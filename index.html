@@ -1127,7 +1127,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '18-Sep-f';
+var BUILD_TAG = '18-Sep-g';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1176,7 +1176,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 18-Sep-f q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 18-Sep-g q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -5732,7 +5732,7 @@ var CLOUD = (function(){
       .then(function(res){
         queue.shift(); persistQ(); busy = false;
         if (res && typeof res.best === 'number' && res.best > (profile.best||0)){ profile.best = res.best; saveProfile(); }
-        if (item.t === 'run' || item.t === 'save'){ refreshTop(true, function(){ renderBoard($('goBoard'), -1); renderBoard($('startBoard'), -1); }); }
+        if (item.t === 'run' || item.t === 'save'){ refreshUntilMine(0); }                  // the server's short cache may lag one fetch behind
         if (queue.length) setTimeout(flush, 250);
       })
       .catch(function(){ busy = false; setTimeout(flush, 15000); });
@@ -5759,6 +5759,16 @@ var CLOUD = (function(){
     if (!on()) return;
     if (!force && top && Date.now() - topAt < 60000){ if (cb) cb(top); return; }
     get({ action:'top', n:20 }).then(function(r){ if (r && r.ok && Array.isArray(r.top)){ top = r.top; topAt = Date.now(); if (cb) cb(top); } }).catch(function(){});
+  }
+  function refreshUntilMine(attempt){                                                       // re-fetch the world board until our latest best shows up (max 3 tries)
+    var delay = [800, 3500, 9000][attempt]; if (delay == null) return;
+    setTimeout(function(){
+      refreshTop(true, function(list){
+        renderBoard($('goBoard'), -1); renderBoard($('startBoard'), -1);
+        var mine = null; for (var i=0;i<list.length;i++) if (list[i].pid === profile.pid){ mine = list[i]; break; }
+        if (!mine || mine.score < (profile.best||0)) refreshUntilMine(attempt + 1);
+      });
+    }, delay);
   }
   function restore(code, cb){
     get({ action:'load', code:code }).then(function(r){
