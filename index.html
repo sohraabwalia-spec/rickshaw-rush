@@ -169,7 +169,31 @@ window.addEventListener('error', function(e){
   .hsRow { display:flex; align-items:baseline; gap:10px; padding:3px 10px; font-family:'Courier New',monospace;
     letter-spacing:1px; color:#ffe9bf; font-size:clamp(13px,2.6vw,16px); }
   .hsRow .rank { color:#ffce3a; width:1.6em; text-align:right; }
-  .hsRow .nm { color:#7df9ff; width:3.2em; font-weight:900; }
+  .hsRow .nm { color:#7df9ff; min-width:3.2em; max-width:8.5em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:900; }
+  .boardNote { text-align:center; font-size:11px; color:rgba(255,233,191,.55); letter-spacing:1px; margin-top:4px; }
+  /* player identity strip + nickname / sync-code modal (cloud saves) */
+  #playerStrip { margin-top:10px; font-size:clamp(11px,2.4vw,13px); color:rgba(255,233,191,.85); letter-spacing:.5px; pointer-events:auto; }
+  #playerStrip b { color:#7df9ff; }
+  #playerStrip code { font-family:'Courier New',monospace; font-weight:900; color:#ffce3a; letter-spacing:2px; }
+  .psLink { color:#ffce3a; text-decoration:underline; cursor:pointer; margin-left:6px; }
+  #nickModal { position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center; background:rgba(8,4,14,.78); backdrop-filter:blur(4px); pointer-events:auto; }
+  #nickModal.hidden { display:none; }
+  .nmCard { width:min(92vw,420px); background:linear-gradient(180deg,#3a1650,#1d0b2c); border:3px solid #ffce3a; border-radius:18px; padding:22px 22px 18px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  .nmTitle { color:#ffce3a; font-weight:900; letter-spacing:3px; font-size:clamp(16px,3.4vw,22px); text-shadow:2px 2px 0 #5e2a84; }
+  .nmSub { color:rgba(255,233,191,.8); font-size:13px; margin:6px 0 14px; line-height:1.4; }
+  .nmInput { font-family:'Courier New',monospace; font-weight:900; font-size:24px; letter-spacing:3px; text-align:center; width:100%; box-sizing:border-box;
+    background:rgba(0,0,0,.45); border:3px solid #ffce3a; border-radius:10px; color:#fff; padding:8px; outline:none; text-transform:none; }
+  .nmInput.code { text-transform:uppercase; letter-spacing:6px; }
+  .nmBtn { margin-top:12px; width:100%; font-weight:900; letter-spacing:2px; font-size:16px; padding:12px; border-radius:12px; border:0; cursor:pointer;
+    background:linear-gradient(180deg,#ffd94a,#ff9f1a); color:#3a1650; box-shadow:0 5px 0 #a3541b; }
+  .nmBtn:active { transform:translateY(3px); box-shadow:0 2px 0 #a3541b; }
+  .nmAlt { margin-top:12px; font-size:12px; color:#7df9ff; text-decoration:underline; cursor:pointer; }
+  .nmErr { color:#ff7d7d; font-size:12px; margin-top:8px; min-height:14px; }
+  .nmCode { margin-top:12px; font-size:12px; color:rgba(255,233,191,.7); }
+  .nmCode code { font-family:'Courier New',monospace; font-weight:900; color:#ffce3a; letter-spacing:3px; font-size:15px; }
+  .gCode { font-size:12px; font-weight:700; color:rgba(244,234,214,.75); background:rgba(20,14,8,0.6); border:2px solid rgba(255,206,58,0.25); border-radius:12px; padding:6px 12px; margin-left:10px; letter-spacing:1px; }
+  .gCode code { font-family:'Courier New',monospace; color:#ffce3a; letter-spacing:2px; font-size:13px; }
+  @media (max-width:760px){ .gCode { display:none; } }
   .hsRow .sc { margin-left:auto; font-variant-numeric:tabular-nums; }
   .hsRow.you { background:rgba(255,206,58,.20); border-radius:6px; color:#fff; }
   #startScreen .boardPanel { position:absolute; right:16px; top:70px; pointer-events:none;
@@ -335,10 +359,12 @@ window.addEventListener('error', function(e){
     </div>
     <button class="btn" id="startBtn">🔉 HORN OK — PLEASE START</button>
     <button class="btn btnGarage" id="garageBtn">🛠️ GARAGE</button>
+    <div id="playerStrip" class="hidden"></div>
     <div class="credit">HORN OK PLEASE</div>
     <div class="boardPanel">
-      <div class="boardTitle">🏆 TOP SCORES</div>
+      <div class="boardTitle" id="startBoardTitle">🏆 TOP SCORES</div>
       <div class="board" id="startBoard"></div>
+      <div class="boardNote" id="startBoardNote"></div>
     </div>
   </div>
 
@@ -347,6 +373,7 @@ window.addEventListener('error', function(e){
       <div class="gBack" id="garageBack"><span class="gBackChev">‹</span> MENU</div>
       <div class="gTitle">GARAGE<span class="gTitleSub">customize · ride · repeat</span></div>
       <div class="gWallet">🪙 <span id="garageCoins">0</span></div>
+      <div class="gCode hidden" id="gCode">🔑 SYNC CODE <code id="gCodeVal"></code></div>
     </div>
     <div class="gStage">
       <canvas id="garageCanvas"></canvas>
@@ -392,14 +419,37 @@ window.addEventListener('error', function(e){
       <input id="initials" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="AAA">
       <button class="saveBtn" id="saveScoreBtn">SAVE</button>
     </div>
-    <div class="boardTitle" style="margin-top:18px">🏆 TOP SCORES</div>
+    <div class="boardTitle" style="margin-top:18px" id="goBoardTitle">🏆 TOP SCORES</div>
     <div class="board" id="goBoard"></div>
+    <div class="boardNote" id="goBoardNote"></div>
     <button class="btn" id="restartBtn">EK AUR ROUND 🛺</button>
     <div class="goBtnRow">
       <button class="btn btnSmall" id="menuBtn">🏠 MENU</button>
       <button class="btn btnSmall btnGarage" id="goGarageBtn">🛠️ GARAGE</button>
     </div>
     <button class="btn btnSmall" id="dbgLogBtn" style="margin-top:10px;opacity:.85">📊 EXPORT DEBUG LOG</button>
+  </div>
+</div>
+
+<div id="nickModal" class="hidden">
+  <div class="nmCard">
+    <div id="nmNickPane">
+      <div class="nmTitle">🛺 WHO'S DRIVING?</div>
+      <div class="nmSub">Pick a nickname for the world leaderboard.<br>Your coins, garage unlocks and best score are saved under it.</div>
+      <input class="nmInput" id="nickInput" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="nickname">
+      <div class="nmErr" id="nickErr"></div>
+      <button class="nmBtn" id="nickOk">CHALO! 🚦</button>
+      <div class="nmCode hidden" id="nmCodeShow">Your sync code: <code id="nmCodeVal"></code><br>enter it on another phone to bring your progress along</div>
+      <div class="nmAlt" id="nmToCode">Already playing on another device? Enter sync code</div>
+    </div>
+    <div id="nmCodePane" class="hidden">
+      <div class="nmTitle">🔑 SYNC CODE</div>
+      <div class="nmSub">The 8-letter code shown in your Garage on the other device. This replaces the progress on this device.</div>
+      <input class="nmInput code" id="codeInput" type="text" maxlength="8" autocomplete="off" spellcheck="false" placeholder="ABCD1234">
+      <div class="nmErr" id="codeErr"></div>
+      <button class="nmBtn" id="codeOk">RESTORE PROGRESS</button>
+      <div class="nmAlt" id="nmToNick">← back</div>
+    </div>
   </div>
 </div>
 
@@ -1077,7 +1127,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '18-Sep-e';
+var BUILD_TAG = '18-Sep-f';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1126,7 +1176,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 18-Sep-e q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 18-Sep-f q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -5383,6 +5433,10 @@ var QUIPS = [
   'Bandra se Borivali jaana tha, hospital pahunch gaye.'
 ];
 $('startBtn').addEventListener('click', function(){
+  if (typeof CLOUD !== 'undefined' && !profile.nick){ CLOUD.askNick(beginStart); return; }   // first launch: pick a nickname
+  beginStart();
+});
+function beginStart(){
   var btn = $('startBtn'), t0 = Date.now();
   (function waitReady(){
     var ready = vehicleDefs.length >= 3 || Date.now() - t0 > 8000;      // taxi/bus/hatchback in, or give up after 8 s
@@ -5390,7 +5444,7 @@ $('startBtn').addEventListener('click', function(){
     btn.textContent = '⏳ LOADING TRAFFIC… ' + vehicleDefs.length + '/3';
     setTimeout(waitReady, 150);
   })();
-});
+}
 $('restartBtn').addEventListener('click', startGame);
 $('menuBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); $('startScreen').classList.remove('hidden'); if(typeof renderBoard==='function') renderBoard($('startBoard'), -1); });
 $('goGarageBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); GARAGE.open(); });
@@ -5534,9 +5588,9 @@ function buyItem(cat, id){                                   // returns true on 
   if (ownsItem(cat, id)) return true;
   var it = garageItem(cat, id); if (!it) return false;
   if (profile.coins < it.price) return false;
-  profile.coins -= it.price; profile.owned[cat].push(id); saveProfile(); return true;
+  profile.coins -= it.price; profile.owned[cat].push(id); saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon(); return true;
 }
-function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; profile.equipped[cat] = id; saveProfile();
+function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; profile.equipped[cat] = id; saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon();
   if (cat === 'rickshaw') selectedVehicle = id;
   if (typeof applyPlayerVehicle === 'function') applyPlayerVehicle();   // the ride you drive is always the equipped one
   return true; }
@@ -5609,15 +5663,35 @@ function addScore(name, sc){
   persistScores();
   return scores.indexOf(entry);
 }
+function escHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function renderBoard(el, hlIndex){
   if (!el) return;
-  var html = '';
-  scores.forEach(function(e,i){
-    html += '<div class="hsRow'+(i===hlIndex?' you':'')+'">'
-          + '<span class="rank">'+(i+1)+'</span>'
-          + '<span class="nm">'+e.name+'</span>'
-          + '<span class="sc">'+e.score+'</span></div>';
-  });
+  var html = '', world = (typeof CLOUD !== 'undefined' && CLOUD.on()) ? CLOUD.top() : null;
+  var titleEl = $(el.id === 'goBoard' ? 'goBoardTitle' : 'startBoardTitle'), noteEl = $(el.id === 'goBoard' ? 'goBoardNote' : 'startBoardNote');
+  if (world && world.length){                                   // 🌐 world leaderboard from the cloud (best score per player)
+    var mine = -1;
+    world.slice(0, 10).forEach(function(e,i){
+      var you = (e.pid && e.pid === profile.pid); if (you) mine = i;
+      html += '<div class="hsRow'+(you?' you':'')+'">'
+            + '<span class="rank">'+(i+1)+'</span>'
+            + '<span class="nm">'+escHtml(e.nick)+'</span>'
+            + '<span class="sc">'+e.score+'</span></div>';
+    });
+    if (titleEl) titleEl.textContent = '🌐 WORLD TOP 10';
+    if (noteEl){
+      var rank = -1; for (var k=0;k<world.length;k++) if (world[k].pid === profile.pid){ rank = k+1; break; }
+      noteEl.textContent = mine >= 0 ? 'that\'s you at #' + (mine+1) : rank > 0 ? 'you: #' + rank + ' of ' + world.length + ' · best ' + (profile.best||0) : profile.best ? 'your best ' + profile.best + ' · ' + world.length + ' drivers' : world.length + ' drivers worldwide';
+    }
+  } else {
+    scores.forEach(function(e,i){
+      html += '<div class="hsRow'+(i===hlIndex?' you':'')+'">'
+            + '<span class="rank">'+(i+1)+'</span>'
+            + '<span class="nm">'+escHtml(e.name)+'</span>'
+            + '<span class="sc">'+e.score+'</span></div>';
+    });
+    if (titleEl) titleEl.textContent = '🏆 TOP SCORES';
+    if (noteEl) noteEl.textContent = (typeof CLOUD !== 'undefined' && CLOUD.on()) ? 'this device · fetching world board…' : '';
+  }
   el.innerHTML = html;
 }
 renderBoard($('startBoard'), -1);
@@ -5639,6 +5713,144 @@ $('saveScoreBtn').addEventListener('click', submitScore);
 $('initials').addEventListener('keydown', function(e){
   if (e.key === 'Enter'){ e.preventDefault(); submitScore(); }
 });
+
+/* ============================== CLOUD: nickname · sync code · world leaderboard · diagnostics ==============================
+   Backend = Google Apps Script web app bound to a Sheet (cloud/Code.gs). CLOUD_URL empty → everything stays local exactly as before.
+   Posts are queued in localStorage and retried, so a flaky phone connection never loses a run. */
+var CLOUD_URL = 'https://script.google.com/macros/s/AKfycbw52nLtze2qLiKhvocbvqjvk5e4kg2Q83R744Ty4Snvj9_6135PsPMRNEkJB-rP6U-3Fw/exec';                                    // paste the Apps Script /exec URL here
+var CLOUD = (function(){
+  var Q_KEY = 'rickshawRushCloudQ_v1', queue = [], busy = false, top = null, topAt = 0, diagSent = 0, syncT = null, pendingStart = null;
+  try { queue = JSON.parse(localStorage.getItem(Q_KEY)) || []; } catch(e){ queue = []; }
+  function on(){ return !!CLOUD_URL; }
+  function persistQ(){ try { localStorage.setItem(Q_KEY, JSON.stringify(queue.slice(-30))); } catch(e){} }
+  function post(obj){ if (!on()) return; queue.push(obj); persistQ(); flush(); }
+  function flush(){
+    if (!on() || busy || !queue.length || typeof fetch !== 'function') return;
+    busy = true; var item = queue[0];
+    fetch(CLOUD_URL, { method:'POST', body:JSON.stringify(item), redirect:'follow' })
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        queue.shift(); persistQ(); busy = false;
+        if (res && typeof res.best === 'number' && res.best > (profile.best||0)){ profile.best = res.best; saveProfile(); }
+        if (item.t === 'run' || item.t === 'save'){ refreshTop(true, function(){ renderBoard($('goBoard'), -1); renderBoard($('startBoard'), -1); }); }
+        if (queue.length) setTimeout(flush, 250);
+      })
+      .catch(function(){ busy = false; setTimeout(flush, 15000); });
+  }
+  function get(params){
+    if (!on() || typeof fetch !== 'function') return Promise.reject(new Error('offline'));
+    var qs = Object.keys(params).map(function(k){ return k + '=' + encodeURIComponent(params[k]); }).join('&');
+    return fetch(CLOUD_URL + '?' + qs, { redirect:'follow' }).then(function(r){ return r.json(); });
+  }
+  function genPid(){
+    var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = '', arr = new Uint8Array(8);
+    try { crypto.getRandomValues(arr); } catch(e){ for (var j=0;j<8;j++) arr[j] = Math.floor(Math.random()*256); }
+    for (var i=0;i<8;i++) s += A[arr[i] % A.length];
+    return s;
+  }
+  function ensurePid(){ if (!profile.pid){ profile.pid = genPid(); saveProfile(); } return profile.pid; }
+  function saveBlob(){
+    return { pid:ensurePid(), nick:profile.nick || 'Anon', best:profile.best||0, coins:profile.coins, runs:profile.runs||0,
+             profile:{ owned:profile.owned, equipped:profile.equipped, v:profile.v } };
+  }
+  function sync(){ if (!on() || !profile.nick) return; var b = saveBlob(); b.t = 'save'; post(b); }
+  function syncSoon(){ clearTimeout(syncT); syncT = setTimeout(sync, 2500); }          // garage purchases: coalesce into one save
+  function refreshTop(force, cb){
+    if (!on()) return;
+    if (!force && top && Date.now() - topAt < 60000){ if (cb) cb(top); return; }
+    get({ action:'top', n:20 }).then(function(r){ if (r && r.ok && Array.isArray(r.top)){ top = r.top; topAt = Date.now(); if (cb) cb(top); } }).catch(function(){});
+  }
+  function restore(code, cb){
+    get({ action:'load', code:code }).then(function(r){
+      if (!r || !r.ok){ cb(false, r && r.err === 'not found' ? 'No driver with that code.' : 'Could not load that code.'); return; }
+      profile.pid = r.pid; profile.nick = r.nick; profile.best = Math.max(profile.best||0, r.best||0); profile.coins = r.coins; profile.runs = r.runs||0;
+      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; }
+      saveProfile(); profile = loadProfile();                                             // re-run the normaliser/migrations on the restored data
+      selectedVehicle = profile.equipped.rickshaw || 'rickshaw';
+      document.querySelectorAll('.vehCard').forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); });
+      if (typeof applyPlayerVehicle === 'function') try { applyPlayerVehicle(); } catch(e){}
+      cb(true);
+    }).catch(function(){ cb(false, 'No connection — try again in a moment.'); });
+  }
+  /* ---- nickname / sync-code modal ---- */
+  function showPane(which){ $('nmNickPane').classList.toggle('hidden', which !== 'nick'); $('nmCodePane').classList.toggle('hidden', which !== 'code'); }
+  function askNick(then){
+    pendingStart = then || null;
+    $('nickInput').value = profile.nick || ''; $('nickErr').textContent = ''; $('codeErr').textContent = ''; $('codeInput').value = '';
+    var cs = $('nmCodeShow'); cs.classList.toggle('hidden', !profile.nick); if (profile.nick) $('nmCodeVal').textContent = ensurePid();
+    $('nmToCode').classList.toggle('hidden', !on());
+    showPane('nick'); $('nickModal').classList.remove('hidden');
+    setTimeout(function(){ try { $('nickInput').focus(); } catch(e){} }, 50);
+  }
+  function closeModal(){ $('nickModal').classList.add('hidden'); updateStrip(); var f = pendingStart; pendingStart = null; if (f) f(); }
+  function acceptNick(){
+    var n = ($('nickInput').value || '').replace(/[^\w \-\.]/g, '').trim().slice(0, 12);
+    if (n.length < 2){ $('nickErr').textContent = 'At least 2 letters, boss.'; return; }
+    profile.nick = n; ensurePid(); saveProfile(); sync(); closeModal();
+  }
+  function acceptCode(){
+    var c = ($('codeInput').value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (c.length !== 8){ $('codeErr').textContent = 'Codes are 8 letters/numbers.'; return; }
+    $('codeErr').textContent = 'Loading…'; $('codeOk').disabled = true;
+    restore(c, function(ok, err){
+      $('codeOk').disabled = false;
+      if (!ok){ $('codeErr').textContent = err; return; }
+      $('codeErr').textContent = ''; closeModal();
+      if (typeof GARAGE !== 'undefined' && GARAGE.refresh) try { GARAGE.refresh(); } catch(e){}
+      renderBoard($('startBoard'), -1);
+      popup('🔑 Welcome back, ' + profile.nick + '!', 'popEvent', 50, 30);
+    });
+  }
+  function updateStrip(){
+    var s = $('playerStrip'); if (!s) return;
+    if (!profile.nick){ s.classList.add('hidden'); return; }
+    s.classList.remove('hidden');
+    s.innerHTML = '👤 <b>' + escHtml(profile.nick) + '</b>' + (on() ? ' · sync code <code>' + ensurePid() + '</code>' : '') + '<span class="psLink" id="psEdit">change</span>';
+    var e = $('psEdit'); if (e) e.addEventListener('click', function(){ askNick(null); });
+    var gc = $('gCode'), gv = $('gCodeVal'); if (gc && gv){ gc.classList.toggle('hidden', !on()); gv.textContent = ensurePid(); }
+  }
+  $('nickOk').addEventListener('click', acceptNick);
+  $('nickInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); acceptNick(); } });
+  $('codeOk').addEventListener('click', acceptCode);
+  $('codeInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); acceptCode(); } });
+  $('codeInput').addEventListener('input', function(){ this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8); });
+  $('nmToCode').addEventListener('click', function(){ showPane('code'); setTimeout(function(){ try { $('codeInput').focus(); } catch(e){} }, 50); });
+  $('nmToNick').addEventListener('click', function(){ showPane('nick'); });
+  $('nickModal').addEventListener('click', function(e){ if (e.target === this && profile.nick){ closeModal(); } });
+  /* ---- per-run telemetry: score row + player save + (a few) diagnostic reports per session ---- */
+  function deathCause(){
+    var best = null, bd = 1e9;
+    for (var i=0;i<obstacles.length;i++){ var o = obstacles[i], dz = Math.abs(o.root.position.z - PLAYER_Z), dx = Math.abs(o.root.position.x - player.position.x);
+      if (dz < 4 && (dx < 1.4 || o.hit.allLanes) && dz < bd){ bd = dz; best = o; } }
+    if (typeof cop !== 'undefined' && cop && copPaused) return best ? 'cop:' + best.kind : 'cop';
+    if (typeof bike !== 'undefined' && bike && bikePaused) return best ? 'duel:' + best.kind : 'duel';
+    return best ? best.kind + (best.hit.jumpOver ? ' (jump)' : best.hit.duckUnder ? ' (duck)' : '') : 'unknown';
+  }
+  function runEnd(){
+    profile.runs = (profile.runs||0) + 1; if (state.score > (profile.best||0)) profile.best = state.score; saveProfile();
+    if (!on() || !profile.nick) return;
+    var cause = deathCause(), zi = (typeof zoneIndex === 'function') ? zoneIndex() : 0;
+    var flags = [ (monsoon && monsoon.active) ? 'monsoon' : '', (typeof QUALITY !== 'undefined' ? 'q' + QUALITY.level : ''), IS_TOUCH ? 'touch' : 'keys', 'v' + BUILD_TAG ].filter(Boolean).join(',');
+    post({ t:'run', pid:ensurePid(), nick:profile.nick, score:state.score, dist:Math.floor(state.dist), zone:zi, vehicle:selectedVehicle, cause:cause, flags:flags, save:saveBlob() });
+    if (diagSent < 4 && state.dist > 120 && window.PERF){                                 // diagnostics: first 4 real runs of a session
+      diagSent++;
+      try {
+        var rep = PERF.report();
+        rep.marks = rep.marks.slice(-40); rep.warnings = rep.warnings.slice(-30);
+        rep.quality = (typeof QUALITY !== 'undefined') ? QUALITY.level : 0;
+        rep.assets = window.ASSET_LOAD ? { seconds:ASSET_LOAD.seconds, loaded:ASSET_LOAD.loaded, total:ASSET_LOAD.total, failed:ASSET_LOAD.failed, base:ASSET_LOAD.base, decoder:window.__decoderMode } : null;
+        rep.run = { score:state.score, dist:Math.floor(state.dist), zone:zi, cause:cause, flags:flags, vehicle:selectedVehicle, coins:state.coins, best:profile.best, runsTotal:profile.runs };
+        post({ t:'diag', pid:ensurePid(), nick:profile.nick, report:rep });
+      } catch(e){}
+    }
+  }
+  /* ---- boot: flush anything queued from last time, fetch the world board ---- */
+  if (on()){ setTimeout(flush, 1500); refreshTop(false, function(){ renderBoard($('startBoard'), -1); }); }
+  setTimeout(updateStrip, 0);
+  window.addEventListener('online', flush);
+  return { on:on, post:post, flush:flush, ensurePid:ensurePid, sync:sync, syncSoon:syncSoon, refreshTop:refreshTop, restore:restore, top:function(){ return top; },
+           askNick:askNick, updateStrip:updateStrip, runEnd:runEnd, deathCause:deathCause, saveBlob:saveBlob };
+})();
 
 function clearWorld(){
   obstacles.forEach(function(o){ scene.remove(o.root); });
@@ -5692,10 +5904,17 @@ function gameOver(){
   state.score = Math.floor(state.dist) + state.bonus;
   if (state.coins > 0){ profile.coins += state.coins; saveProfile(); }   // bank this run's coins into the wallet
   var qualifies = scoreQualifies(state.score);
+  var newBest = state.score > (profile.best||0);
+  if (typeof CLOUD !== 'undefined') try { CLOUD.runEnd(); } catch(e){}                 // score row + save + diagnostics (no-op offline)
   setTimeout(function(){
     $('quip').textContent = '"' + pick(QUIPS) + '"';
     $('finalScore').textContent = 'SCORE: ' + state.score;
-    if (qualifies){
+    if (profile.nick){                                                                 // named driver: no initials prompt, board saves itself
+      var idxN = qualifies ? addScore(profile.nick, state.score) : -1;
+      $('bestScoreLine').innerHTML = newBest ? '<span class="newBest">★ NEW PERSONAL BEST! ★</span>' : 'BEST: ' + (profile.best||0);
+      $('nameEntry').classList.add('hidden');
+      renderBoard($('goBoard'), idxN);
+    } else if (qualifies){
       $('bestScoreLine').innerHTML = '<span class="newBest">★ NEW HIGH SCORE! ★</span>';
       $('nameEntry').classList.remove('hidden');
       $('initials').value = '';
@@ -6295,6 +6514,7 @@ var GARAGE = (function(){
     $g('startScreen').classList.add('hidden');
     $g('garageScreen').classList.remove('hidden');
     initPreview(); buildPreviewModel(); resizePreview(); updateWallet();
+    if (typeof CLOUD !== 'undefined') CLOUD.updateStrip();                       // sync code badge in the top bar
     setCat('rickshaw'); setSub('paint');
     frameFor('rickshaw'); yaw=BASE_YAW; yawVel=0; idleT=0;   // default to the REAR view (chase-cam angle + rear art)
     if (!gRaf) loop();
@@ -6318,7 +6538,8 @@ var GARAGE = (function(){
     var tr=$g('gTestRide'); if(tr) tr.addEventListener('click', function(){ if(typeof garageTestRide==='function') garageTestRide(); });
     window.addEventListener('resize', function(){ if(isOpen) resizePreview(); });
   }
-  return { open:open, close:close, wire:wire, isOpen:function(){return isOpen;}, sel:function(){return sel;}, rebuildPreview:function(){ if (isOpen) buildPreviewModel(); } };
+  function refresh(){ if (!isOpen) return; ['rickshaw','paint','rearArt','trim','horn','fx'].forEach(function(c){ sel[c]=equippedItem(c); }); buildPreviewModel(); updateWallet(); renderCards(); updateSelInfo(); }
+  return { open:open, close:close, wire:wire, refresh:refresh, isOpen:function(){return isOpen;}, sel:function(){return sel;}, rebuildPreview:function(){ if (isOpen) buildPreviewModel(); } };
 })();
 GARAGE.wire();
 
