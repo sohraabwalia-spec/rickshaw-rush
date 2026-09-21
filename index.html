@@ -138,18 +138,18 @@ window.addEventListener('error', function(e){
   #flash.on { animation:flashHit .35s ease-out; }
   @keyframes flashHit { 0%{opacity:1} 100%{opacity:0} }
   /* ---- monsoon storm overlays (opacity driven from JS via --wet) ---- */
-  #stormVignette { position:fixed; inset:0; pointer-events:none; z-index:2; opacity:0;
+  #stormVignette { position:fixed; inset:0; pointer-events:none; z-index:2; opacity:0; will-change:opacity;
     background:
       radial-gradient(ellipse 120% 100% at 50% 30%, rgba(30,40,60,0) 40%, rgba(14,20,34,0.55) 100%),
       linear-gradient(180deg, rgba(24,32,48,0.5), rgba(18,24,40,0.2) 50%, rgba(14,20,34,0.4)); }
-  #rainGlass { position:fixed; inset:0; pointer-events:none; z-index:3; opacity:0;
-    background-repeat:repeat;
+  #rainGlass { position:fixed; inset:0; pointer-events:none; z-index:3; opacity:0; overflow:hidden; will-change:opacity; }
+  #rainGlass::before { content:''; position:absolute; left:0; right:0; top:-300px; bottom:-300px; will-change:transform;
     background-image:
       repeating-linear-gradient(101deg, rgba(180,205,230,0) 0 7px, rgba(180,205,230,0.05) 7px 8px, rgba(180,205,230,0) 8px 15px),
       repeating-linear-gradient(97deg, rgba(200,220,240,0) 0 11px, rgba(200,220,240,0.06) 11px 12px, rgba(200,220,240,0) 12px 22px);
-    background-size:120px 100%, 180px 100%;
+    background-size:120px 300px, 180px 300px;
     animation:rainSlide 0.5s linear infinite; }
-  @keyframes rainSlide { from{ background-position:0 0, 0 0; } to{ background-position:0 260px, 0 340px; } }
+  @keyframes rainSlide { from{ transform:translateY(0); } to{ transform:translateY(300px); } }
   #lightning { position:fixed; inset:0; pointer-events:none; z-index:4; opacity:0; background:rgba(220,235,255,0.9); }
   #lightning.on { animation:lightningFlash .45s ease-out; }
   @keyframes lightningFlash { 0%{opacity:0} 6%{opacity:0.85} 12%{opacity:0.1} 20%{opacity:0.7} 100%{opacity:0} }
@@ -1140,7 +1140,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '21-Sep-b';
+var BUILD_TAG = '21-Sep-c';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1189,7 +1189,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 21-Sep-b q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 21-Sep-c q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -5971,6 +5971,7 @@ function startGame(){
   state.shield = false; state.turbo = 0; state.slowmo = 0; state.shake = 0;
   state.lastSpawnZ = SPAWN_AHEAD;
   bendReset();                                           // straight, flat opening
+  warmShaders();
   distSinceBanner = 0; distSincePower = 200;
   prevSafe = 1; prevSafeLow = false;   // start with the middle lane open
   player.userData.aura.visible = false;
@@ -6652,6 +6653,16 @@ var RAIN_N = 220, rainPos = new Float32Array(RAIN_N*6), rainMesh = null;   // ON
 var _stormEls = {};
 function stormEl(id){ if(!(id in _stormEls)) _stormEls[id]=document.getElementById(id); return _stormEls[id]; }
 function lightningFlash(){ var el=stormEl('lightning'); if(!el) return; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); thunder(); }
+var _shadersWarm = false;
+function warmShaders(){                                   // compile the monsoon-only programs once, off the critical path (first storm used to hitch ~0.7 s)
+  if (_shadersWarm || !renderer || !scene) return; _shadersWarm = true;
+  try {
+    var wasVis = rainGroup.visible; rainGroup.visible = true; rainMat.opacity = 0.01;
+    var pud = new THREE.Mesh(_puddleGeo, _puddleMat); pud.rotation.x = -Math.PI/2; pud.position.set(0, 0.014, -30); scene.add(pud);
+    renderer.compile(scene, camera);
+    scene.remove(pud); rainGroup.visible = wasVis; rainMat.opacity = 0;
+  } catch(e){ _shadersWarm = false; }
+}
 function startMonsoon(){ monsoon.active=true; monsoon.timer = 24 + Math.random()*10; if(window.PERF)PERF.mark('monsoon start'); popup('🌧️ MONSOON! BARISH AAYI!', 'popNear', 50, 28); }
 var _rainSrc=null, _rainGain=null;
 function ensureRainAudio(){
