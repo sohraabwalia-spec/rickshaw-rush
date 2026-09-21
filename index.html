@@ -1140,7 +1140,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '21-Sep-d';
+var BUILD_TAG = '22-Sep-a';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1189,7 +1189,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 21-Sep-d q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 22-Sep-a q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -2948,13 +2948,13 @@ whenModel(['CAR_GLB_B64'], function loadCarModel(){
 // additional traffic vehicles (obstacles only)
 // Retired the low-res legacy sedan taxi — replaced by the Higgsfield kaali-peeli taxi below.
 // loadObstacleVehicle(window.SEDAN2_GLB_B64, { targetLen:4.2, faceYaw:0,       hwScale:0.42, dScale:0.9 });
-whenModel('TAXI_GLB_B64', function(){ loadObstacleVehicle(window.TAXI_GLB_B64,   { targetLen:4.3, faceYaw:0,       hwScale:0.42, dScale:0.9 }); });  // Mumbai kaali-peeli taxi (loads when embedded)
-whenModel('TRUCK_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK_GLB_B64,  { targetLen:6.8, faceYaw:Math.PI, hwScale:0.4,  dScale:0.85 }); });
+whenModel('TAXI_GLB_B64', function(){ loadObstacleVehicle(window.TAXI_GLB_B64,   { targetLen:4.3, faceYaw:0,       hwScale:0.42, dScale:0.9, kind:'taxi' }); });  // Mumbai kaali-peeli taxi (loads when embedded)
+whenModel('TRUCK_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK_GLB_B64,  { targetLen:6.8, faceYaw:Math.PI, hwScale:0.4,  dScale:0.85, kind:'truck' }); });
 whenModel(['BUS_GLB_B64','BUS_TEX_GREEN'], function(){ loadObstacleVehicle(window.BUS_GLB_B64,    { targetLen:7.0, faceYaw:0,       hwScale:0.30, dScale:0.85, kind:'bus',
   variantTex:[window.BUS_TEX_GREEN, window.BUS_TEX_BLUE, window.BUS_TEX_CREAM] }); });  // BEST bus + green/blue/cream liveries
-whenModel(['WAGON_GLB_B64','WAGON_TEX_YELLOW'], function(){ loadObstacleVehicle(window.WAGON_GLB_B64,  { targetLen:3.8, faceYaw:0,       hwScale:0.42, dScale:0.9,
+whenModel(['WAGON_GLB_B64','WAGON_TEX_YELLOW'], function(){ loadObstacleVehicle(window.WAGON_GLB_B64,  { targetLen:3.8, faceYaw:0,       hwScale:0.42, dScale:0.9, kind:'hatch',
   variantTex:[window.WAGON_TEX_YELLOW, window.WAGON_TEX_WHITE, window.WAGON_TEX_BLUE] }); });  // compact hatchback + yellow/white/blue
-whenModel('TRUCK2_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK2_GLB_B64, { targetLen:4.6, faceYaw:0,       hwScale:0.4,  dScale:0.9 }); });  // decorated CNG mini-truck
+whenModel('TRUCK2_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK2_GLB_B64, { targetLen:4.6, faceYaw:0,       hwScale:0.4,  dScale:0.9, kind:'tempo' }); });  // decorated CNG mini-truck
 
 /* ===================== DELIVERY-RIDER BIKE MINIBOSS =====================
    Appears every 1000 pts from 2000. Settles just ahead of the player and weaves
@@ -3479,7 +3479,7 @@ function copSpawnStation(c){
   var variant = (idx % 3 === 2) ? pick(['lady','radar']) : 'lathi';
   var man = makeHavaldar(variant); man.rotation.y = -0.5; man.position.set(COP_MAN_X, 0, COP_STATION_Z); scene.add(man);
   var spikes = c.plan[idx] === 'S', lanes = spikes ? [0,1,2] : c.plan[idx];
-  var st = { jeep:jeep, man:man, z:COP_STATION_Z, lanes:lanes, spikes:spikes, phase:'approach', tell:0, bar:null, barRefs:[], salute:0,
+  var st = { jeep:jeep, man:man, z:COP_STATION_Z, lanes:lanes, spikes:spikes, variant:variant, phase:'approach', tell:0, bar:null, barRefs:[], salute:0,
              warns:lanes.map(function(){ return makeLaneWarn(); }), hidden:[] };
   // clear the kerb: hide right-side scenery + walkers that would merge with the jeep/havaldar
   function clearNear(list){ list.forEach(function(p){ if (!p._copHidden && p.position.x > 0 && Math.abs(p.position.z - (COP_STATION_Z - 3)) < COP_CLEAR_Z){ p.visible = false; p._copHidden = true; st.hidden.push(p); } }); }
@@ -3492,11 +3492,18 @@ function startCopEncounter(){
   for (var i=obstacles.length-1;i>=0;i--){ if (obstacles[i].root.position.z < -10){ scene.remove(obstacles[i].root); obstacles.splice(i,1); } }
   cop = { plan:copBuildStations(), stations:[], spawned:0, cleared:0, done:false, anim:0 };
   copSpawnStation(cop);
-  var lbl = $('bossLabel'); if (lbl) lbl.textContent = '🚨 NAKABANDI';
+  copLabel(cop);
   bossShow(true); bossFill(0);
   bossHint('cop', '🚨 NAKABANDI', 'Police checkpoints ahead. Jump the spike strips ' + bhKey('jump') + ', steer around the parked jeeps ' + bhKey('lane') + '. Clear every checkpoint to fill the bar.');
   popup('🚨 NAKABANDI AHEAD — POLICE CHECKPOINTS!', 'popNear', 54, 42);
   seetiSound(true);
+}
+function copLabel(c){ var lbl = $('bossLabel'); if (lbl) lbl.textContent = '🚨 NAKABANDI · CHECKPOINT ' + Math.min(c.plan.length, c.cleared + 1) + ' / ' + c.plan.length; }
+function copStationHint(st){                             // per-checkpoint coaching (the card on the right)
+  if (st.spikes) bossHint('cop-spikes', '🛞 TYRE KILLER', 'A spike strip rolls across every lane. Jump it ' + bhKey('jump') + ' — timing, not lane, saves you.');
+  else if (st.lanes.length > 1) bossHint('cop-double', '🚧 DOUBLE BARRICADE', 'Two lanes close, the gap is always ONE lane over from where you are ' + bhKey('lane') + '.');
+  else if (st.variant === 'radar') bossHint('cop-radar', '📡 SPEED GUN', 'Havaldar with a radar. Pass him WITHOUT turbo or it is an overspeed chalaan (coins, not your life).');
+  else bossHint('cop-single', '🫡 SINGLE CHECK', 'One lane closes. Steer clear ' + bhKey('lane') + ' — or honk ' + bhKey('horn') + ' while he signals and he waves you straight through.');
 }
 function copStationRemove(st){ scene.remove(st.jeep); scene.remove(st.man); st.warns.forEach(function(w){ scene.remove(w); }); st.hidden.forEach(function(p){ p.visible = true; p._copHidden = false; }); st.hidden.length = 0; }
 function copRemove(c){ c.stations.forEach(copStationRemove); }
@@ -3524,7 +3531,7 @@ function updateCop(dt, dz){
     if (st.phase === 'approach' && st.z >= (st.spikes ? COP_SIGNAL_Z - 22 : COP_SIGNAL_Z)){          // he sees you coming: seeti + point the lathi (spikes: earlier, they span every lane)
       var midAir = (state.jumping || state.ducking) && ((st.holdSignal = (st.holdSignal || 0) + dt) < 0.3);   // fairness: never signal mid-jump/duck (≤0.3 s grace)
       if (!midAir){
-        st.phase = 'signal'; st.tell = COP_TELL;
+        st.phase = 'signal'; st.tell = COP_TELL; st.hornWindow = true; copStationHint(st);
         seetiSound(st.lanes.length > 1);
         popup(st.spikes ? '🛞 TYRE KILLER! JUMP! 🚨' : st.lanes.length > 1 ? 'STOP! 🚨' : 'SEETI! 🚨', 'popNear', 50, 34);
       }
@@ -3533,7 +3540,9 @@ function updateCop(dt, dz){
       st.tell -= dt;
       var fl = 0.3 + 0.4*(0.5+0.5*Math.sin(now*18));
       st.warns.forEach(function(w,k){ w.visible = true; w.material.opacity = fl; w.position.set(LANES[st.lanes[k]], 0.04, st.z + 18); });
-      if (st.tell <= 0){                                 // drop the barricade(s) right at his checkpoint
+      if (st.waved){                                     // you honked politely → salaam, no barricade
+        st.warns.forEach(function(w){ w.visible = false; }); st.phase = 'armed'; st.tell = 0;
+      } else if (st.tell <= 0){                                 // drop the barricade(s) right at his checkpoint
         st.warns.forEach(function(w){ w.visible = false; });
         if (st.spikes){                                    // one strip rolled out from his side across the whole road
           var sm = makeSpikeStrip(); sm.position.set(COP_MAN_X + 1.2 + ROAD_W/2, 0, st.z); scene.add(sm);
@@ -3549,12 +3558,16 @@ function updateCop(dt, dz){
         st.phase = 'armed';
       }
     } else if (st.phase === 'armed'){
-      var passed = true;                                 // cleared once every barricade is behind you (or smashed by shield/turbo)
+      var passed = st.barRefs.length ? true : (st.z >= PLAYER_Z - 2);   // cleared once every barricade is behind you (or, waved through, once you pass him)
       st.barRefs.forEach(function(r){ if (obstacles.indexOf(r) >= 0 && r.root.position.z <= PLAYER_Z + 1.5) passed = false; });
       if (passed){
-        st.phase = 'cleared'; c.cleared++; bossFill(c.cleared / c.plan.length); tihai();
+        if (st.variant === 'radar' && !st.fined && state.turbo > 0){            // caught speeding past the radar gun
+          st.fined = true; var fine = Math.min(profile.coins, 40 + zoneNow*15); profile.coins -= fine; saveProfile();
+          popup('📡 OVERSPEED! CHALAAN −' + fine + ' coins', 'popArrest', 50, 40); seetiSound(true); state.shake = Math.max(state.shake, 0.35);
+        }
+        st.phase = 'cleared'; c.cleared++; bossFill(c.cleared / c.plan.length); tihai(); copLabel(c);
         if (c.cleared >= c.plan.length && !c.done) copWin(c);
-        else { seetiSound(false); popup('✅ JAANE DO!', 'popNear', 50, 36); shout('cop', 0.7, COP_MAN_X); }
+        else if (!st.waved && !st.fined){ seetiSound(false); popup('✅ JAANE DO!', 'popNear', 50, 36); shout('cop', 0.7, COP_MAN_X); }
       }
     }
     // next checkpoint appears up the road once this one is nearly on you
@@ -4008,7 +4021,10 @@ function swapInModelBuildings(){
 
 function makeCar(){
   if (!vehicleDefs.length) return makeTaxi();   // no GLB vehicle ready yet — graceful fallback
-  var v = pick(vehicleDefs);
+  var vw = (typeof MOOD !== 'undefined' && MOOD.veh) || {}, w = {}, perKind = {};
+  for (var vk=0; vk<vehicleDefs.length; vk++) perKind[vehicleDefs[vk].kind] = (perKind[vehicleDefs[vk].kind]||0) + 1;   // liveries register as separate defs — share the kind's weight
+  for (var vi=0; vi<vehicleDefs.length; vi++){ var kd = vehicleDefs[vi].kind; w[vi] = (vw[kd] != null ? vw[kd] : 1) / perKind[kd]; }   // time of day / zone decides the traffic mix
+  var v = vehicleDefs[+pickWeighted(w)] || pick(vehicleDefs);
   return { mesh:cloneObj(v.template), hw:v.hw, d:v.d, kind:v.kind };
 }
 
@@ -4810,6 +4826,29 @@ function spawnPowerup(kind, lane, z){
 var distSinceBanner = 0, distSincePower = 0;
 var prevSafe = 1, prevSafeLow = false;
 var prevChunkDeep = false;    // did the last spawned chunk contain a long traffic vehicle?
+/* ---- WORLD MOOD: time of day × zone shapes what the street throws at you ----
+   morning: cows, dabbawalas, chai — few trucks · day: taxis, stalls · dusk: traffic thickens, processions set off
+   night: trucks & tempos own the road, stalls shut, Ganpati/baraat glow · zones multiply on top (rush hour = 2× traffic …) */
+var MOOD = { time:'', tall:null, veh:null, sp:null };
+function dayPhaseName(){ var ph = (state.dist % 5000) / 5000; return ph < 0.08 ? 'morning' : ph < 0.30 ? 'day' : ph < 0.45 ? 'dusk' : ph < 0.70 ? 'night' : 'morning'; }
+function pickWeighted(w){ var tot = 0, k; for (k in w) tot += w[k]; var r = Math.random()*tot; for (k in w){ r -= w[k]; if (r <= 0) return k; } return k; }
+var MOOD_LINES = { morning:'🐄 SUBAH KA RASTA — cows, dabbawalas, chai', day:'🚕 DIN — kaali-peelis and stalls', dusk:'🌆 SHAAM — traffic thickens, baraat season', night:'🌙 RAAT — trucks and tempos own the highway' };
+function worldMood(){
+  var t = dayPhaseName(), z = zoneNow;
+  var tall = { car:2, stall:1, chaat:1, cow:1, cart:1, dabbawala:1, fullbar:1, overheadbar:1 };
+  var veh  = { car:1, taxi:1.2, hatch:1, truck:0.7, bus:0.8, tempo:0.8 };
+  var sp   = { cows:1, baraat:1, ganpati:1 };
+  if (t === 'morning'){ tall.cow = 2.6; tall.dabbawala = 2.2; tall.chaat = 1.6; tall.car = 1.2; veh.truck = 0.3; veh.tempo = 0.5; veh.bus = 1.4; sp.cows = 3; sp.baraat = 0.4; sp.ganpati = 0.6; }
+  else if (t === 'day'){ veh.taxi = 1.7; tall.stall = 1.4; }
+  else if (t === 'dusk'){ tall.car = 2.6; veh.taxi = 1.5; veh.bus = 1.3; sp.baraat = 2.2; sp.ganpati = 1.6; sp.cows = 0.5; }
+  else { tall.car = 2.4; tall.stall = 0.5; tall.chaat = 0.5; tall.dabbawala = 0.4; tall.cow = 0.6; veh.truck = 2.4; veh.tempo = 1.6; veh.taxi = 0.7; veh.bus = 0.5; veh.hatch = 0.6; sp.baraat = 1.8; sp.ganpati = 2.2; sp.cows = 0.2; }
+  if (z === 1){ tall.car *= 1.8; }                                   // rush hour: traffic doubles
+  else if (z === 2){ tall.chaat *= 1.7; tall.stall *= 1.6; sp.ganpati *= 1.5; }   // chowpatty nights: food carts, processions
+  else if (z >= 4){ tall.car *= 1.3; veh.truck *= 1.3; }
+  if (MOOD.time && MOOD.time !== t && state.running && !bike && !copPaused && state.dist > 300) popup(MOOD_LINES[t], 'popSub', 50, 30);
+  MOOD.time = t; MOOD.tall = tall; MOOD.veh = veh; MOOD.sp = sp;
+  return MOOD;
+}
 function director(dz){
   state.lastSpawnZ += dz;        // spawn anchor drifts toward player; refill ahead
   distSinceBanner += dz; distSincePower += dz; distSinceJunction += dz; distSinceSetpiece += dz;
@@ -4820,8 +4859,8 @@ function director(dz){
     if (quiet && distSinceJunction > JUNCTION_EVERY - zn*50 && state.dist > 350){      // 🚦 red-light junction (full-width jump, alone in its chunk)
       distSinceJunction = -rand(0,120); spawnJunction(z); state.lastSpawnZ -= 44; prevSafeLow = true; prevChunkDeep = false; continue;
     }
-    if (quiet && distSinceSetpiece > SETPIECE_EVERY - zn*110 && state.dist > 700 && !(monsoon && monsoon.active)){   // 🐄🥁🙏 crossing set-piece
-      distSinceSetpiece = -rand(0,300); spawnSetpiece(z); state.lastSpawnZ -= 78; prevSafeLow = false; prevChunkDeep = true; continue;
+    if (quiet && distSinceSetpiece > SETPIECE_EVERY - zn*80 && state.dist > 450 && !(monsoon && monsoon.active)){   // 🐄🥁🙏 crossing set-piece
+      distSinceSetpiece = -rand(0,200); spawnSetpiece(z); state.lastSpawnZ -= 78; prevSafeLow = false; prevChunkDeep = true; continue;
     }
     var nextSafe = chooseSafeLane();
     // when the OPEN lane changes, force a gap wider than the max drift-lag so a differently-safed
@@ -4869,7 +4908,7 @@ function spawnChunk(z, forcedSafe){
     if (l===safe) continue;
     var r = Math.random();
     if (r < 0.42 + difficulty*0.2){                // max ~0.62 both-lane block (was up to 0.75)
-      var tt = pick(tallTypes);
+      var tt = pickWeighted(worldMood().tall);
       var rec = spawnObstacle(tt, l, z + rand(-0.5,0.5)); if (rec) row.push(rec);
       if (tt==='car') deep = true;                 // traffic vehicle (may be a long bus/truck) → widen next gap
       blocked++;
@@ -4977,7 +5016,7 @@ function updateJunctions(dt, dz){
 
 /* --- Crossing set-pieces: a scripted ~5 s event where a group walks ACROSS all three lanes.
        Actors are spaced ≥ 6 m apart so at most two lanes are ever blocked at once — the gap moves, you time it. --- */
-var distSinceSetpiece = -300, SETPIECE_EVERY = 900, setpieces = [];
+var distSinceSetpiece = -80, SETPIECE_EVERY = 520, setpieces = [];     // first crossing ~600 m in, then every ~500–800 m (was 900+: most runs never saw one)
 function crossingActor(def, x, z, vx, hop, hitOverride){
   if (!def || !def.mesh) return null;
   def.mesh.position.set(x, 0, z); addBlob(def.mesh, (def.hw||0.8)*2 + 0.9, (def.d||1.5) + 0.9, 0.9); scene.add(def.mesh);
@@ -5015,7 +5054,8 @@ function makeStringLights(garland){
 }
 var EVENT_TEXT = { cows:['🐄 GAAY KA JHUND!', 'time the gap — cows don\'t stop for anyone'], baraat:['🥁 BARAAT AA GAYI!', 'DUCK the banner · weave the baraatis · dhol full volume'], ganpati:['🙏 GANPATI BAPPA MORYA!', 'DUCK the toran · thread the procession · marigolds everywhere'] };
 function spawnSetpiece(z){
-  var kind = pick(cowTemplates.length ? ['cows','baraat','ganpati'] : ['baraat','ganpati']);
+  var spw = worldMood().sp, w2 = { baraat:spw.baraat, ganpati:spw.ganpati }; if (cowTemplates.length) w2.cows = spw.cows;
+  var kind = pickWeighted(w2);
   var S = { kind:kind, actors:[], deco:[], z:z, announced:false, resolved:false, slow:false, driftDeco:0 };
   if (kind === 'cows'){                                     // a real herd: 6 cows ambling across, spaced so ≥1 lane is always open
     var side = Math.random()<0.5 ? -1 : 1, vx = -side*2.6, x0 = side*(ROAD_W/2 + 0.8);
@@ -5113,10 +5153,10 @@ function cowBells(){
    Zones (by score) keep tightening the director and unlock new mechanics; announced with a title card. */
 var ZONES = [
   { at:0,     name:'',                          sub:'' },
-  { at:5000,  name:'ZONE 2 · RUSH HOUR',        sub:'traffic thickens · signals every 450 m · patrol jeeps on your tail' },
-  { at:10000, name:'ZONE 3 · CHOWPATTY NIGHTS', sub:'tighter rows · double spike strips · riders throw faster' },
-  { at:15000, name:'ZONE 4 · MONSOON MAYHEM',   sub:'rain every minute · puddles · set-pieces back to back' },
-  { at:20000, name:'ZONE 5 · MUMBAI LOCAL',     sub:'everything, faster — jugaad or nothing' }
+  { at:5000,  name:'ZONE 2 · RUSH HOUR',        sub:'twice the traffic · signals every 450 m · patrol jeeps on your tail' },
+  { at:10000, name:'ZONE 3 · CHOWPATTY NIGHTS', sub:'chaat carts & stalls crowd the road · Ganpati processions · riders throw faster' },
+  { at:15000, name:'ZONE 4 · MONSOON MAYHEM',   sub:'rain every minute · puddles · crossings back to back' },
+  { at:20000, name:'ZONE 5 · MUMBAI LOCAL',     sub:'everything, faster, more trucks — jugaad or nothing' }
 ];
 var zoneNow = 0;
 function zoneIndex(){ var z = 0; for (var i=0;i<ZONES.length;i++) if (state.score >= ZONES[i].at) z = i; return z; }
@@ -6321,6 +6361,12 @@ function hornNow(){
   if (!state.running) return;
   var now = Date.now(); if (now < hornCooldownUntil) return; hornCooldownUntil = now + 650;
   playHorn(equippedOrTrial('horn'));
+  if (cop) cop.stations.forEach(function(st){                                   // polite honk while a single-lane havaldar signals → he waves you through
+    if (st.phase === 'signal' && st.hornWindow && !st.spikes && st.lanes.length === 1 && st.variant !== 'radar' && !st.waved){
+      st.waved = true; popup('🫡 SALAAM SAHAB — JAANE DO!', 'popNear', 52, 36); shout('cop', 0.8, COP_MAN_X); state.bonus += 60 * state.mult; addCombo();
+      for (var cq=0; cq<2; cq++) burst(COP_MAN_X - 0.4, 1.5, st.z, 0xffd24a, 6, 1.5, 1.4);
+    }
+  });
   bumpEl('ctrlHorn');
   reactBystanders(state.x);                                 // peds jump, stall-keepers hop
   for (var i=0;i<obstacles.length;i++){ var o = obstacles[i];   // a drifting vehicle just ahead flinches out of the way a touch
