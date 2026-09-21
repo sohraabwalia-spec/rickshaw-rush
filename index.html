@@ -85,6 +85,15 @@ window.addEventListener('error', function(e){
     accent-color:#ffce3a; opacity:.85; }
   #bossBar { position:absolute; top:64px; left:50%; transform:translateX(-50%); width:min(58vw,420px); text-align:center; transition:opacity .25s; }
   #bossBar.hidden { opacity:0; pointer-events:none; }
+  /* boss coaching card: tells you what to do in the current duel / checkpoint phase */
+  #bossHint { position:absolute; right:14px; top:50%; transform:translateY(-50%); width:min(34vw,260px); text-align:left;
+    background:rgba(20,8,30,.74); border:2px solid rgba(255,206,58,.6); border-radius:12px; padding:10px 12px; color:#ffe9bf;
+    font-weight:800; font-size:clamp(12px,1.9vw,15px); line-height:1.35; backdrop-filter:blur(3px); box-shadow:0 8px 24px rgba(0,0,0,.35);
+    transition:opacity .25s, transform .25s; }
+  #bossHint.hidden { opacity:0; transform:translateY(-50%) translateX(12px); pointer-events:none; }
+  #bossHint .bhT { color:#ffce3a; font-weight:900; letter-spacing:1.5px; font-size:clamp(11px,1.8vw,13px); margin-bottom:4px; text-shadow:1px 1px 0 #5e2a84; }
+  #bossHint kbd { display:inline-block; font:900 11px/1 'Courier New',monospace; color:#3a1650; background:#ffce3a; border-radius:5px; padding:3px 6px; margin:0 2px; vertical-align:middle; }
+  @media (max-width:760px){ #bossHint { top:auto; bottom:22vh; right:8px; width:46vw; font-size:11.5px; padding:8px 10px; transform:none; } #bossHint.hidden { transform:translateX(12px); } }
   #bossLabel { color:#ffce3a; font-weight:900; font-size:clamp(13px,2.4vw,17px); letter-spacing:1px;
     text-shadow:0 2px 6px rgba(0,0,0,.6); margin-bottom:4px; }
   #bossTrack { height:12px; border-radius:7px; background:rgba(20,8,26,.6); border:2px solid rgba(255,255,255,.22); overflow:hidden; }
@@ -325,6 +334,7 @@ window.addEventListener('error', function(e){
     </div>
     <div id="powerStack"></div>
     <div id="bossBar" class="hidden"><div id="bossLabel">⚡ RIDER DUEL</div><div id="bossTrack"><div id="bossFill"></div></div></div>
+    <div id="bossHint" class="hidden"></div>
     <input id="volSlider" type="range" min="0" max="100" value="18" title="Music volume">
     <div id="muteBtn">🔊</div>
     <div id="controls">
@@ -993,7 +1003,7 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
   // 2) stream the models in priority order (your ride, then traffic, then the street), swapping each in as it lands
   var PRIORITY = ['ui-art.js','rickshaw-model.js','car-model.js','taxi-model.js','bus-tex-variants.js','bus-model.js','wagon-tex-variants.js','wagon-model.js','truck2-model.js','road-asphalt.js','ground-tex.js','signs-tex.js','props-model.js','cow-tex-variants.js','cow-model.js','cart-model.js','vendor-model.js','walker-model.js','walker2-model.js','auntie-model.js'];
   var ordered = PRIORITY.filter(function(f){ return FILES.indexOf(f) >= 0; }).concat(FILES.filter(function(f){ return PRIORITY.indexOf(f) < 0; }));
-  var origPaint = paint; paint = function(){ origPaint(); window.ASSET_LOAD.loaded = Object.keys(done).length; window.ASSET_LOAD.pct = Math.min(100, Math.round(loadedBytes/total*100)); if (window.__modelArrived) { try { window.__modelArrived(); } catch(e){} } };
+  var origPaint = paint; paint = function(){ origPaint(); window.ASSET_LOAD.loaded = Object.keys(done).length; window.ASSET_LOAD.doneFiles = done; window.ASSET_LOAD.pct = Math.min(100, Math.round(loadedBytes/total*100)); if (window.__modelArrived) { try { window.__modelArrived(); } catch(e){} } };
   runQueue(ordered, 3).then(function(){
     window.ASSET_LOAD.done = true; window.ASSET_LOAD.seconds = +((Date.now()-t0)/1000).toFixed(1);
     if (failed.length) console.warn('Missing files: ' + failed.join(', '));
@@ -1036,8 +1046,10 @@ var state = {
 };
 
 /* ============================== RENDERER / SCENE ============================== */
-var renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));  // cap for FPS on retina
+var MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // phones/tablets: lighter tier from the first frame
+var FOG_FAR = MOBILE ? 105 : 150;                       // draw distance (scenery beyond the fog is culled) — shorter on phones
+var renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 1.25));  // cap for FPS on retina / phones
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1049,7 +1061,7 @@ document.body.appendChild(renderer.domElement);
 var scene = new THREE.Scene();
 var DAY_SKY = new THREE.Color(0xffd9a3), DUSK_SKY = new THREE.Color(0x5e2a6e);
 var DAY_FOG = new THREE.Color(0xffc98a), DUSK_FOG = new THREE.Color(0x6e3a78);
-scene.fog = new THREE.Fog(DAY_FOG.clone(), 40, 150);
+scene.fog = new THREE.Fog(DAY_FOG.clone(), MOBILE ? 30 : 40, FOG_FAR);
 scene.background = DAY_SKY.clone();
 
 var camera = new THREE.PerspectiveCamera(62, window.innerWidth/window.innerHeight, .1, 340);   // far > sky-dome radius, or the dome gets clipped at the horizon (bright hole)
@@ -1060,7 +1072,7 @@ scene.add(hemi);
 var sun = new THREE.DirectionalLight(0xffe0ac, 1.7);            // strong warm golden-hour key
 sun.position.set(-16, 24, -6);
 sun.castShadow = true;
-sun.shadow.mapSize.set(1024,1024);
+sun.shadow.mapSize.set(MOBILE ? 512 : 1024, MOBILE ? 512 : 1024);
 sun.shadow.camera.left=-22; sun.shadow.camera.right=22;
 sun.shadow.camera.top=22; sun.shadow.camera.bottom=-22;
 sun.shadow.camera.far=90; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
@@ -1091,6 +1103,7 @@ var composer = null, bloomPass = null, useComposer = false;
 /* ---- adaptive quality: keep the game above 60 fps. Steps down (never up mid-run) when the
    rolling frame time sags: 1 = bloom off, 2 = pixel ratio 1.0, 3 = shadows off. ---- */
 var QUALITY = { level:0, acc:0, slow:0 };
+if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(); }, 0);   // phones: skip the bloom pass from the start
 function qualityStepDown(){
   QUALITY.level++;
   if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
@@ -1127,7 +1140,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '18-Sep-g';
+var BUILD_TAG = '21-Sep-b';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1176,7 +1189,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 18-Sep-g q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 21-Sep-b q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -1217,6 +1230,60 @@ var PERF = (function(){
 })();
 window.PERF = PERF;                                    // expose it: every call site checks window.PERF (HUD + death marks never ran without this)
 window.exportDebugLog = function(){ return PERF.export(); };
+
+/* ============================== ROAD BEND: sweeping curves & hills ==============================
+   The world stays logically straight (lanes, spawning, collision, fairness all untouched); every material gets a
+   world-space vertex warp that bends geometry ahead of the player: x += curve·d², y += hill·d² + rolling wave.
+   Installed on THREE.Material.prototype so streamed GLB materials pick it up too. userData.noBend opts a material out. */
+var BEND = { curve:{value:0}, hill:{value:0}, wave:{value:new THREE.Vector3(0, 0.085, 0)}, z0:{value:0}, max:{value:150} };
+var BEND_GLSL =
+  'uniform float uBendCurve; uniform float uBendHill; uniform vec3 uBendWave; uniform float uBendZ0; uniform float uBendMax;\n' +
+  'vec3 rrBend(vec3 p){ float d = clamp(uBendZ0 - p.z, 0.0, uBendMax); float r = smoothstep(4.0, 34.0, d);\n' +
+  '  p.x += uBendCurve * d * d; p.y += uBendHill * d * d + uBendWave.x * r * (1.0 - cos((d + uBendWave.z) * uBendWave.y)); return p; }\n';
+var BEND_PROJECT =
+  'vec4 mvPosition = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\n\tmvPosition = instanceMatrix * mvPosition;\n#endif\n' +
+  'vec4 rrWorld = modelMatrix * mvPosition; rrWorld.xyz = rrBend(rrWorld.xyz);\n' +
+  'mvPosition = viewMatrix * rrWorld;\ngl_Position = projectionMatrix * mvPosition;\n';
+var BEND_WORLDPOS =
+  '#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\tvec4 worldPosition = vec4( transformed, 1.0 );\n' +
+  '\t#ifdef USE_INSTANCING\n\t\tworldPosition = instanceMatrix * worldPosition;\n\t#endif\n\tworldPosition = modelMatrix * worldPosition;\n' +
+  '\tworldPosition.xyz = rrBend(worldPosition.xyz);\n#endif\n';
+(function installBend(){
+  var proto = THREE.Material.prototype;
+  proto.onBeforeCompile = function(shader){
+    if (this.userData && this.userData.noBend) return;
+    if (shader.vertexShader.indexOf('#include <project_vertex>') < 0) return;              // custom shaders (sky dome) are left alone
+    shader.uniforms.uBendCurve = BEND.curve; shader.uniforms.uBendHill = BEND.hill; shader.uniforms.uBendWave = BEND.wave;
+    shader.uniforms.uBendZ0 = BEND.z0; shader.uniforms.uBendMax = BEND.max;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\n' + BEND_GLSL)
+      .replace('#include <project_vertex>', BEND_PROJECT)
+      .replace('#include <worldpos_vertex>', BEND_WORLDPOS);
+  };
+  proto.customProgramCacheKey = function(){ return (this.userData && this.userData.noBend) ? 'rr-nobend' : 'rr-bend'; };
+})();
+var bendPlan = { hold:0, curve:0, hill:0, amp:0, intro:0 };
+function bendReset(){ bendPlan.curve = bendPlan.hill = bendPlan.amp = 0; bendPlan.hold = 0; bendPlan.intro = 7; }
+function bendClear(){ bendReset(); BEND.curve.value = 0; BEND.hill.value = 0; BEND.wave.value.x = 0; }
+function updateBend(dt, dz){
+  if (bendPlan.intro > 0){ bendPlan.intro -= dt; }                                          // straight, flat opening stretch
+  else {
+    bendPlan.hold -= dt;
+    if (bendPlan.hold <= 0){
+      bendPlan.hold = rand(6, 12);
+      var r = Math.random(), sgn = Math.random() < 0.5 ? -1 : 1;
+      bendPlan.curve = r < 0.28 ? 0 : sgn * rand(0.00045, 0.0013);                          // sweeping left/right bends
+      var h = Math.random();
+      bendPlan.hill = h < 0.45 ? 0 : h < 0.8 ? rand(0.00012, 0.00038) : -rand(0.00008, 0.00022);   // climbs are more common than dips
+      bendPlan.amp = Math.random() < 0.55 ? 0 : rand(0.35, 1.0);                           // rolling undulation
+    }
+  }
+  var k = Math.min(1, dt * 0.33);                                                           // ease between plans (~3 s)
+  BEND.curve.value += (bendPlan.curve - BEND.curve.value) * k;
+  BEND.hill.value  += (bendPlan.hill  - BEND.hill.value)  * k;
+  BEND.wave.value.x += (bendPlan.amp - BEND.wave.value.x) * k;
+  BEND.wave.value.z += dz;                                                                  // bumps flow toward the player with the road
+}
 
 /* ============================== HELPERS ============================== */
 function box(w,h,d,color){
@@ -1359,7 +1426,7 @@ var roadBump = canvasTex(RW, RH, function(g,w,h){
 roadBump.wrapS = roadBump.wrapT = THREE.RepeatWrapping;
 roadBump.repeat.set(1, 14);
 
-var road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 400),
+var road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 400, 1, 100),
   new THREE.MeshStandardMaterial({ map:roadTex, bumpMap:roadBump, bumpScale:0.05,
     roughness:0.34, metalness:0.5, envMapIntensity:1.35 }));   // wet, reflective asphalt
 road.rotation.x = -Math.PI/2; road.position.z = -160; road.receiveShadow = true;
@@ -1368,11 +1435,11 @@ scene.add(road);
 // plain concrete kerb stones along both edges (no stripes — a moving hazard pattern strobes)
 var kerbMat = new THREE.MeshStandardMaterial({ color:0xb2aa9a, roughness:0.9, metalness:0.0 });
 [-1,1].forEach(function(s){
-  var kerb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 400), kerbMat);
+  var kerb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 400, 1, 1, 100), kerbMat);
   kerb.position.set(s*(ROAD_W/2 + 0.22), 0.15, -160);
   kerb.castShadow = true; kerb.receiveShadow = true; scene.add(kerb);
   // shallow drainage channel just inside the kerb
-  var drain = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 400),
+  var drain = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 400, 1, 100),
     new THREE.MeshStandardMaterial({ color:0x2b2b2e, roughness:0.95 }));
   drain.rotation.x = -Math.PI/2; drain.position.set(s*(ROAD_W/2 - 0.35), 0.012, -160);
   scene.add(drain);
@@ -1399,7 +1466,7 @@ whenModel('GROUND_COLOR', function(){
   sideMat.needsUpdate = true;
 });
 [-1,1].forEach(function(s){
-  var sw = new THREE.Mesh(new THREE.PlaneGeometry(30, 400), sideMat);
+  var sw = new THREE.Mesh(new THREE.PlaneGeometry(30, 400, 1, 100), sideMat);
   sw.rotation.x = -Math.PI/2; sw.position.set(s*(ROAD_W/2+15), 0.02, -160);
   sw.receiveShadow = true; scene.add(sw);
 });
@@ -2128,6 +2195,7 @@ var sunSprite = new THREE.Mesh(new THREE.CircleGeometry(16, 32),
 sunSprite.position.set(-70, 34, -250); scene.add(sunSprite);
 var sunHalo = new THREE.Mesh(new THREE.CircleGeometry(30, 32), sunSprite.material.clone());
 sunHalo.material.opacity = 0.35; sunHalo.position.copy(sunSprite.position); sunHalo.position.z += 1; scene.add(sunHalo);
+sunSprite.material.userData.noBend = true; sunHalo.material.userData.noBend = true;   // sun stays on the horizon
 
 // Mumbai skyline silhouette: Gateway of India, Sea Link, high-rises (drawn white, tinted by material)
 var skylineTex = canvasTex(2048, 512, function(g,w,h){
@@ -2201,7 +2269,7 @@ var clouds = [];
 for (var ci=0; ci<7; ci++){
   var cl = new THREE.Mesh(new THREE.SphereGeometry(rand(10,20), 10, 7),
     new THREE.MeshBasicMaterial({ color:0xf2ecf5, transparent:true, opacity:.55, fog:false, depthWrite:false }));
-  cl.scale.y = .4; cl.position.set(rand(-140,140), rand(70,110), rand(-270,-250));
+  cl.scale.y = .4; cl.position.set(rand(-140,140), rand(70,110), rand(-270,-250)); cl.material.userData.noBend = true;
   scene.add(cl); clouds.push(cl);
 }
 
@@ -2937,7 +3005,19 @@ function startBikeEncounter(){
 }
 /* --- boss duel helpers --- */
 var BOSS_P1 = 14, BOSS_P2 = 14, BOSS_P3 = 12;   // seconds-scale fill rates for the 3 phases
-function bossShow(v){ var b=$('bossBar'); if(b) b.classList.toggle('hidden', !v); }
+function bossShow(v){ var b=$('bossBar'); if(b) b.classList.toggle('hidden', !v); if (!v) bossHint(null); }
+var _bossHintKey = null;
+function bossHint(key, title, text){                    // coaching card beside the road: what to do in this phase
+  var el = $('bossHint'); if (!el) return;
+  if (key === null){ el.classList.add('hidden'); _bossHintKey = null; return; }
+  if (_bossHintKey === key) return;
+  _bossHintKey = key; el.innerHTML = '<div class="bhT">' + title + '</div>' + text; el.classList.remove('hidden');
+}
+function bhKey(action){                                 // control chip for the current input method
+  var T = IS_TOUCH;
+  return action === 'jump' ? (T ? '<kbd>swipe ↑</kbd>' : '<kbd>↑</kbd>') : action === 'duck' ? (T ? '<kbd>swipe ↓</kbd>' : '<kbd>↓</kbd>') :
+         action === 'lane' ? (T ? '<kbd>swipe ← →</kbd>' : '<kbd>← →</kbd>') : action === 'horn' ? (T ? '<kbd>📯</kbd>' : '<kbd>H</kbd>') : '';
+}
 function bossFill(m){ var f=$('bossFill'); if(f) f.style.width = (Math.max(0,Math.min(1,m))*100)+'%'; }
 // ---- thrown "delivery" hazards: recognizable Indian courier items (random each throw) ----
 function makeTiffin(){   // stacked steel dabba (the dabbawala tiffin)
@@ -3414,6 +3494,7 @@ function startCopEncounter(){
   copSpawnStation(cop);
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '🚨 NAKABANDI';
   bossShow(true); bossFill(0);
+  bossHint('cop', '🚨 NAKABANDI', 'Police checkpoints ahead. Jump the spike strips ' + bhKey('jump') + ', steer around the parked jeeps ' + bhKey('lane') + '. Clear every checkpoint to fill the bar.');
   popup('🚨 NAKABANDI AHEAD — POLICE CHECKPOINTS!', 'popNear', 54, 42);
   seetiSound(true);
 }
@@ -5723,7 +5804,7 @@ var CLOUD = (function(){
   try { queue = JSON.parse(localStorage.getItem(Q_KEY)) || []; } catch(e){ queue = []; }
   function on(){ return !!CLOUD_URL; }
   function persistQ(){ try { localStorage.setItem(Q_KEY, JSON.stringify(queue.slice(-30))); } catch(e){} }
-  function post(obj){ if (!on()) return; queue.push(obj); persistQ(); flush(); }
+  function post(obj){ if (!on()) return; obj.rid = genPid() + genPid().slice(0,4); queue.push(obj); persistQ(); flush(); }   // rid: server ignores a duplicate delivery
   function flush(){
     if (!on() || busy || !queue.length || typeof fetch !== 'function') return;
     busy = true; var item = queue[0];
@@ -5832,9 +5913,9 @@ var CLOUD = (function(){
     var best = null, bd = 1e9;
     for (var i=0;i<obstacles.length;i++){ var o = obstacles[i], dz = Math.abs(o.root.position.z - PLAYER_Z), dx = Math.abs(o.root.position.x - player.position.x);
       if (dz < 4 && (dx < 1.4 || o.hit.allLanes) && dz < bd){ bd = dz; best = o; } }
-    if (typeof cop !== 'undefined' && cop && copPaused) return best ? 'cop:' + best.kind : 'cop';
-    if (typeof bike !== 'undefined' && bike && bikePaused) return best ? 'duel:' + best.kind : 'duel';
-    return best ? best.kind + (best.hit.jumpOver ? ' (jump)' : best.hit.duckUnder ? ' (duck)' : '') : 'unknown';
+    if (typeof cop !== 'undefined' && cop && copPaused) return best ? 'cop:' + (best.kind || best.type || 'obstacle') : 'cop';
+    if (typeof bike !== 'undefined' && bike && bikePaused) return best ? 'duel:' + (best.kind || best.type || 'obstacle') : 'duel';
+    return best ? (best.kind || best.type || 'obstacle') + (best.hit.jumpOver ? ' (jump)' : best.hit.duckUnder ? ' (duck)' : '') : 'unknown';
   }
   function runEnd(){
     profile.runs = (profile.runs||0) + 1; if (state.score > (profile.best||0)) profile.best = state.score; saveProfile();
@@ -5848,7 +5929,7 @@ var CLOUD = (function(){
         var rep = PERF.report();
         rep.marks = rep.marks.slice(-40); rep.warnings = rep.warnings.slice(-30);
         rep.quality = (typeof QUALITY !== 'undefined') ? QUALITY.level : 0;
-        rep.assets = window.ASSET_LOAD ? { seconds:ASSET_LOAD.seconds, loaded:ASSET_LOAD.loaded, total:ASSET_LOAD.total, failed:ASSET_LOAD.failed, base:ASSET_LOAD.base, decoder:window.__decoderMode } : null;
+        rep.assets = window.ASSET_LOAD ? { seconds:ASSET_LOAD.seconds, loaded:ASSET_LOAD.loaded, total:ASSET_LOAD.total, failed:ASSET_LOAD.failed, missing:(ASSET_LOAD.files||[]).filter(function(f){ return !(ASSET_LOAD.doneFiles||{})[f]; }).slice(0,8), base:ASSET_LOAD.base, decoder:window.__decoderMode, mobile:MOBILE } : null;
         rep.run = { score:state.score, dist:Math.floor(state.dist), zone:zi, cause:cause, flags:flags, vehicle:selectedVehicle, coins:state.coins, best:profile.best, runsTotal:profile.runs };
         post({ t:'diag', pid:ensurePid(), nick:profile.nick, report:rep });
       } catch(e){}
@@ -5889,6 +5970,7 @@ function startGame(){
   state.jumping = false; state.ducking = false;
   state.shield = false; state.turbo = 0; state.slowmo = 0; state.shake = 0;
   state.lastSpawnZ = SPAWN_AHEAD;
+  bendReset();                                           // straight, flat opening
   distSinceBanner = 0; distSincePower = 200;
   prevSafe = 1; prevSafeLow = false;   // start with the middle lane open
   player.userData.aura.visible = false;
@@ -6525,6 +6607,7 @@ var GARAGE = (function(){
     $g('garageScreen').classList.remove('hidden');
     initPreview(); buildPreviewModel(); resizePreview(); updateWallet();
     if (typeof CLOUD !== 'undefined') CLOUD.updateStrip();                       // sync code badge in the top bar
+    if (typeof bendClear === 'function') bendClear();                          // flat floor for the turntable
     setCat('rickshaw'); setSub('paint');
     frameFor('rickshaw'); yaw=BASE_YAW; yawVel=0; idleT=0;   // default to the REAR view (chase-cam angle + rear art)
     if (!gRaf) loop();
@@ -6617,13 +6700,13 @@ function updateMonsoon(dt){
   }
   if (wet > 0.01){          // storm darkening layered ON TOP of the day cycle (which ran just above)
     scene.fog.color.lerp(STORM_FOG, wet*0.85);
-    scene.fog.far = 150 - wet*72;
+    scene.fog.far = FOG_FAR - wet*(FOG_FAR*0.48);
     hemi.intensity = Math.max(0.16, hemi.intensity * (1 - wet*0.32));
     sun.intensity  *= (1 - wet*0.45);
     renderer.toneMappingExposure = Math.max(0.60, renderer.toneMappingExposure * (1 - wet*0.14));   // ~4% brighter than before; never blacks out at night
     var hl = 0.55 + wet*0.5;
     player.userData.headlight.material.emissive.setRGB(hl, hl*0.9, 0.4+wet*0.5);
-  } else { scene.fog.far = 150; }
+  } else { scene.fog.far = FOG_FAR; }
   if (AC){ ensureRainAudio(); if(_rainGain) _rainGain.gain.value = state.muted ? 0 : wet*0.14; }
 }
 function updateCrows(dt){
@@ -6695,6 +6778,7 @@ function attractCarSpawn(){
   attract.cars.push({ mesh:def.mesh, lane:lane, v: 9 + Math.random()*6, honked:false });
 }
 function attractTick(dt){
+  var kb = Math.min(1, dt*0.5); BEND.curve.value += (0.0006 - BEND.curve.value)*kb; BEND.hill.value += (0.00012 - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
   var A = attract, now = Date.now()*0.001;
   if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; }
   A.t += dt;
@@ -6773,6 +6857,7 @@ function animate(){
   state.speed = target * (state.turbo>0 ? 1.7 : 1);
   var dz = state.speed * dt;
   state.dist += dz;
+  updateBend(dt, dz);                                   // road curves & hills
 
   // engine pitch
   if (engineOsc){
@@ -6787,7 +6872,7 @@ function animate(){
   state.x += (targetX - state.x) * (1 - Math.exp(-22 * rawDt));
   if (Math.abs(targetX - state.x) < 0.001) state.x = targetX;
   player.position.x = state.x;
-  player.rotation.z = (prevX - state.x) * 2.2;          // lean into lane change
+  player.rotation.z = (prevX - state.x) * 2.2 - BEND.curve.value * 55;   // lean into lane change + into the bend
   player.rotation.y = (state.x - targetX) * -0.12;
 
   // jump physics
@@ -6863,7 +6948,8 @@ function animate(){
   var _bossBusy = !!bike || copPaused;
   if (animate._wasBusy && !_bossBusy) bossGapScore = state.score + 700;
   animate._wasBusy = _bossBusy;
-  if (state.running && !_bossBusy && state.score >= bossGapScore){
+  var _stormy = !!(monsoon && monsoon.active);                                    // never open a boss fight in the rain — the two together were the top killer in live data
+  if (state.running && !_bossBusy && !_stormy && state.score >= bossGapScore){
     if (state.score >= nextBikeScore && bikeTemplates.length) startBikeEncounter();
     else if (state.score >= nextCopScore) startCopEncounter();
   }
@@ -6891,7 +6977,7 @@ function animate(){
         var nl=pick(wo); bk.fromX=LANES[bk.lane]; bk.toX=LANES[nl]; bk.lane=nl; bk.t=0; bk.weaveTimer=minGap+Math.random()*0.6;
       }
       if (bk.phase === 'in'){
-        bk.z += dz; if (bk.z >= BIKE_HOLD_Z){ bk.z = BIKE_HOLD_Z; bk.phase='weave'; bk.hit.d=11; bossShow(true); }
+        bk.z += dz; if (bk.z >= BIKE_HOLD_Z){ bk.z = BIKE_HOLD_Z; bk.phase='weave'; bk.hit.d=11; bossShow(true); bossHint('weave', '⚡ ROUND 1 · WEAVE', 'Stay out of his lane — he feints before he swerves. Jump the gutka he spits ' + bhKey('jump') + '. Survive and the bar fills.'); }
       } else if (bk.phase === 'weave'){                // PHASE 1: weave + feints, lane is lethal
         if (bk.windup > 0){ bk.windup -= dt; if (bk.windup <= 0){ bk.fromX=LANES[bk.lane]; bk.toX=LANES[bk.pendingLane]; bk.lane=bk.pendingLane; bk.t=0; } }
         else if (bk.t < 1){ bk.t = Math.min(1, bk.t + dt/1.3); }
@@ -6904,13 +6990,13 @@ function animate(){
         }
         if ((bk.gutkaTimer -= dt) <= 0){ if(!(hasParcel()||hasGutka())) spitGutka(bk); bk.gutkaTimer = 1.5 + Math.random()*0.8; }   // gutka spit special (weave phase)
         bk.meter += dt / BOSS_P1;
-        if (bk.meter >= 0.34){ bk.phase='parcels'; bk.parcelTimer=0.8; bk.t=1; bk.weaveTimer=1.4; }
+        if (bk.meter >= 0.34){ bk.phase='parcels'; bk.parcelTimer=0.8; bk.t=1; bk.weaveTimer=1.4; bossHint('parcels', '📦 ROUND 2 · PARCELS', 'He is throwing his deliveries at you. Jump them ' + bhKey('jump') + ' or dodge ' + bhKey('lane') + '. Keep clear of his lane.'); }
       } else if (bk.phase === 'parcels'){              // PHASE 2: fling parcels (dodge or jump)
         if (bk.t < 1) bk.t = Math.min(1, bk.t + dt/1.3);
         else if ((bk.weaveTimer -= dt) <= 0) bikeWeave(1.15);
         if ((bk.parcelTimer -= dt) <= 0){ if(!(hasParcel()||hasGutka())){ if(Math.random()<0.5) spitGutka(bk); else spawnParcel(bk); } bk.parcelTimer = (zoneNow >= 2 ? 0.55 : 0.8) + Math.random()*0.4; }
         bk.meter += dt / BOSS_P2;
-        if (bk.meter >= 0.67){ bk.phase='overtake'; bk.hit.d=2.4; bk.t=1; bk.weaveTimer=0.9; }   // body-only now
+        if (bk.meter >= 0.67){ bk.phase='overtake'; bk.hit.d=2.4; bk.t=1; bk.weaveTimer=0.9; bossHint('overtake', '🏁 ROUND 3 · REEL HIM IN', 'Now get BEHIND him: match his lane ' + bhKey('lane') + ' and stay there — the bar only fills while you are on his tail.'); }   // body-only now
       } else if (bk.phase === 'overtake'){             // PHASE 3: match its lane to reel it in
         if (bk.t < 1) bk.t = Math.min(1, bk.t + dt/0.95);
         else if ((bk.weaveTimer -= dt) <= 0) bikeWeave(0.9);
@@ -6920,7 +7006,7 @@ function animate(){
         if (bk.meter >= 1){                            // reeled in → pull alongside for the argument
           bk.phase='argue'; bk.argueT=0; bk.argueLine=0; bk.throwing=null; if (bk.arm) bk.arm.visible=false;
           var al = state.lane===0 ? 1 : state.lane===2 ? 1 : (bk.lane===0 ? 0 : 2);   // an adjacent lane to yours
-          bk.fromX=bk.root.position.x; bk.toX=LANES[al]; bk.lane=al; bk.t=0; bossFill(1);
+          bk.fromX=bk.root.position.x; bk.toX=LANES[al]; bk.lane=al; bk.t=0; bossFill(1); bossHint('argue', '💬 SHOWDOWN', 'Hold your lane and let him say his piece…');
         }
       } else if (bk.phase === 'argue'){                // FINALE: side-by-side shouting match, then you gun it
         bk.argueT += dt; if (bk.t < 1) bk.t = Math.min(1, bk.t + dt/0.6);
@@ -6939,7 +7025,7 @@ function animate(){
           if (ln[0]==='rider') shoutSound('rider'); else { honk(); }
           if (ln[0]==='auto' && bk.argueLine===2) playerFlickArm(side);            // the wrist-flick out of the window
         }
-        if (at >= 2.7){ bk.phase='gone'; bk.root.rotation.z=0; bk.root.rotation.y=0; bikeWin(bk); shout('rider', 1.0, bk.root.position.x);
+        if (at >= 2.7){ bk.phase='gone'; bk.root.rotation.z=0; bk.root.rotation.y=0; bikeWin(bk); shout('rider', 1.0, bk.root.position.x); bossHint('gone', '🚀 GUN IT!', 'Overtaken. Tip milega — grab the coin shower!'); setTimeout(function(){ if (_bossHintKey === 'gone') bossHint(null); }, 2600);
           state.turboKick = 0.8; for (var sk=0; sk<10; sk++) burst(player.position.x + rand(-0.6,0.6), 0.3, 1.2 + sk*0.3, 0xb09060, 3, 1.2, 1.6); }
       } else if (bk.phase === 'gone'){                 // you floor it: he falls away behind you and is gone in the dust
         bk.z += dz*1.35 + dt*4; bk.root.rotation.z = Math.sin(bk.z*1.3)*0.06;
@@ -7209,7 +7295,8 @@ function animate(){
     camBase.y + state.y*0.3 + (Math.random()-0.5)*sh*0.4,
     camBase.z
   );
-  camera.lookAt(state.x*0.5, 1.6 + state.y*0.4, -8);
+  camera.lookAt(state.x*0.5 + BEND.curve.value * 900, 1.6 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
+  camera.rotateZ(-BEND.curve.value * 60);                                                            // bank with it
   var evOn = (state.eventSlow && state.eventSlow < 1);                                                // set-piece on: camera drops low and close so the crowd fills the frame
   camBase.y += ((evOn ? 3.1 : 4.4) - camBase.y) * Math.min(1, rawDt*2.5);
   camBase.z += ((evOn ? 6.2 : 7.5) - camBase.z) * Math.min(1, rawDt*2.5);
