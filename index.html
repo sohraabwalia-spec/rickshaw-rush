@@ -1140,7 +1140,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '22-Sep-g';
+var BUILD_TAG = '22-Sep-h';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1193,7 +1193,7 @@ var PERF = (function(){
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
-    mark:function(label){ marks.push({t:+((performance.now()-started)/1000).toFixed(1), label:String(label)}); },
+    mark:function(label){ marks.push({t:+((performance.now()-started)/1000).toFixed(1), label:String(label)}); }, marks:marks,
     report:function(){
       var dur=(performance.now()-started)/1000;
       var sorted=ft.slice().sort(function(x,y){return x-y;});
@@ -3059,7 +3059,7 @@ var bike = null, nextBikeScore = 2000, bikePaused = false, BIKE_HOLD_Z = -4.5;  
 var BIKE_INTERVAL = 2000;   // gap (in score) AFTER one duel ends before the next can start
 function startBikeEncounter(){
   if (!bikeTemplates.length || bike || cop) return;
-  bikePaused = true;
+  bikePaused = true; if (window.PERF) PERF.mark('duel start');
   for (var i=obstacles.length-1;i>=0;i--){ if (obstacles[i].root.position.z < -10){ scene.remove(obstacles[i].root); obstacles.splice(i,1); } }
   var lanes = [0,1,2].filter(function(l){ return l !== state.lane; });
   var lane = pick(lanes);
@@ -3563,7 +3563,7 @@ function copSpawnStation(c){
 }
 function startCopEncounter(){
   if (cop || bike) return;
-  copPaused = true;
+  copPaused = true; if (window.PERF) PERF.mark('nakabandi start');
   for (var i=obstacles.length-1;i>=0;i--){ if (obstacles[i].root.position.z < -10){ scene.remove(obstacles[i].root); obstacles.splice(i,1); } }
   cop = { plan:copBuildStations(), stations:[], spawned:0, cleared:0, done:false, anim:0 };
   copSpawnStation(cop);
@@ -3583,7 +3583,7 @@ function copStationHint(st){                             // per-checkpoint coach
 function copStationRemove(st){ scene.remove(st.jeep); scene.remove(st.man); st.warns.forEach(function(w){ scene.remove(w); }); st.hidden.forEach(function(p){ p.visible = true; p._copHidden = false; }); st.hidden.length = 0; }
 function copRemove(c){ c.stations.forEach(copStationRemove); }
 function copEnd(){
-  copPaused = false; bossShow(false); copSiren(0); nextCopScore = state.score + COP_INTERVAL;
+  copPaused = false; bossShow(false); copSiren(0); nextCopScore = state.score + bossInterval(COP_INTERVAL);
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '⚡ RIDER DUEL';
 }
 function copWin(c){
@@ -4950,14 +4950,14 @@ function director(dz){
   while (state.lastSpawnZ > SPAWN_AHEAD){
     var z = SPAWN_AHEAD - (state.lastSpawnZ - SPAWN_AHEAD);
     var zn = zoneNow, quiet = !bike && !cop && !badshah && !flyover && !prevSafeLow && !prevChunkDeep && !patrol;
-    if (quiet && zn >= 1 && distSincePatrol > PATROL_EVERY - zn*80 && !setpieces.length && !junctions.length && !(monsoon && monsoon.active)){ spawnPatrol(); }   // 🚔 patrol from behind (no spawn slot used)
-    if (quiet && distSinceJunction > JUNCTION_EVERY - zn*50 && state.dist > 350){      // 🚦 red-light junction (full-width jump, alone in its chunk)
+    if (quiet && zn >= 1 && distSincePatrol > Math.max(320, PATROL_EVERY - zn*80) && !setpieces.length && !junctions.length && !(monsoon && monsoon.active)){ spawnPatrol(); }   // 🚔 patrol from behind (no spawn slot used)
+    if (quiet && distSinceJunction > Math.max(300, JUNCTION_EVERY - zn*50) && state.dist > 350){      // 🚦 red-light junction (full-width jump, alone in its chunk)
       distSinceJunction = -rand(0,120); spawnJunction(z); state.lastSpawnZ -= 44; prevSafeLow = true; prevChunkDeep = false; continue;
     }
-    if (quiet && distSinceSetpiece > SETPIECE_EVERY - zn*80 && state.dist > 450 && !(monsoon && monsoon.active)){   // 🐄🥁🙏 crossing set-piece
+    if (quiet && distSinceSetpiece > setpieceCadence() && state.dist > 450 && !(monsoon && monsoon.active) && !bossWaiting()){   // 🐄🥁🙏 crossing set-piece (a waiting boss/flyover goes first)
       distSinceSetpiece = -rand(0,200); spawnSetpiece(z); state.lastSpawnZ -= 78; prevSafeLow = false; prevChunkDeep = true; distSinceBanner = -60; continue;   // the procession's toran is a banner — no second one right behind it
     }
-    if (quiet && !setpieces.length && distSinceAutoX > AUTOX_EVERY - zn*60 && state.dist > 550 && Math.random() < 0.5){   // 🛺 rickshaw crossing the road
+    if (quiet && !setpieces.length && distSinceAutoX > Math.max(260, AUTOX_EVERY - zn*60) && state.dist > 550 && Math.random() < 0.5){   // 🛺 rickshaw crossing the road
       if (spawnCrossingAuto(z)){ distSinceAutoX = -rand(0, 250); prevSafeLow = false; prevChunkDeep = false; state.lastSpawnZ -= 30; continue; }
     }
     var nextSafe = chooseSafeLane();
@@ -4967,7 +4967,7 @@ function director(dz){
                                       : Math.max(20, rand(22, 30) - Math.min(6, state.dist/800));
     // reaction-time floor: at least ~1.0 s of travel between rows (1.5 s when the open lane shifts),
     // whatever the speed — the fixed 20-unit minimum was only 0.5 s at top speed
-    gap = Math.max(gap, state.speed * ((nextSafe !== prevSafe) ? 1.5 - zoneNow*0.1 : 1.0 - zoneNow*0.07));   // zones squeeze the reaction floor (never below 0.72 s / 1.1 s)
+    gap = Math.max(gap, state.speed * ((nextSafe !== prevSafe) ? Math.max(0.95, 1.5 - zoneNow*0.1) : Math.max(0.64, 1.0 - zoneNow*0.07)));   // zones squeeze the reaction floor (never below 0.64 s / 0.95 s)
     if (prevChunkDeep) gap += 9;                // guarantee reaction distance right after a long bus/truck
     state.lastSpawnZ -= gap;
     spawnChunk(z, nextSafe);
@@ -4982,13 +4982,21 @@ function chooseSafeLane(){
   // Later rows approach faster than a drifting bus/truck and catch up with it, so the open lane of a new row
   // must never be a lane that traffic ahead is still driving in (that is how a three-lane wall formed on 21-Sep).
   var busy = trafficLanesAhead();
-  if (Math.random() < 0.82 && !busy[prevSafe]) return prevSafe;   // usually keep the same open lane (drift-safe)
+  if (Math.random() < 0.82 - 0.1*heat() && !busy[prevSafe]) return prevSafe;   // usually keep the same open lane (drift-safe); late game it wanders more
   var opts = [];
   for (var d=-1; d<=1; d++){ var l = prevSafe + d; if (l>=0 && l<=2 && l!==prevSafe && !busy[l]) opts.push(l); }
   if (!opts.length){ for (var l2=0;l2<3;l2++) if (!busy[l2]) opts.push(l2); }
   return opts.length ? pick(opts) : prevSafe;
 }
 function spawnChunk(z, forcedSafe){
+  // late game: the two-step — a banner to duck, then a full row of low barricades to jump one second later
+  if (heat() > 0.2 && distSinceBanner > 150 && !setpieces.length && !flyover && !prevSafeLow && Math.random() < 0.16*heat()){
+    distSinceBanner = 0; spawnObstacle('banner', 1, z);
+    var z2 = z - state.speed*1.05 - 3; for (var bl=0;bl<3;bl++) spawnObstacle('barricade', bl, z2 + rand(-0.3,0.3));
+    spawnCoinRow(prevSafe, z2 - 5, 4, true); state.lastSpawnZ -= state.speed*1.05 + 3; prevSafeLow = true; prevChunkDeep = false;
+    if (!spawnChunk._toldTwoStep){ spawnChunk._toldTwoStep = true; popup('DUCK… THEN JUMP!', 'popNear', 50, 40); }
+    return;
+  }
   // occasionally a full banner (duck) — alone in its chunk, so always survivable
   if (distSinceBanner > 180 && !setpieces.length && !flyover && Math.random() < 0.3){
     distSinceBanner = 0;
@@ -5118,7 +5126,9 @@ function updateJunctions(dt, dz){
 /* --- Crossing set-pieces: a scripted ~5 s event where a group walks ACROSS all three lanes.
        Actors are spaced ≥ 6 m apart so at most two lanes are ever blocked at once — the gap moves, you time it. --- */
 var distSinceSetpiece = -80, SETPIECE_EVERY = 430, setpieces = [];
-function setpieceDue(){ return state.dist > 450 && distSinceSetpiece > SETPIECE_EVERY - zoneNow*80 - 160; }   // within ~160 m of the next crossing → bosses hold off     // first crossing ~600 m in, then every ~500–800 m (was 900+: most runs never saw one)
+function setpieceCadence(){ return Math.max(220, SETPIECE_EVERY - zoneNow*80); }
+function setpieceDue(){ var c = setpieceCadence(); return state.dist > 450 && distSinceSetpiece > c - Math.min(160, c*0.35); }   // within the last ~third of the cadence → bosses hold off (a fixed 160 m window starved every boss and the flyover from zone 3 on)
+function bossWaiting(){ return state.running && (state.score >= nextFlyoverScore || (state.score >= bossGapScore && (state.score >= nextBadshahScore || state.score >= nextBikeScore || state.score >= nextCopScore))); }   // within ~160 m of the next crossing → bosses hold off     // first crossing ~600 m in, then every ~500–800 m (was 900+: most runs never saw one)
 var distSinceAutoX = -200, AUTOX_EVERY = 650;
 function spawnCrossingAuto(z){                              // a rickshaw doing a slow U-turn / reverse across the whole road — time your lane, then abuse him
   var model = vehicleModelFor(Math.random() < 0.25 ? 'classic' : 'rickshaw'); if (!model) return false;
@@ -5271,9 +5281,15 @@ var ZONES = [
   { at:5000,  name:'ZONE 2 · RUSH HOUR',        sub:'twice the traffic · signals every 450 m · patrol jeeps on your tail' },
   { at:10000, name:'ZONE 3 · CHOWPATTY NIGHTS', sub:'chaat carts & stalls crowd the road · Ganpati processions · riders throw faster' },
   { at:15000, name:'ZONE 4 · MONSOON MAYHEM',   sub:'rain every minute · puddles · crossings back to back' },
-  { at:20000, name:'ZONE 5 · MUMBAI LOCAL',     sub:'everything, faster, more trucks — jugaad or nothing' }
+  { at:20000, name:'ZONE 5 · MUMBAI LOCAL',     sub:'everything, faster, more trucks — jugaad or nothing' },
+  { at:30000, name:'ZONE 6 · DHOOM MACHALE',    sub:'the cap comes off: 50+ km/h · the open lane wanders · duck-then-jump traps' },
+  { at:40000, name:'ZONE 7 · KHATARNAK',        sub:'every boss, sooner and meaner · legend territory' }
 ];
 var zoneNow = 0;
+/* HEAT — the late game. Score 20k→50k maps to 0→3: the speed cap keeps climbing, the open lane wanders, bosses come
+   sooner and need more, two-step traps (duck-then-jump) appear. Before 20k it is exactly the game it was. */
+function heat(){ return Math.min(3, Math.max(0, (state.score - 20000) / 10000)); }
+function bossInterval(base){ return Math.round(base * (1 - 0.12*Math.min(3, heat()))); }   // 0 → −36 % at 50k
 function zoneIndex(){ var z = 0; for (var i=0;i<ZONES.length;i++) if (state.score >= ZONES[i].at) z = i; return z; }
 function updateZone(){
   var z = zoneIndex();
@@ -5426,7 +5442,9 @@ function initAudio(){
   masterGain = AC.createGain(); masterGain.gain.value = state.muted?0:0.5;
   var limiter = AC.createDynamicsCompressor();                                   // brick-wall-ish limiter: horns + voices + music can no longer clip
   limiter.threshold.value = -10; limiter.knee.value = 6; limiter.ratio.value = 14; limiter.attack.value = 0.002; limiter.release.value = 0.18;
-  masterGain.connect(limiter); limiter.connect(AC.destination);
+  var soft = AC.createWaveShaper(); soft.oversample = '2x';                      // soft-clip safety net after the limiter: nothing can crackle a laptop speaker
+  (function(){ var n = 1024, c = new Float32Array(n); for (var i=0;i<n;i++){ var x = i*2/n - 1; c[i] = Math.tanh(x*1.6)/Math.tanh(1.6); } soft.curve = c; })();
+  masterGain.connect(limiter); limiter.connect(soft); soft.connect(AC.destination);
   // engine: sawtooth + lowpass, putt-putt via LFO on gain
   engineOsc = AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value = 55;
   var lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 380;
@@ -5610,25 +5628,33 @@ var SHOUT_LINES = {
 var lastShout = 0;
 /* ---- cartoon voice: a burst of pitched formant blips, one per syllable, with a rising or falling contour ---- */
 var BABBLE_BASE = { driver:190, rider:240, cop:150, bus:120, ped:265, band:215, autox:205, dancer:230, badshah:170 };
+var _babbleEnds = [];                                       // at most two cartoon voices at once — a third would just be noise
 function babble(who, text){
   if (!AC || state.muted) return;
+  var nowT = AC.currentTime; _babbleEnds = _babbleEnds.filter(function(e){ return e > nowT; }); if (_babbleEnds.length >= 2) return;
   var base = BABBLE_BASE[who] || 200, syl = Math.max(2, Math.min(9, Math.round(String(text).replace(/[^a-z]/gi,' ').split(/\s+/).filter(Boolean).length * 1.7)));
   var excl = /!/.test(text), q = /\?/.test(text), t = AC.currentTime + 0.02, at = t;
   for (var i=0;i<syl;i++){
     var dur = 0.07 + Math.random()*0.05, prog = i/(syl-1||1);
     var f = base * (0.9 + Math.random()*0.25) * (q ? 1 + prog*0.35 : excl ? 1.25 - prog*0.3 : 1.05 - prog*0.12);
     var o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, at); o.frequency.exponentialRampToValueAtTime(f*0.86, at+dur);
-    var f1 = AC.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value = 500 + Math.random()*900; f1.Q.value = 5;
-    var f2 = AC.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value = 1600 + Math.random()*900; f2.Q.value = 6;
-    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(excl ? 0.16 : 0.12, at+0.015); g.gain.exponentialRampToValueAtTime(0.0001, at+dur);
+    var f1 = AC.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value = 500 + Math.random()*900; f1.Q.value = 3.5;
+    var f2 = AC.createBiquadFilter(); f2.type='bandpass'; f2.frequency.value = 1600 + Math.random()*900; f2.Q.value = 4;
+    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(excl ? 0.11 : 0.085, at+0.015); g.gain.exponentialRampToValueAtTime(0.0001, at+dur);
     o.connect(f1); o.connect(f2); f1.connect(g); f2.connect(g); g.connect(masterGain); o.start(at); o.stop(at+dur+0.02);
     at += dur + 0.025 + (i % 3 === 2 ? 0.05 : 0);
   }
+  _babbleEnds.push(at);
+}
+function playClip(src, vol){                                 // recorded voice lines go through the same limiter as everything else (they used to bypass it)
+  try { var a = new Audio(src); a.volume = vol == null ? 0.9 : vol;
+    if (AC && !state.muted){ try { var n = AC.createMediaElementSource(a); n.connect(masterGain); a.volume = 1; a.addEventListener('ended', function(){ try { n.disconnect(); } catch(e){} }); } catch(e){} }
+    a.play().catch(function(){}); } catch(e){}
 }
 function say(who, text, xPct, yPct){                       // a spoken line: bubble + babble (no cooldown gate — callers pick their moments)
   popup('💬 ' + text, 'popShout', xPct == null ? 50 : xPct, yPct == null ? (who === 'driver' ? 48 : 30) : yPct);
   var clips = (window.VOICE_LINES && window.VOICE_LINES[who]) || null;
-  if (clips && clips.length && !state.muted){ try { var a = new Audio(pick(clips)); a.volume = 0.9; a.play().catch(function(){}); return; } catch(e){} }
+  if (clips && clips.length && !state.muted){ playClip(pick(clips), 0.8); return; }
   babble(who, text);
 }
 function shout(who, chance, x){
@@ -5640,7 +5666,7 @@ function shout(who, chance, x){
   popup('💬 ' + line, 'popShout', side, 30);
   var clips = (window.VOICE_LINES && window.VOICE_LINES[who]) || null;
   if (clips && clips.length && !state.muted){
-    try { var a = new Audio(pick(clips)); a.volume = 0.9; a.play().catch(function(){}); return; } catch(e){}
+    playClip(pick(clips), 0.8); return;
   }
   babble(who, line);
 }
@@ -5673,8 +5699,7 @@ function doJump(){
 }
 function doDuck(){
   if (!state.running || state.jumping || state.ducking) return;
-  state.ducking = true;
-  setTimeout(function(){ state.ducking = false; }, 700);
+  state.ducking = true; state.duckT = 0.7;                   // game-time (see animate): a wall-clock timer un-ducked you early inside crossing slow-mo → toran deaths
 }
 window.addEventListener('keydown', function(e){
   if (e.repeat) return;
@@ -5781,7 +5806,7 @@ var GAME_AUDIO = (function(){
     setMusic: setMusic,
     setMusicVolume: function(v){ MUSIC_VOL = Math.max(0, Math.min(1, v)); if(current && !state.muted) current.volume = MUSIC_VOL; if (dholGain) dholGain.gain.value = MUSIC_VOL; },
     bell: function(){ sfx(bell, 0.5); },
-    horn: function(){ sfx(horn, 0.9); },
+    horn: function(){ sfx(horn, 0.7); },
     ambience: function(){ if(ambience && !state.muted) fade(ambience, AMB_VOL, 800); },
     mute: function(m){ if(m){ try{ if(current)current.pause(); if(ambience)ambience.pause(); }catch(e){} }
                        else { if(ambience) fade(ambience, AMB_VOL, 400); setMusic(curVeh||selectedVehicle); } }
@@ -6273,7 +6298,7 @@ function flyAddGantries(){                                    // two big sign ga
 function flyoverActive(){ return !!flyover; }
 function startFlyover(){
   if (flyover || bike || cop || badshah || setpieces.length || (monsoon && monsoon.active)) return;
-  buildFlyoverDressing();
+  buildFlyoverDressing(); nextFlyoverScore = state.score + FLYOVER_EVERY;
   flyover = { phase:'signs', d0:state.dist, drop:0, gust:0, gustDir:0, gustT:rand(5, 9), jeep:null, jeepZ:16, jeepLane:state.lane, tollDone:false, tollOpen:1, tollSwitched:false, coinsT:0 };
   popup('🌉 SEA LINK AHEAD', 'popEvent', 50, 20); popup('AUTOS NOT ALLOWED — take it anyway', 'popSub', 50, 36); tihai();
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '🌉 SEA LINK'; bossShow(true); bossFill(0);
@@ -6324,7 +6349,7 @@ function flyoverEnd(){
   var F = flyover; if (!F) return;
   if (F.jeep){ scene.remove(F.jeep); F.jeep = null; } copSiren(0);
   if (F.tollBooths) F.tollBooths.forEach(function(tb){ scene.remove(tb.booth); scene.remove(tb.ob.root); var i2 = obstacles.indexOf(tb.ob); if (i2 >= 0) obstacles.splice(i2, 1); });
-  flyover = null; sceneryHidden = false; nextFlyoverScore = state.score + FLYOVER_EVERY; bossShow(false);
+  flyover = null; sceneryHidden = false; nextFlyoverScore = Math.max(nextFlyoverScore, state.score + 5000); bossShow(false);   // every 15k from the START of the last one (set in startFlyover), never sooner than 5k after it ends
   bendPlan.lock = false; bendPlan.hold = 0;
   buildings.forEach(function(b){ b.group.visible = true; b.group.position.y = 0; b.group.position.x = b.baseX; });
   alleys.forEach(function(a){ a.position.y = 0; }); streetParts.forEach(function(k){ k.position.y = k.userData.baseY || 0; k.visible = true; });
@@ -6418,14 +6443,14 @@ function loadBadshahModel(b64, opt){
   }, function(e){ console.warn('Badshah GLB failed', e); }); } catch(e){ console.warn('Badshah err', e); }
 }
 whenModel('BADSHAH_GLB_B64', function(){ loadBadshahModel(window.BADSHAH_GLB_B64, { targetLen:5.4, faceYaw:0 }); });
-var badshah = null, nextBadshahScore = 4200, BADSHAH_INTERVAL = 6000;
+var badshah = null, nextBadshahScore = 4200, BADSHAH_INTERVAL = 9000;
 var BADSHAH_LINES = { start:['Hat be! Papa ka naam suna hai?', 'Jaanta hai main kaun hoon?!', 'Side ho, tin ke dabbe!'], lunge:['Bach ke!', 'Dekh kya raha hai?', 'Aaja aaja!'], flinch:['Arre arre arre!', 'Oye!', 'Pagal hai kya?'], leave:['Papa ka phone… baad mein dekhta hoon tujhe.', 'Chal, next time.'], driver:['Papa ka naam, mummy ki gaadi.', 'Badshah nahi, bachcha hai!', 'Jaa, tuition ka time ho gaya.'] };
 function startBadshahEncounter(){
   if (!badshahTemplate || badshah || bike || cop) return;
   var root = badshahTemplate.clone(true); addBlob(root, BADSHAH_HW*2 + 0.6, BADSHAH_D + 0.8, 0.85); scene.add(root);
   var lane = state.lane === 1 ? pick([0,2]) : 1;
   root.position.set(LANES[lane], 0, 26);
-  badshah = { root:root, lane:lane, x:LANES[lane], z:26, phase:'arrive', t:0, lunges:0, stuck:0, xOff:0, lean:0, need:5 + (zoneNow >= 3 ? 1 : 0), roamT:0, tz:-40, tele:0, honkT:0.4, beat:0, fake:false, hornWindow:false, shake:0 };
+  badshah = { root:root, lane:lane, x:LANES[lane], z:26, phase:'arrive', t:0, lunges:0, stuck:0, xOff:0, lean:0, need:5 + (zoneNow >= 3 ? 1 : 0) + Math.floor(heat()), roamT:0, tz:-40, tele:0, honkT:0.4, beat:0, fake:false, hornWindow:false, shake:0 };
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE 0 / ' + badshah.need;
   bossShow(true); bossFill(0);
   bossHint('badshah', '👑 JAANTA HAI MAIN KAUN HOON?', 'Rich kid, monster SUV, zero brakes in the head. He is harmless until his BRAKE LIGHTS flare and the horn blasts — then get OUT of his lane ' + bhKey('lane') + '. Or wait till he is right on your bumper and HONK BACK ' + bhKey('horn') + ' — he flinches. He cannot drive through traffic either: use the jams. Watch the road too.');
@@ -6436,7 +6461,7 @@ function startBadshahEncounter(){
 }
 function badshahEnd(win){
   if (!badshah) return;
-  var b = badshah; badshahMusic(false); bossShow(false); nextBadshahScore = state.score + BADSHAH_INTERVAL;
+  var b = badshah; badshahMusic(false); bossShow(false); nextBadshahScore = state.score + bossInterval(BADSHAH_INTERVAL);
   if (win){
     popup('👑 BADSHAH BHAGA! +' + (500*state.mult), 'popEvent', 50, 24); state.bonus += 500*state.mult; addCombo(); addCombo(); addCombo();
     for (var L=0;L<3;L++) spawnCoinRow(L, -16, 7, true); burst(player.position.x, 1.4, -2, 0xffce3a, 30, 4, 5);
@@ -6451,7 +6476,7 @@ function badshahHorn(long){                                 // musical air horn:
   [1, 1.25, 1.5].forEach(function(m, i){
     var o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(340*m, t); o.frequency.linearRampToValueAtTime(330*m, t+dur);
     var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 2200;
-    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.10*near, t+0.03); g.gain.setValueAtTime(0.10*near, t+dur*0.8); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.08*near, t+0.03); g.gain.setValueAtTime(0.08*near, t+dur*0.8); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
     o.connect(f); f.connect(g); g.connect(masterGain); o.start(t); o.stop(t+dur+0.05);
   });
 }
@@ -6508,7 +6533,7 @@ function bSmash(b){                                         // cones, barricades
 function updateBadshah(dt, dz){
   var b = badshah, now = Date.now()*0.001; b.t += dt;
   // music: schedule beats ~0.25 s ahead; volume swells with proximity
-  if (_bMusic && !state.muted){ var vol = 0.18 * Math.max(0.15, 1 - Math.abs(b.z)/90); _bMusic.gain.gain.setTargetAtTime(vol, AC.currentTime, 0.15);
+  if (_bMusic && !state.muted){ var vol = 0.14 * Math.max(0.15, 1 - Math.abs(b.z)/90); _bMusic.gain.gain.setTargetAtTime(vol, AC.currentTime, 0.15);
     while (_bMusic.next < AC.currentTime + 0.3){ badshahBeat(_bMusic, _bMusic.next, _bMusic.step++); _bMusic.next += 0.2308; } }   // 130 bpm eighths
   if ((b.honkT -= dt) <= 0 && b.phase !== 'leave'){ b.honkT = b.stuck > 0.3 ? rand(0.5, 1.1) : rand(0.9, 2.4); badshahHorn(false); }   // stuck behind traffic → leans on the horn
   var brake = b.root.userData.brakeMat, bar = b.root.userData.barMat;
@@ -6534,8 +6559,8 @@ function updateBadshah(dt, dz){
       var esc = [b.lane-1, b.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, b.z - 16, b.z + 9); });
       if (esc.length){ b.lane = pick(esc); b.stuck = 0; b.roamT = rand(1.0, 2.0); } else b.tz = Math.max(b.tz, b.z); }
     var teleNow = Math.max(0.9, 1.25 - zoneNow*0.07);
-    if (b.t > 75 && b.lunges < b.need){ say('badshah', pick(['Papa ka phone… bach gaya tu.', 'Time nahi hai mere paas — nikal.']), 50 + b.x*6, 26); badshahEnd(true); return; }   // he never gets his run-in on a jammed road → papa calls anyway
-    if ((b.hold = (b.hold||0) + dt) > rand(3.5, 6) && Math.abs(b.z - b.tz) < 6 && !state.jumping && badshahEscapable(teleNow) && bLaneClear(state.lane, -18, 3)){   // set up a lunge — only when you can dodge AND his run-in is clear
+    if (b.t > 50 && b.lunges < b.need){ say('badshah', pick(['Papa ka phone… bach gaya tu.', 'Time nahi hai mere paas — nikal.']), 50 + b.x*6, 26); badshahEnd(true); return; }   // he never gets his run-in on a jammed road → papa calls anyway
+    if ((b.hold = (b.hold||0) + dt) > rand(2.5, 4.5) && Math.abs(b.z - b.tz) < 6 && !state.jumping && badshahEscapable(teleNow) && bLaneClear(state.lane, -18, 3)){   // set up a lunge — only when you can dodge AND his run-in is clear
       b.hold = 0; b.stuck = 0;
       if (b.lunges >= 1 && !b.swiped && Math.random() < 0.45 && [state.lane-1, state.lane+1].some(function(l){ return l>=0 && l<=2 && bLaneClear(l, -16, 6); })){   // once per encounter: the side-swipe threat (not lethal)
         b.swiped = true; b.phase = 'swipe'; b.swipeT = 0; b.lane = pick([state.lane-1, state.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, -16, 6); }));
@@ -6555,10 +6580,10 @@ function updateBadshah(dt, dz){
     if (b.swipeT > 2.3){ b.phase = 'recover'; b.tz = rand(-55, -35); b.xOff = 0; b.lean = 0; b.swipeHit = false; }
   } else if (b.phase === 'tell'){                            // brake lights + horn; he drops right onto your bumper, THEN the honk window opens
     b.approachT += dt; b.z += (-8 - b.z) * Math.min(1, dt*2.6);
-    if (!b.near && (b.z > -12.5 || b.approachT > 1.3)){ b.near = true; b.hornWindow = true; popup('🎺 HONK BACK ' + (IS_TOUCH ? '— TAP 📯' : '— PRESS H'), 'popNear', 50, 40); }
+    if (!b.near && (b.z > -12.5 || b.approachT > 1.3)){ b.near = true; b.hornWindow = true; if (b.earlyHonk != null && b.t - b.earlyHonk < 0.5){ badshahHonkBack(); return; } popup('🎺 HONK BACK ' + (IS_TOUCH ? '— TAP 📯' : '— PRESS H'), 'popNear', 50, 40); }
     if (b.near) b.tele -= dt;
     if (!badshahEscapable(b.tele + 0.1) || !bLaneClear(b.lane, b.z - 1, 2)){ b.phase = 'recover'; b.tz = rand(-52, -36); b.hornWindow = false; b.near = false; burst(b.x, 0.6, b.z + 1.5, 0xc9b79a, 6, 2, 2); }   // traffic closed the gap since the tell began → he peels off (no strike)
-    else if (b.near && b.tele <= 0){ b.hornWindow = false; if (b.fake){ b.phase = 'recover'; b.tz = rand(-55, -35); } else { b.phase = 'strike'; b.strikeT = 0.75; } }
+    else if (b.near && b.tele <= 0){ b.hornWindow = false; if (b.fake){ b.phase = 'recover'; b.tz = rand(-55, -35); } else { b.phase = 'strike'; b.strikeT = 0.75; if (window.PERF) PERF.mark('badshah strike lane=' + b.lane + ' you=' + state.lane); } }
   } else if (b.phase === 'strike'){                          // brake-check: right in front of you — lethal in his lane
     b.strikeT -= dt; b.z += (-2.2 - b.z) * Math.min(1, dt*9);
     if (Math.random() < dt*30) burst(b.x + rand(-0.8,0.8), 0.3, b.z + 2.6, 0xc9b79a, 2, 1.5, 1.5);   // tyre smoke
@@ -6589,11 +6614,12 @@ function updateBadshah(dt, dz){
 }
 function badshahHonkBack(){                                 // your horn during his tell → he flinches and aborts
   var b = badshah; if (!b) return;
-  if (b.phase === 'tell' && !b.hornWindow){ if (!b.earlyTold){ b.earlyTold = true; popup('…wait till he is on your bumper', 'popSub', 50, 44); } return; }
+  if (window.PERF && b.phase !== 'roam') PERF.mark('honk @' + b.phase + (b.hornWindow ? ' window' : '') + ' z=' + b.z.toFixed(1));
+  if (b.phase === 'tell' && !b.hornWindow){ b.earlyHonk = b.t; if (!b.earlyTold){ b.earlyTold = true; popup('…wait till he is on your bumper', 'popSub', 50, 44); } return; }   // remembered: a honk just before the window still counts
   if (b.phase !== 'tell' || !b.hornWindow) return;
   b.hornWindow = false; b.phase = 'recover'; b.tz = rand(-50, -34); b.lane = b.lane === 1 ? pick([0,2]) : 1;
   b.lunges++; bossFill(b.lunges / b.need); var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE ' + b.lunges + ' / ' + b.need;
-  say('badshah', pick(BADSHAH_LINES.flinch), 50 + b.x*6, 26); popup('🎺 FLINCHED!', 'popNear', 50, 36); state.bonus += 80*state.mult; addCombo();
+  say('badshah', pick(BADSHAH_LINES.flinch), 50 + b.x*6, 26); popup('🎺 FLINCHED!', 'popNear', 50, 36); if (window.PERF) PERF.mark('badshah flinch ' + b.lunges + '/' + b.need); state.bonus += 80*state.mult; addCombo();
   if (b.lunges >= b.need){ setTimeout(function(){ if (badshah){ say('badshah', pick(BADSHAH_LINES.leave), 50 + badshah.x*6, 26); badshahEnd(true); } }, 600); }
 }
 
@@ -6883,9 +6909,9 @@ function playHorn(id){
 var hornCooldownUntil = 0;
 function hornNow(){
   if (!state.running) return;
+  if (badshah) badshahHonkBack();                           // every press reaches the boss — the 650 ms sound cooldown below used to eat presses mid-tell
   var now = Date.now(); if (now < hornCooldownUntil) return; hornCooldownUntil = now + 650;
   playHorn(equippedOrTrial('horn'));
-  if (badshah) badshahHonkBack();
   if (cop) cop.stations.forEach(function(st){                                   // polite honk while a single-lane havaldar signals → he waves you through
     if (st.phase === 'signal' && st.hornWindow && !st.spikes && st.lanes.length === 1 && st.variant !== 'radar' && !st.waved){
       st.waved = true; popup('🫡 SALAAM SAHAB — JAANE DO!', 'popNear', 52, 36); shout('cop', 0.8, COP_MAN_X); state.bonus += 60 * state.mult; addCombo();
@@ -7267,7 +7293,7 @@ function thunder(){
 }
 function updateMonsoon(dt){
   if (!monsoon.active){
-    if (state.running){ monsoon.next -= dt; if (monsoon.next <= 0 && state.dist > 400 && !bike && !copPaused && !badshah && !flyover && !setpieces.length) startMonsoon(); }   // rain waits for a boss fight / crossing to finish, and vice versa
+    if (state.running){ monsoon.next -= dt; if (monsoon.next <= 0 && state.dist > 400 && !bike && !copPaused && !badshah && !flyover && !setpieces.length && state.score < nextFlyoverScore) startMonsoon(); }   // rain waits for a boss fight / crossing to finish, and vice versa
   } else {
     monsoon.timer -= dt;
     if (monsoon.timer <= 0){ monsoon.active=false; monsoon.next = (zoneNow >= 3 ? 34 : 62) + Math.random()*40; }   // a little more dry road between storms — crossings need it
@@ -7432,6 +7458,7 @@ function animate(){
   if (!state.running){ if (attractActive()) attractTick(rawDt); else if (attract.on) attractStop(); renderFrame(); return; }
 
   var dt = rawDt * state.timeScale;
+  if (state.ducking){ state.duckT = (state.duckT || 0) - dt; if (state.duckT <= 0){ state.ducking = false; state.duckT = 0; } }
 
   // powerup timers
   if (state.turbo > 0){ state.turbo -= rawDt; if (state.turbo<=0){ state.turbo=0; powerSound(false); } }
@@ -7444,7 +7471,7 @@ function animate(){
   state.timeScale += (tsTarget - state.timeScale) * Math.min(1, rawDt*12);
 
   // speed ramp
-  var target = Math.min(MAX_SPEED, BASE_SPEED + state.dist/90);
+  var target = Math.min(MAX_SPEED + 6*Math.min(2, heat()), BASE_SPEED + state.dist/90);   // the cap rises to 54 by 40k pts
   if (flyover && (flyover.phase === 'deck' || flyover.phase === 'toll')) target *= 1.15;   // highway pace on the Sea Link
   state.speed = target * (state.turbo>0 ? 1.7 : 1);
   var dz = state.speed * dt;
@@ -7542,12 +7569,14 @@ function animate(){
   if (animate._wasBusy && !_bossBusy) bossGapScore = state.score + 700;
   animate._wasBusy = _bossBusy;
   var _stormy = !!(monsoon && monsoon.active);                                    // never open a boss fight in the rain — the two together were the top killer in live data
-  var _street = setpieces.length > 0 || junctions.length > 0 || (typeof setpieceDue === 'function' && setpieceDue());   // a crossing is on (or about to be) — the boss waits its turn
+  var _street = setpieces.length > 0 || junctions.length > 0;   // a crossing is on — the boss waits for it to pass (the director stops spawning new ones while a boss is waiting: bossWaiting())
   if (state.running && !_bossBusy && !_stormy && !_street && state.score >= nextFlyoverScore) startFlyover();
-  if (state.running && !_bossBusy && !_stormy && !_street && state.score >= bossGapScore){
-    if (state.score >= nextBadshahScore && badshahTemplate) startBadshahEncounter();
-    else if (state.score >= nextBikeScore && bikeTemplates.length) startBikeEncounter();
-    else if (state.score >= nextCopScore) startCopEncounter();
+  if (state.running && !_bossBusy && !_stormy && !_street && state.score >= bossGapScore && state.score < nextFlyoverScore){   // a due Sea Link gets the next quiet window before any boss; then whichever boss has waited longest goes first (a fixed order never let the nakabandi in)
+    var _due = [];
+    if (state.score >= nextBadshahScore && badshahTemplate) _due.push([nextBadshahScore, startBadshahEncounter]);
+    if (state.score >= nextBikeScore && bikeTemplates.length) _due.push([nextBikeScore, startBikeEncounter]);
+    if (state.score >= nextCopScore) _due.push([nextCopScore, startCopEncounter]);
+    if (_due.length){ _due.sort(function(a, b){ return a[0] - b[0]; }); _due[0][1](); }
   }
   // traffic-cop boss
   if (cop && state.running) updateCop(dt, dz);
@@ -7593,7 +7622,7 @@ function animate(){
       } else if (bk.phase === 'parcels'){              // PHASE 2: fling parcels (dodge or jump)
         if (bk.t < 1) bk.t = Math.min(1, bk.t + dt/1.3);
         else if ((bk.weaveTimer -= dt) <= 0) bikeWeave(1.15);
-        if ((bk.parcelTimer -= dt) <= 0){ if(!(hasParcel()||hasGutka())){ if(Math.random()<0.5) spitGutka(bk); else spawnParcel(bk); } bk.parcelTimer = (zoneNow >= 2 ? 0.55 : 0.8) + Math.random()*0.4; }
+        if ((bk.parcelTimer -= dt) <= 0){ if(!(hasParcel()||hasGutka())){ if(Math.random()<0.5) spitGutka(bk); else spawnParcel(bk); } bk.parcelTimer = ((zoneNow >= 2 ? 0.55 : 0.8) + Math.random()*0.4) * (1 - 0.12*Math.min(2, heat())); }
         bk.meter += dt / BOSS_P2;
         if (bk.meter >= 0.67){ bk.phase='overtake'; bk.hit.d=2.4; bk.t=1; bk.weaveTimer=0.9; say('rider', pick(RIDER_TAUNTS.overtake), 50 + LANES[bk.lane]*6, 26); bossHint('overtake', '🏁 ROUND 3 · REEL HIM IN', 'Now get BEHIND him: match his lane ' + bhKey('lane') + ' and stay there — the bar only fills while you are on his tail.'); }   // body-only now
       } else if (bk.phase === 'overtake'){             // PHASE 3: match its lane to reel it in
@@ -7656,7 +7685,7 @@ function animate(){
         duelMark.material.opacity = (bk.phase === 'overtake' ? 0.35 : 0.22) + 0.15*pulse;
       }
       if (bk.tellT > 0){ bk.tellT -= dt; if (Math.random() < dt*40) burst(bk.root.position.x + bk.tellDir*0.55, 0.9, bk.z, 0xffa020, 1, 0.4, 0.5); }   // indicator flicker on the side he's about to swerve to
-      if ((bk.phase==='escape' && bk.z < -150) || (bk.phase==='gone' && bk.z > 26)){ scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+BIKE_INTERVAL; continue; }
+      if ((bk.phase==='escape' && bk.z < -150) || (bk.phase==='gone' && bk.z > 26)){ scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+bossInterval(BIKE_INTERVAL); continue; }
       if (bk.throwing){                                // arm swing → release at the top → arm tucks away
         var th = bk.throwing; th.t += dt;
         if (th.arm) poseThrowArm(th.arm, Math.min(1, th.t/th.dur));
@@ -7667,8 +7696,8 @@ function animate(){
       // leaving) never counts as a hit; the bodies visually cross for a few frames but the read is "he moved into MY lane"
       var swapping = bk.t < 1 && state.lane !== bk.lane;
       if (bk.phase !== 'escape' && bk.phase !== 'argue' && bk.phase !== 'gone' && !swapping && playerHit(bk)){
-        if (state.turbo>0){ burst(bk.root.position.x,1.5,bk.root.position.z,0x30e0ff,12,3,4); scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+BIKE_INTERVAL; state.shake=0.3; continue; }
-        if (state.shield){ state.shield=false; powerSound(false); burst(player.position.x,1.4,0,0xffd24a,16,3,4); scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+BIKE_INTERVAL; state.shake=0.5; continue; }
+        if (state.turbo>0){ burst(bk.root.position.x,1.5,bk.root.position.z,0x30e0ff,12,3,4); scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+bossInterval(BIKE_INTERVAL); state.shake=0.3; continue; }
+        if (state.shield){ state.shield=false; powerSound(false); burst(player.position.x,1.4,0,0xffd24a,16,3,4); scene.remove(bk.root); obstacles.splice(i,1); bike=null; bikePaused=false; bossShow(false); nextBikeScore=state.score+bossInterval(BIKE_INTERVAL); state.shake=0.5; continue; }
         burst(player.position.x,1.2,0,0xff6040,20,4,5); state.shake=1.0; bossShow(false); gameOver(); break;
       }
       checkNearMiss(bk);
