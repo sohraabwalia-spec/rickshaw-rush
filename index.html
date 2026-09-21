@@ -1140,7 +1140,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '21-Sep-c';
+var BUILD_TAG = '21-Sep-d';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1189,7 +1189,7 @@ var PERF = (function(){
         hud.textContent='FPS '+fps+'   calls '+calls+'   tris '+(tris/1000).toFixed(0)+'k'+
           (typeof obstacles!=='undefined'?('\nobs '+obstacles.length):'')+(typeof props!=='undefined'?('  props '+props.length):'')+
           (typeof pedestrians!=='undefined'?('  peds '+pedestrians.length):'')+
-          '\nbuild 21-Sep-c q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
+          '\nbuild 21-Sep-d q'+(window.QUALITY_LEVEL||0)+'   decoder '+(window.__decoderMode||'?')+
           '   asset fails '+logs.filter(function(l){ return /GLB|glb|parse/i.test(l.msg); }).length;
       }
     },
@@ -3136,7 +3136,7 @@ function releaseThrow(bk){
   var lane = th.lane;
   if (th.kind === 'parcel'){
     obstacles.push({ root:m, hit:{hw:0.5,d:1.0,jumpOver:true,top:0.85}, type:'parcel', lane:lane,
-      fly:{ t:0, dur:0.55, x0:wp.x, y0:wp.y, x1:LANES[lane], z0:wp.z, z1:-28, peak:1.7, spin:rand(5,9)*(Math.random()<.5?-1:1) } });
+      fly:{ t:0, dur:0.55, x0:wp.x, y0:wp.y, x1:LANES[lane], z0:wp.z, z1:-(26 + state.speed*0.9), peak:1.7, spin:rand(5,9)*(Math.random()<.5?-1:1) } });
     if (typeof GAME_AUDIO!=='undefined') GAME_AUDIO.horn();   // throw "whoosh" (bell chimes on impact)
     burst(wp.x, wp.y, wp.z, 0xd8c8a0, 5, 1.2, 1.2);
   }
@@ -3182,7 +3182,7 @@ function releaseGutka(bk){
   var m = makeGutka(), sx = bk.root.position.x, sz = bk.root.position.z - 0.35, sy = 1.72;   // from the helmet's chin
   m.position.set(sx, sy, sz); scene.add(m);
   obstacles.push({ root:m, hit:{hw:0.55,d:1.0,jumpOver:true,top:0.32}, type:'gutka', lane:lane,
-    fly:{ t:0, dur:0.62, x0:sx, y0:sy, x1:LANES[lane], z0:sz, z1:-28, peak:1.2, spin:0, stream:true } });
+    fly:{ t:0, dur:0.62, x0:sx, y0:sy, x1:LANES[lane], z0:sz, z1:-(26 + state.speed*0.9), peak:1.2, spin:0, stream:true } });
   for (var k=0;k<3;k++) burst(sx + (LANES[lane]-sx)*0.15*k, sy - 0.1*k, sz - 0.6*k, 0x9c1420, 6, 1.4, 1.2);   // red mist cone
   spitSound();
   th.released = true;
@@ -4836,10 +4836,19 @@ function director(dz){
     spawnChunk(z, nextSafe);
   }
 }
+function trafficLanesAhead(){                            // lanes holding a live drifting vehicle still in front of the player
+  var m = [false,false,false];
+  for (var i=0;i<obstacles.length;i++){ var o = obstacles[i]; if (o.drift && !o.cross && !o.isBike && o.hit && !o.hit.jumpOver && o.root.position.z < -4) m[o.lane] = true; }
+  return m;
+}
 function chooseSafeLane(){
-  if (Math.random() < 0.82) return prevSafe;            // usually keep the same open lane (drift-safe)
+  // Later rows approach faster than a drifting bus/truck and catch up with it, so the open lane of a new row
+  // must never be a lane that traffic ahead is still driving in (that is how a three-lane wall formed on 21-Sep).
+  var busy = trafficLanesAhead();
+  if (Math.random() < 0.82 && !busy[prevSafe]) return prevSafe;   // usually keep the same open lane (drift-safe)
   var opts = [];
-  for (var d=-1; d<=1; d++){ var l = prevSafe + d; if (l>=0 && l<=2 && l!==prevSafe) opts.push(l); }
+  for (var d=-1; d<=1; d++){ var l = prevSafe + d; if (l>=0 && l<=2 && l!==prevSafe && !busy[l]) opts.push(l); }
+  if (!opts.length){ for (var l2=0;l2<3;l2++) if (!busy[l2]) opts.push(l2); }
   return opts.length ? pick(opts) : prevSafe;
 }
 function spawnChunk(z, forcedSafe){
@@ -6687,7 +6696,7 @@ function thunder(){
 }
 function updateMonsoon(dt){
   if (!monsoon.active){
-    if (state.running){ monsoon.next -= dt; if (monsoon.next <= 0 && state.dist > 400) startMonsoon(); }
+    if (state.running){ monsoon.next -= dt; if (monsoon.next <= 0 && state.dist > 400 && !bike && !copPaused) startMonsoon(); }   // rain waits for a boss fight to finish, and vice versa
   } else {
     monsoon.timer -= dt;
     if (monsoon.timer <= 0){ monsoon.active=false; monsoon.next = (zoneNow >= 3 ? 28 : 50) + Math.random()*35; }
@@ -7111,7 +7120,7 @@ function animate(){
         var bz = b.root.position.z;
         if (b.lane===la){ if (bz < oz && bz > behindZ) behindZ = bz; }          // nearest same-lane obstacle behind
         else { var h=b.hit; if (h && !h.jumpOver && !h.duckUnder && !h.ground && !h.allLanes){
-          var span = ((h.d||2) + (o.hit.d||2))/2 + 2;                          // depth-aware: long buses/trucks overlap a wide z-band
+          var span = ((h.d||2) + (o.hit.d||2))/2 + 2*PLAYER_HD + 2.5 + state.speed*0.25;   // depth-aware + room for the auto and a beat to react
           if (Math.abs(bz-projz) < span) blk[b.lane]=true;
         } }
       }
