@@ -958,8 +958,8 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 /* ---- staged asset loader: fetches every model script with a real progress bar, retries once, reports what failed,
         then runs the game script. Replaces 43 blocking <script src> tags (≈50 MB) that showed a blank page while downloading. ---- */
 (function(){
-  var FILES = ["ui-art.js", "rickshaw-model.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "man-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "bullock-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js"];
-  var SIZES = {"rickshaw-model.js": 704964, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 657901, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 1538338, "taxi-model.js": 478120, "man-model.js": 2047935, "bldg-old-model.js": 405228, "bldg-mixed-model.js": 383718, "bldg-modern-model.js": 555467, "bldg-market-model.js": 477455, "bldg-corner-model.js": 422895, "ground-tex.js": 568553, "signs-tex.js": 259673, "banner3d-model.js": 786748, "tree-models.js": 1276282, "posters-model.js": 252939, "parcel-models.js": 1058493, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 4487465, "bus-model.js": 234786, "bus-tex-variants.js": 722602, "wagon-model.js": 259128, "wagon-tex-variants.js": 737121, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 792300, "police-model.js": 1096378, "bldg-paan-model.js": 368317, "bldg-hotel-model.js": 368902, "bldg-hospital-model.js": 357985, "bldg-lodge-model.js": 381158, "bldg-clinic-model.js": 295083, "bldg-office-model.js": 628891, "bldg-police-model.js": 349783, "props-model.js": 4487335, "bullock-model.js": 10345655, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688};
+  var FILES = ["ui-art.js", "rickshaw-model.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js"];
+  var SIZES = {"rickshaw-model.js": 704964, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 380193, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 204296, "bldg-old-model.js": 405228, "bldg-mixed-model.js": 383718, "bldg-modern-model.js": 555467, "bldg-market-model.js": 477455, "bldg-corner-model.js": 422895, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1058357, "bus-model.js": 234786, "bus-tex-variants.js": 398002, "wagon-model.js": 259128, "wagon-tex-variants.js": 395949, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 389744, "police-model.js": 341554, "bldg-paan-model.js": 368317, "bldg-hotel-model.js": 368902, "bldg-hospital-model.js": 357985, "bldg-lodge-model.js": 381158, "bldg-clinic-model.js": 295083, "bldg-office-model.js": 628891, "bldg-police-model.js": 349783, "props-model.js": 4487335, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688};
   var total = 0; Object.keys(SIZES).forEach(function(k){ total += SIZES[k]; });
   var done = {}, failed = [], loadedBytes = 0;
   function $(id){ return document.getElementById(id); }
@@ -1004,7 +1004,7 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
   var PRIORITY = ['ui-art.js','rickshaw-model.js','car-model.js','taxi-model.js','bus-tex-variants.js','bus-model.js','wagon-tex-variants.js','wagon-model.js','truck2-model.js','road-asphalt.js','ground-tex.js','signs-tex.js','props-model.js','cow-tex-variants.js','cow-model.js','cart-model.js','vendor-model.js','walker-model.js','walker2-model.js','auntie-model.js'];
   var ordered = PRIORITY.filter(function(f){ return FILES.indexOf(f) >= 0; }).concat(FILES.filter(function(f){ return PRIORITY.indexOf(f) < 0; }));
   var origPaint = paint; paint = function(){ origPaint(); window.ASSET_LOAD.loaded = Object.keys(done).length; window.ASSET_LOAD.doneFiles = done; window.ASSET_LOAD.pct = Math.min(100, Math.round(loadedBytes/total*100)); if (window.__modelArrived) { try { window.__modelArrived(); } catch(e){} } };
-  runQueue(ordered, 3).then(function(){
+  runQueue(ordered, 4).then(function(){
     window.ASSET_LOAD.done = true; window.ASSET_LOAD.seconds = +((Date.now()-t0)/1000).toFixed(1);
     if (failed.length) console.warn('Missing files: ' + failed.join(', '));
     if (window.__modelArrived) window.__modelArrived();
@@ -1022,6 +1022,15 @@ function whenModel(names, fn){
   var ready = names.every(function(n){ return !!window[n]; });
   if (ready){ try { fn(); } catch(e){ console.warn('model init failed', names.join(','), e); } }
   else _pendingInits.push({ names:names, fn:fn });
+}
+// Heavy late kits (Sea Link, Badshah, tanker) parse on the main thread (~100–300 ms). Never do that mid-run: wait for the
+// menu / game-over screen, unless the thing is about to be needed (then one hitch beats a missing boss).
+function deferHeavy(fn, needSoon){
+  (function tick(){
+    var running = (typeof state !== 'undefined') && state.running;
+    if (!running || (needSoon && needSoon())){ try { fn(); } catch(e){ console.warn('deferred model init failed', e); } }
+    else setTimeout(tick, 700);
+  })();
 }
 window.__modelArrived = function(){
   for (var i=_pendingInits.length-1; i>=0; i--){ var pi = _pendingInits[i];
@@ -1140,7 +1149,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '22-Sep-h';
+var BUILD_TAG = '22-Sep-i';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1669,7 +1678,7 @@ function loadPropKit(src){
   });
 }
 whenModel('PROP_GLB', function(){ loadPropKit(window.PROP_GLB); });
-whenModel('FLY_GLB', function(){ loadPropKit(window.FLY_GLB); });   // Sea Link kit: toll booth, big gantry, debris
+whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // Sea Link kit: toll booth, big gantry, debris
 function propClone(name){ var t = propTemplates[name]; return t ? t.clone(true) : null; }
 
 function makeStreetLamp(){
@@ -3025,7 +3034,7 @@ whenModel(['BUS_GLB_B64','BUS_TEX_GREEN'], function(){ loadObstacleVehicle(windo
 whenModel(['WAGON_GLB_B64','WAGON_TEX_YELLOW'], function(){ loadObstacleVehicle(window.WAGON_GLB_B64,  { targetLen:3.8, faceYaw:0,       hwScale:0.42, dScale:0.9, kind:'hatch',
   variantTex:[window.WAGON_TEX_YELLOW, window.WAGON_TEX_WHITE, window.WAGON_TEX_BLUE] }); });  // compact hatchback + yellow/white/blue
 whenModel('TRUCK2_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK2_GLB_B64, { targetLen:4.6, faceYaw:0,       hwScale:0.4,  dScale:0.9, kind:'tempo' }); });
-whenModel('TANKER_GLB_B64', function(){ loadObstacleVehicle(window.TANKER_GLB_B64, { targetLen:7.4, faceYaw:0,       hwScale:0.4,  dScale:0.85, kind:'tanker' }); });   // PANI water tanker (Sea Link convoys)  // decorated CNG mini-truck
+whenModel('TANKER_GLB_B64', function(){ deferHeavy(function(){ loadObstacleVehicle(window.TANKER_GLB_B64, { targetLen:7.4, faceYaw:0,       hwScale:0.4,  dScale:0.85, kind:'tanker' }); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // PANI water tanker (Sea Link convoys)  // decorated CNG mini-truck
 
 /* ===================== DELIVERY-RIDER BIKE MINIBOSS =====================
    Appears every 1000 pts from 2000. Settles just ahead of the player and weaves
@@ -5435,7 +5444,7 @@ function updateParticles(dt){
 }
 
 /* ============================== AUDIO ============================== */
-var AC = null, engineOsc=null, engineGain=null, engineLfo=null, masterGain=null, dholTimer=null, dholGain=null;
+var AC = null, engineOsc=null, engineGain=null, engineLfo=null, engineLfoGain=null, masterGain=null, dholTimer=null, dholGain=null;
 function initAudio(){
   if (AC) return;
   AC = new (window.AudioContext||window.webkitAudioContext)();
@@ -5449,8 +5458,8 @@ function initAudio(){
   engineOsc = AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value = 55;
   var lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 380;
   engineGain = AC.createGain(); engineGain.gain.value = 0.0;
-  engineLfo = AC.createOscillator(); engineLfo.type='square'; engineLfo.frequency.value = 16;
-  var lfoG = AC.createGain(); lfoG.gain.value = 0.04;
+  engineLfo = AC.createOscillator(); engineLfo.type='triangle'; engineLfo.frequency.value = 9;   // putt-putt: a square LFO racing up to 30 Hz at top speed was the "vibration" buzz
+  var lfoG = AC.createGain(); lfoG.gain.value = 0.03; engineLfoGain = lfoG;
   engineLfo.connect(lfoG); lfoG.connect(engineGain.gain);
   engineOsc.connect(lp); lp.connect(engineGain); engineGain.connect(masterGain);
   engineOsc.start(); engineLfo.start();
@@ -6442,7 +6451,7 @@ function loadBadshahModel(b64, opt){
     badshahTemplate = holder;
   }, function(e){ console.warn('Badshah GLB failed', e); }); } catch(e){ console.warn('Badshah err', e); }
 }
-whenModel('BADSHAH_GLB_B64', function(){ loadBadshahModel(window.BADSHAH_GLB_B64, { targetLen:5.4, faceYaw:0 }); });
+whenModel('BADSHAH_GLB_B64', function(){ deferHeavy(function(){ loadBadshahModel(window.BADSHAH_GLB_B64, { targetLen:5.4, faceYaw:0 }); }, function(){ return state.score > nextBadshahScore - 1500; }); });
 var badshah = null, nextBadshahScore = 4200, BADSHAH_INTERVAL = 9000;
 var BADSHAH_LINES = { start:['Hat be! Papa ka naam suna hai?', 'Jaanta hai main kaun hoon?!', 'Side ho, tin ke dabbe!'], lunge:['Bach ke!', 'Dekh kya raha hai?', 'Aaja aaja!'], flinch:['Arre arre arre!', 'Oye!', 'Pagal hai kya?'], leave:['Papa ka phone… baad mein dekhta hoon tujhe.', 'Chal, next time.'], driver:['Papa ka naam, mummy ki gaadi.', 'Badshah nahi, bachcha hai!', 'Jaa, tuition ka time ho gaya.'] };
 function startBadshahEncounter(){
@@ -7481,7 +7490,8 @@ function animate(){
   // engine pitch
   if (engineOsc){
     engineOsc.frequency.setTargetAtTime(45 + state.speed*2.6, AC.currentTime, 0.1);
-    engineLfo.frequency.setTargetAtTime(10 + state.speed*0.5, AC.currentTime, 0.1);
+    engineLfo.frequency.setTargetAtTime(Math.min(13, 6 + state.speed*0.2), AC.currentTime, 0.1);      // idles chug, cruise hums: the flutter never climbs into buzz territory
+    if (engineLfoGain) engineLfoGain.gain.setTargetAtTime(0.03 * Math.max(0.25, 1 - state.speed/60), AC.currentTime, 0.2);
   }
 
   // player lateral — time-based exponential smoothing (crisp, frame-rate independent).
