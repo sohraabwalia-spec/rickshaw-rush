@@ -12,7 +12,7 @@ window.addEventListener('error', function(e){
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Rickshaw Rush: Mumbai</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@400;700&family=Baloo+2:wght@600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { width:100%; height:100%; overflow:hidden; background:#1a0f2e; font-family:'Trebuchet MS','Arial Black',sans-serif; touch-action:none; }
@@ -473,11 +473,177 @@ window.addEventListener('error', function(e){
     #startScreen.v2 #assetBar, #startScreen.v2 #assetStatus, #startScreen.v2 .keyHints, #startScreen.v2 .vehTag, .mTag { display:none; }
     #startScreen.v2 .mBoard { width:48vh; } #startScreen.v2 .vehName { white-space:nowrap; font-size:2.9vh; } #startScreen.v2 .iconNav { left:auto; right:3vw; bottom:3vh; }
   }
+  /* ===================== GARAGE v2 (24-Sep): Mohalla Motor Works — painted workshop plate + live 3D auto + real UI ===================== */
+  #garageScreen.g2 { --g2green:#1e4d33; --g2green2:#2a6a45; --g2saff:#efbd3c; --g2saff2:#d99a1f; --g2cream:#efe5cc; --g2ink:#1c1f21; --g2char:rgba(22,25,25,.9);
+    display:block; background:#1a140f; color:var(--g2cream); font-family:'Oswald','Baloo 2','Trebuchet MS',sans-serif; }
+  #garageScreen.g2.hidden { display:none; }
+  #garageScreen.g2:not(.hidden) { animation:g2In .38s ease both; } @keyframes g2In { from { opacity:0; } to { opacity:1; } }
+  #garageScreen.g2 #garageCanvas { position:absolute; inset:0; width:100%; height:100%; touch-action:none; cursor:grab; }
+  #garageScreen.g2 #garageCanvas:active { cursor:grabbing; }
+  .g2Shade { position:absolute; inset:0; pointer-events:none; background:linear-gradient(180deg, rgba(10,8,6,.45) 0, rgba(10,8,6,0) 14%), linear-gradient(0deg, rgba(10,8,6,.35) 0, rgba(10,8,6,0) 18%); }
+  .g2Top { position:absolute; left:0; right:0; top:0; height:min(8.4vh,72px); display:flex; align-items:center; gap:12px; padding:0 min(1.6vw,24px);
+    background:linear-gradient(180deg, rgba(16,18,18,.92), rgba(16,18,18,.78)); border-bottom:1px solid rgba(239,189,60,.18); box-shadow:0 6px 18px rgba(0,0,0,.35); }
+  .g2Back { display:flex; align-items:center; gap:10px; height:70%; padding:0 18px 0 12px; border-radius:10px; cursor:pointer; color:var(--g2cream);
+    background:rgba(34,38,38,.95); border:1px solid rgba(255,255,255,.12); font:600 min(2.2vh,22px)/1 'Oswald',sans-serif; letter-spacing:1.5px; transition:background .15s, transform .15s; }
+  .g2Back svg { width:min(2.6vh,24px); height:min(2.6vh,24px); color:var(--g2saff); } .g2Sep { width:1px; align-self:stretch; margin:8px 0; background:rgba(255,255,255,.18); }
+  .g2Back:hover { background:rgba(50,56,56,.98); } .g2Back:active { transform:scale(.96); }
+  .g2Title { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); display:flex; align-items:center; gap:min(1.6vw,24px); pointer-events:none; }
+  .g2Title h1 { margin:0; font:600 min(4.8vh,46px)/1 'Oswald',sans-serif; letter-spacing:3px; color:#eadbb8; text-shadow:0 2px 0 rgba(0,0,0,.5); }
+  .g2Flag { width:min(5vw,76px); height:12px; background:linear-gradient(180deg, #e8782a 0 3px, transparent 3px 4.5px, #efe5cc 4.5px 7.5px, transparent 7.5px 9px, #2b8a4b 9px 12px); opacity:.85; border-radius:2px; }
+  .g2Wallet { margin-left:auto; display:flex; align-items:center; gap:10px; height:70%; padding:0 20px 0 8px; border-radius:10px; background:rgba(34,38,38,.95); border:1px solid rgba(255,255,255,.12); }
+  .g2Wallet b { font:600 min(2.8vh,27px)/1 'Oswald',sans-serif; letter-spacing:1px; color:#f4ead2; font-variant-numeric:tabular-nums; min-width:3.2em; text-align:right; }
+  .g2Coin { width:min(3.8vh,36px); height:min(3.8vh,36px); border-radius:50%; display:flex; align-items:center; justify-content:center; font:700 min(2vh,18px)/1 'Oswald',sans-serif; color:#8a5a08;
+    background:radial-gradient(circle at 35% 30%, #ffe78a, #f2b632 55%, #b77a10); box-shadow:inset 0 0 0 2px #c8901a, inset 0 0 0 4px #ffd970; }
+  .g2Wallet.bump { animation:g2Bump .5s ease; } @keyframes g2Bump { 30% { transform:scale(1.08); background:rgba(80,60,10,.95); } }
+  .g2Gear { height:70%; aspect-ratio:1; border-radius:10px; background:rgba(34,38,38,.95); border:1px solid rgba(255,255,255,.12); color:#e9dcc0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .g2Gear svg { width:60%; height:60%; } .g2Gear:hover { color:var(--g2saff); }
+  /* left category rail */
+  .g2Rail { position:absolute; left:min(1.1vw,20px); top:calc(min(8.4vh,72px) + 5.5vh); display:flex; flex-direction:column; gap:min(1.8vh,18px); }
+  .g2Tab { width:min(8.2vw,15.5vh,152px); aspect-ratio:1/1.03; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:min(1.4vh,12px); cursor:pointer;
+    border-radius:14px; background:linear-gradient(180deg, rgba(26,32,32,.94), rgba(16,20,20,.94)); border:2px solid rgba(255,255,255,.07); color:#e6dcc4;
+    box-shadow:0 8px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06); transition:transform .15s, border-color .15s, background .2s; }
+  .g2Tab svg { width:44%; height:auto; max-height:48%; } .g2Tab span { font:500 min(2.1vh,20px)/1 'Oswald',sans-serif; letter-spacing:1px; }
+  .g2Tab:hover { transform:translateX(3px); border-color:rgba(239,189,60,.45); }
+  .g2Tab.selected { background:linear-gradient(180deg, #24553a, #173a28); border-color:#d9b23a; color:#f3e3b5; box-shadow:0 0 0 1px rgba(217,178,58,.35), 0 0 22px rgba(217,178,58,.25), 0 8px 20px rgba(0,0,0,.45); }
+  .g2Tab.selected svg { color:#f2c64a; }
+  /* view tools + hint */
+  .g2Tools { position:absolute; left:50%; bottom:2.4vh; transform:translateX(-50%); display:flex; gap:8px; }
+  .g2Tools button { width:38px; height:38px; border-radius:50%; cursor:pointer; border:1px solid rgba(255,255,255,.18); background:rgba(20,22,22,.72); color:#f1e6cc; font:600 20px/1 'Oswald',sans-serif; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+  .g2Tools button svg { width:18px; height:18px; } .g2Tools button:hover { border-color:var(--g2saff); color:var(--g2saff); }
+  .g2Hint { position:absolute; left:50%; bottom:calc(2.4vh + 46px); transform:translateX(-50%); font:500 12px/1 'Oswald',sans-serif; letter-spacing:2px; text-transform:uppercase; color:rgba(255,240,210,.7); text-shadow:0 1px 4px rgba(0,0,0,.8); pointer-events:none; transition:opacity .6s; }
+  .g2Hint.gone { opacity:0; }
+  /* the clipboard */
+  .g2Board { position:absolute; right:min(1.1vw,20px); top:calc(min(8.4vh,72px) + 9vh); bottom:2.6vh; width:min(27vw,500px); padding:min(1.2vh,12px); border-radius:12px;
+    background:linear-gradient(160deg, #3b3129, #231d18 60%, #2c241d); box-shadow:0 18px 40px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.06); display:flex; flex-direction:column; }
+  .g2Clip { position:absolute; left:50%; top:-3.4vh; transform:translateX(-50%); width:min(9vw,150px); height:6vh; border-radius:10px 10px 6px 6px;
+    background:linear-gradient(180deg, #9aa0a2, #5d6366 55%, #7c8285); box-shadow:0 4px 8px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.5); z-index:2; }
+  .g2Clip i { position:absolute; left:50%; top:-2.6vh; transform:translateX(-50%); width:4vh; height:4vh; border-radius:50%; border:6px solid #7f8588; border-bottom-color:transparent; }
+  .g2Paper { position:relative; flex:1; min-height:0; display:flex; flex-direction:column; border-radius:6px; padding:min(3.4vh,34px) min(1.4vw,24px) min(1.8vh,18px); color:var(--g2ink);
+    background:radial-gradient(ellipse at 20% 10%, rgba(255,255,255,.35), rgba(255,255,255,0) 50%), radial-gradient(ellipse at 90% 90%, rgba(120,90,40,.22), rgba(0,0,0,0) 55%),
+      repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 2px, transparent 2px 5px), #ebe0c4; box-shadow:inset 0 0 30px rgba(110,80,30,.28); overflow:hidden; }
+  .g2Head { display:flex; align-items:flex-end; gap:10px; margin-bottom:min(1.6vh,16px); color:#2a2622; }
+  .g2Head h2 { margin:0; font:400 min(5.4vh,3.1vw,54px)/.95 'Permanent Marker',sans-serif; letter-spacing:.5px; color:#1d1f20; transform:rotate(-3deg); white-space:nowrap; position:relative; }
+  .g2Head h2::after { content:""; position:absolute; left:4%; right:-6%; bottom:-7px; height:5px; border-radius:3px; background:#23272a; transform:rotate(1deg); opacity:.85; }
+  .g2Tag { font:400 min(2vh,1.1vw,18px)/1.05 'Kalam',cursive; color:#3a342c; transform:rotate(-6deg); margin-left:auto; text-align:right; }
+  .g2Sky { width:min(6vw,90px); color:#4a4238; opacity:.7; flex:none; }
+  .g2Seg { display:flex; gap:6px; padding:4px; border-radius:10px; background:rgba(40,34,26,.12); margin-bottom:min(1.4vh,12px); }
+  .g2Seg.hidden { display:none; }
+  .g2Seg .gSubTab { flex:1; cursor:pointer; border:0; border-radius:7px; padding:min(1vh,8px) 4px; background:transparent; color:#4b4236; font:500 min(1.8vh,16px)/1 'Oswald',sans-serif; letter-spacing:.8px; }
+  .g2Seg .gSubTab.selected { background:#243a2d; color:#f3e3b5; box-shadow:0 2px 0 rgba(0,0,0,.25); }
+  .g2Cards { flex:1; min-height:0; overflow-y:auto; overflow-x:hidden; display:grid; gap:min(1.3vh,12px); align-content:start; padding:4px 4px 8px; margin:0 -4px; scrollbar-width:thin; }
+  .g2Cards.c2 { grid-template-columns:1fr 1fr; } .g2Cards.c3 { grid-template-columns:repeat(3,1fr); } .g2Cards.c4 { grid-template-columns:repeat(4,1fr); } .g2Cards.c1 { grid-template-columns:1fr; }
+  .g2Card { position:relative; cursor:pointer; border-radius:8px; padding:min(1vh,8px) min(.6vw,10px) min(1.2vh,12px); text-align:center; font-family:'Oswald',sans-serif; color:#f1e6cc;
+    background:linear-gradient(180deg, #3d3a35, #2b2926); border:2px solid rgba(0,0,0,.35); box-shadow:0 3px 0 rgba(0,0,0,.25); transition:transform .14s, box-shadow .14s, filter .14s; }
+  .g2Card:hover { transform:translateY(-2px); filter:brightness(1.07); }
+  .g2Card:focus-visible, .g2Tab:focus-visible, .g2Act:focus-visible, .g2Test:focus-visible, .g2Back:focus-visible, .g2Gear:focus-visible, .g2Tools button:focus-visible, .gSubTab:focus-visible, .g2Play:focus-visible, .g2mCard button:focus-visible, .g2Revert:focus-visible { outline:3px solid #36c5d9; outline-offset:2px; }
+  .g2Card.isLocked { background:linear-gradient(180deg, #8f8b84, #6f6b65); color:#f6efe0; }
+  .g2Card.isOwned { background:linear-gradient(180deg, #4a4a44, #34342f); }
+  .g2Card.isEq { background:linear-gradient(180deg, #245a3b, #1a4029); border-color:#3f8a5c; }
+  .g2Card.isSel { box-shadow:0 0 0 3px #efbd3c, 0 0 16px rgba(239,189,60,.55), 0 3px 0 rgba(0,0,0,.25); transform:translateY(-2px); }
+  .g2Card .g2Badge { position:absolute; left:8px; top:6px; display:flex; align-items:center; gap:6px; font:600 min(1.9vh,17px)/1 'Oswald',sans-serif; letter-spacing:1px; color:#eaf4e4; }
+  .g2Card .g2Badge svg { width:1.2em; height:1.2em; color:#6fdc8c; }
+  .g2Card .g2PrevTag { position:absolute; right:6px; top:6px; font:600 10px/1 'Oswald',sans-serif; letter-spacing:1px; padding:3px 6px; border-radius:4px; background:#efbd3c; color:#2a1c05; }
+  .g2Img { position:relative; height:min(15vh,150px); display:flex; align-items:center; justify-content:center; margin-top:min(2.6vh,24px); }
+  .g2Img img { max-width:100%; max-height:100%; filter:drop-shadow(0 8px 8px rgba(0,0,0,.45)); }
+  .g2Card.isLocked .g2Img img { filter:grayscale(.35) brightness(.85) drop-shadow(0 8px 8px rgba(0,0,0,.4)); }
+  .g2Lock { position:absolute; left:50%; top:50%; transform:translate(-50%,-40%); width:min(4.4vh,42px); height:min(4.4vh,42px); color:#fff; filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+  .g2Name { font:600 min(2.4vh,1.35vw,23px)/1.1 'Oswald',sans-serif; letter-spacing:1px; text-transform:uppercase; margin-top:min(.8vh,6px); }
+  .g2Line { font:400 min(1.8vh,1vw,16px)/1.2 'Oswald',sans-serif; opacity:.85; margin-top:3px; }
+  .g2Price { display:inline-flex; align-items:center; gap:7px; margin-top:min(1vh,8px); padding:4px 12px; border-radius:6px; background:rgba(28,28,26,.85); font:600 min(2.1vh,20px)/1 'Oswald',sans-serif; color:#f6ecd4; }
+  .g2Price .g2Coin { width:1.1em; height:1.1em; font-size:.6em; }
+  .g2Card.isPoor .g2Price { color:#ffb09a; } .g2Need { display:block; font:500 min(1.5vh,13px)/1 'Oswald',sans-serif; color:#5b1d10; margin-top:4px; letter-spacing:.5px; }
+  .g2Card.isLocked .g2Need { color:#ffe1d6; }
+  .g2State { display:inline-block; margin-top:min(.8vh,6px); font:600 min(1.6vh,14px)/1 'Oswald',sans-serif; letter-spacing:1.2px; padding:3px 8px; border-radius:4px; background:rgba(255,255,255,.14); }
+  /* small cards: paint chips, trims, rear art, fx */
+  .g2Card.sm { padding:6px 4px 8px; } .g2Card.sm .g2Name { font-size:min(1.7vh,.95vw,15px); letter-spacing:.3px; } .g2Card.sm .g2Price { font-size:min(1.6vh,14px); padding:2px 7px; }
+  .g2Chip { width:min(62%,7vh); aspect-ratio:1; margin:4px auto 2px; border-radius:50%; box-shadow:inset 0 -8px 14px rgba(0,0,0,.35), inset 0 6px 10px rgba(255,255,255,.3), 0 2px 0 rgba(0,0,0,.3); border:3px solid rgba(255,255,255,.25); }
+  .g2Chip.metal { background:linear-gradient(135deg, rgba(255,255,255,.7) 0, rgba(255,255,255,0) 40%, rgba(0,0,0,.25) 60%, rgba(255,255,255,.4) 100%), var(--c); }
+  .g2Art { width:100%; aspect-ratio:1.6; border-radius:4px; overflow:hidden; background:#2a2622; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .g2Art canvas { width:100%; height:100%; display:block; }
+  .g2Fx { height:min(7vh,64px); border-radius:6px; margin:2px 0 4px; position:relative; overflow:hidden; background:radial-gradient(circle at 50% 80%, rgba(0,0,0,.1), rgba(0,0,0,.55)); }
+  .g2Fx i { position:absolute; left:50%; bottom:6px; width:9px; height:9px; margin-left:-4px; border-radius:50%; background:var(--c); box-shadow:0 0 10px var(--c); animation:gfxRise 1.3s infinite ease-out; }
+  .g2Fx i:nth-child(2){ animation-delay:.4s; margin-left:-16px; } .g2Fx i:nth-child(3){ animation-delay:.8s; margin-left:8px; } .g2Fx i:nth-child(4){ animation-delay:1s; margin-left:-8px; }
+  /* horns: list rows */
+  .g2Card.row { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; text-align:left; padding:8px 10px; }
+  .g2Play { width:min(4.6vh,42px); height:min(4.6vh,42px); border-radius:50%; border:0; cursor:pointer; background:#efbd3c; color:#2a1c05; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 0 #9d7512; }
+  .g2Play svg { width:45%; height:45%; } .g2Play.playing { background:#fff2c4; animation:g2Pulse .6s ease-in-out infinite alternate; } @keyframes g2Pulse { to { transform:scale(1.1); } }
+  .g2Card.row .g2Name { margin:0; font-size:min(2vh,18px); } .g2Card.row .g2Line { font-size:min(1.6vh,14px); }
+  .g2Card.row .g2Right { text-align:right; } .g2Card.row .g2Price, .g2Card.row .g2State { margin-top:0; }
+  /* detail + actions */
+  .g2Detail { font:400 min(1.8vh,15px)/1.3 'Oswald',sans-serif; color:#3b3429; margin:min(1vh,8px) 2px 0; min-height:1.3em; }
+  .g2Detail b { font-weight:600; color:#1d1f20; margin-right:6px; letter-spacing:.5px; } .g2Detail em { display:block; font-style:normal; color:#7a4d0a; }
+  .g2Actions { display:flex; gap:8px; margin-top:min(1.2vh,10px); }
+  .g2Act { flex:1; cursor:pointer; border:0; border-radius:8px; height:min(6vh,52px); font:600 min(2.4vh,21px)/1 'Oswald',sans-serif; letter-spacing:1.5px; color:#f4f0e2;
+    background:linear-gradient(180deg, #2f7a4e, #215a39); box-shadow:0 4px 0 #143824; transition:transform .1s, filter .15s; }
+  .g2Act:hover { filter:brightness(1.1); } .g2Act:active { transform:translateY(3px); box-shadow:0 1px 0 #143824; }
+  .g2Act.buy { background:linear-gradient(180deg, #2f7a4e, #215a39); }
+  .g2Act.equipped { background:#d9ceb2; color:#2f5a3e; box-shadow:none; cursor:default; }
+  .g2Act.poor { background:#cfc6b0; color:#6b3b2a; box-shadow:none; cursor:not-allowed; font-size:min(2vh,17px); letter-spacing:.8px; }
+  .g2Act.busy { pointer-events:none; opacity:.7; }
+  .g2Revert { cursor:pointer; border:2px solid #4a4236; border-radius:8px; background:transparent; color:#3b3429; font:600 min(1.9vh,16px)/1 'Oswald',sans-serif; letter-spacing:.8px; padding:0 12px; }
+  .g2Revert.hidden { display:none; } .g2Revert:hover { background:rgba(0,0,0,.06); }
+  .g2Test { display:flex; align-items:center; gap:min(1.4vw,18px); width:100%; margin-top:min(1.6vh,14px); cursor:pointer; border:2px solid #9b7418; border-radius:8px; padding:min(1vh,8px) 16px;
+    min-height:min(8vh,72px); background:linear-gradient(180deg, #f3c94c, #e2a92b); color:#1b1a16; box-shadow:0 5px 0 #8e6512, 0 10px 18px rgba(0,0,0,.25); transition:transform .1s, filter .15s; text-align:left; }
+  .g2Test svg { width:min(5vh,46px); height:auto; flex:none; }
+  .g2Test .g2TestTxt { flex:1; display:flex; flex-direction:column; align-items:center; }
+  .g2Test b { font:600 min(3.6vh,2vw,34px)/1 'Oswald',sans-serif; letter-spacing:2px; } .g2Test small { font:500 min(1.5vh,13px)/1.2 'Oswald',sans-serif; letter-spacing:.6px; opacity:.8; margin-top:3px; text-transform:uppercase; }
+  .g2Test i { font:600 min(4.4vh,40px)/1 'Oswald',sans-serif; font-style:normal; transition:transform .15s; }
+  .g2Test:hover { filter:brightness(1.06); } .g2Test:hover i { transform:translateX(4px); } .g2Test:active { transform:translateY(3px); box-shadow:0 2px 0 #8e6512; }
+  .g2Foot { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; margin-top:min(1.2vh,10px); color:#3b3429; font:400 min(2.2vh,1.2vw,20px)/1.05 'Kalam',cursive; }
+  .g2Foot span { transform:rotate(-4deg); } .g2Foot em { font-style:normal; margin-left:1.4em; } .g2Foot svg { width:min(10vw,160px); color:#4a4238; opacity:.75; }
+  /* modal, settings, flash */
+  .g2Modal { position:absolute; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(10,8,6,.62); backdrop-filter:blur(3px); }
+  .g2Modal.hidden, .g2Pop.hidden { display:none; }
+  .g2mCard { width:min(92vw,400px); border-radius:10px; padding:22px 24px 20px; color:var(--g2ink); background:#ebe0c4; box-shadow:0 20px 50px rgba(0,0,0,.6), inset 0 0 26px rgba(110,80,30,.25); font-family:'Oswald',sans-serif; animation:uiIn .22s ease both; }
+  .g2mCard h3 { margin:0 0 14px; font:400 30px/1.05 'Permanent Marker',sans-serif; }
+  .g2mRow { display:flex; justify-content:space-between; font-size:18px; padding:6px 0; border-bottom:1px dashed rgba(60,50,40,.3); } .g2mRow b { font-weight:600; font-variant-numeric:tabular-nums; }
+  .g2mRow.total b { color:#1f5a38; } .g2mCard p { margin:12px 0 0; font-size:14px; color:#5a4f40; }
+  .g2mBtns { display:flex; gap:10px; margin-top:18px; } .g2mBtns button { flex:1; height:48px; border-radius:8px; cursor:pointer; font:600 19px/1 'Oswald',sans-serif; letter-spacing:1px; }
+  .g2mNo { background:transparent; border:2px solid #4a4236; color:#3b3429; } .g2mYes { border:0; color:#f4f0e2; background:linear-gradient(180deg, #2f7a4e, #215a39); box-shadow:0 4px 0 #143824; }
+  .g2Pop { position:absolute; right:min(1.6vw,24px); top:calc(min(8.4vh,72px) + 8px); z-index:35; width:250px; padding:8px; border-radius:10px; background:rgba(22,25,25,.97); border:1px solid rgba(255,255,255,.14); box-shadow:0 12px 30px rgba(0,0,0,.5); }
+  .g2pRow { display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; padding:10px; border:0; border-radius:6px; background:transparent; color:#efe5cc; font:500 16px/1 'Oswald',sans-serif; letter-spacing:.5px; cursor:pointer; }
+  .g2pRow:hover { background:rgba(255,255,255,.06); } .g2pRow b { color:var(--g2saff); } .g2pRow input { width:110px; accent-color:#efbd3c; } .g2pRow code { color:#7df9ff; font-size:14px; } .g2pRow.hidden { display:none; }
+  .g2Flash { position:absolute; inset:0; z-index:45; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 52% 40%, #fff6dc, #ffd98c 60%, #e8a44a); transition:opacity .35s ease; }
+  .g2Flash.on { opacity:1; }
+  #garageScreen.g2 .gToast { top:14vh; font-family:'Oswald',sans-serif; letter-spacing:1px; font-weight:600; }
+  .g2Card.stamp::after { content:"✓ EQUIPPED"; position:absolute; left:50%; top:45%; transform:translate(-50%,-50%) rotate(-8deg); padding:6px 12px; border:3px solid #2f7a4e; border-radius:6px; color:#2f7a4e; background:rgba(235,224,196,.92); font:700 18px/1 'Oswald',sans-serif; letter-spacing:2px; animation:g2Stamp .9s ease both; pointer-events:none; }
+  @keyframes g2Stamp { 0% { opacity:0; transform:translate(-50%,-50%) rotate(-8deg) scale(1.6); } 20% { opacity:1; transform:translate(-50%,-50%) rotate(-8deg) scale(1); } 80% { opacity:1; } 100% { opacity:0; } }
+  /* narrower desktop / tablet */
+  @media (max-width:1100px) and (min-width:761px){ .g2Board { width:36vw; } .g2Tab { width:min(9vw,13vh,120px); } .g2Title .g2Flag { display:none; } .g2Head h2 { font-size:min(4.6vh,3.4vw,44px); } .g2Tag, .g2Sky { display:none; } }
+  /* short landscape (phones on their side) */
+  @media (min-width:761px) and (max-height:560px){
+    .g2Top { height:52px; } .g2Rail { top:62px; gap:8px; } .g2Tab { width:min(16vh,78px); gap:4px; border-radius:10px; } .g2Tab span { font-size:11px; }
+    .g2Board { top:64px; bottom:8px; width:min(40vw,360px); padding:6px; } .g2Clip, .g2Tag, .g2Sky, .g2Foot { display:none; } .g2Paper { padding:10px 12px; }
+    .g2Head { margin-bottom:6px; } .g2Head h2 { font-size:26px; } .g2Img { height:18vh; margin-top:16px; } .g2Name { font-size:14px; } .g2Line { font-size:11px; }
+    .g2Test { min-height:48px; margin-top:8px; padding:4px 12px; } .g2Test b { font-size:20px; } .g2Test small { font-size:10px; } .g2Test svg { width:28px; }
+    .g2Act { height:40px; font-size:16px; } .g2Detail { display:none; } .g2Card.big .g2Line { display:none; } .g2Img { height:13vh; margin-top:14px; } .g2Seg { margin-bottom:6px; } .g2Seg .gSubTab { padding:5px 4px; font-size:12px; } .g2Hint { display:none; } .g2Tools { bottom:8px; left:calc(50% - 60px); } .g2Title h1 { font-size:26px; }
+  }
+  /* phones upright: stage on top, categories as a strip, the clipboard becomes a sheet */
+  @media (max-width:760px){
+    #garageScreen.g2 #garageCanvas { height:44vh; bottom:auto; }
+    .g2Shade { height:44vh; }
+    .g2Top { height:56px; gap:8px; padding:0 10px; } .g2Back { padding:0 12px 0 8px; font-size:15px; gap:6px; } .g2Sep { display:none; }
+    .g2Title h1 { font-size:24px; letter-spacing:2px; } .g2Title .g2Flag { display:none; } .g2Wallet { padding:0 10px 0 6px; } .g2Wallet b { font-size:18px; min-width:0; } .g2Coin { width:24px; height:24px; font-size:12px; }
+    .g2Rail { left:8px; right:8px; top:44vh; flex-direction:row; gap:6px; } .g2Tab { flex:1; width:auto; aspect-ratio:auto; height:58px; flex-direction:row; gap:6px; border-radius:10px; } .g2Tab svg { width:24px; max-height:24px; } .g2Tab span { font-size:13px; }
+    .g2Tab:hover { transform:none; }
+    .g2Board { left:6px; right:6px; top:calc(44vh + 66px); bottom:6px; width:auto; padding:5px; } .g2Clip { display:none; } .g2Paper { padding:10px 12px 10px; }
+    .g2Head { margin-bottom:8px; } .g2Head h2 { font-size:30px; } .g2Tag { font-size:13px; } .g2Sky { width:60px; } .g2Foot { display:none; }
+    .g2Img { height:16vh; margin-top:20px; } .g2Name { font-size:16px; } .g2Line { font-size:12px; } .g2Card .g2Badge { font-size:13px; } .g2Price { font-size:15px; }
+    .g2Card.sm .g2Name { font-size:12px; } .g2Cards.c4 { grid-template-columns:repeat(4,1fr); }
+    .g2Test { min-height:56px; } .g2Test b { font-size:22px; } .g2Test small { font-size:10.5px; } .g2Test svg { width:30px; } .g2Act { height:46px; font-size:17px; }
+    .g2Detail { display:none; } .g2Head h2 { font-size:26px; } .g2Img { height:11vh; margin-top:18px; } .g2Card.big .g2Line { display:none; } .g2Title h1 { font-size:20px; }
+    .g2Tools { top:calc(44vh - 48px); bottom:auto; left:auto; right:10px; transform:none; } .g2Tools button { width:34px; height:34px; } .g2Hint { top:calc(44vh - 22px); bottom:auto; left:12px; transform:none; font-size:10px; }
+  }
+  body.inGarage #perfHud { display:none !important; }
+  #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
+  #practiceChip.hidden { display:none; }
+  @media (prefers-reduced-motion: reduce){ #garageScreen.g2 *, #garageScreen.g2 { animation:none !important; transition:none !important; } }
 </style>
 </head>
 <body>
 <div id="grade"></div>
 <div id="ui">
+  <div id="practiceChip" class="hidden">TEST RIDE</div>
   <div id="hud" class="hidden">
     <div id="scoreWrap">
       <div id="scoreVal">0</div>
@@ -545,45 +711,58 @@ window.addEventListener('error', function(e){
     <div id="menuShade"></div>
   </div>
 
-  <div id="garageScreen" class="hidden">
-    <div class="gTopBar">
-      <div class="gBack" id="garageBack"><span class="gBackChev">‹</span> BACK</div>
-      <div class="gTitle">GARAGE<span class="gTitleSub">Sharma Motor Garage · customize · ride · repeat</span></div>
-      <div class="gWallet">🪙 <span id="garageCoins">0</span></div>
-      <div class="gCode hidden" id="gCode">🔑 SYNC CODE <code id="gCodeVal"></code></div>
+  <div id="garageScreen" class="hidden g2" aria-label="Garage">
+    <canvas id="garageCanvas" aria-label="Rickshaw preview. Drag to rotate, scroll or pinch to zoom."></canvas>
+    <div class="g2Shade"></div>
+    <header class="g2Top">
+      <button class="g2Back" id="garageBack" aria-label="Back to menu"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="g2Sep"></span>BACK</button>
+      <div class="g2Title"><i class="g2Flag"></i><h1>GARAGE</h1><i class="g2Flag"></i></div>
+      <div class="g2Wallet" id="g2Wallet" aria-label="Coins"><span class="g2Coin"></span><b id="garageCoins">0</b></div>
+      <button class="g2Gear" id="g2Gear" aria-label="Settings" aria-haspopup="true"><svg viewBox="0 0 24 24"><path fill="currentColor" d="M19.4 13a7.7 7.7 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.7a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.5 11a7.7 7.7 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.7a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg></button>
+    </header>
+    <nav class="g2Rail" role="tablist" aria-label="Garage categories">
+      <button class="g2Tab" role="tab" data-cat="rickshaw"><svg viewBox="0 0 48 40"><path fill="currentColor" d="M9 6c0-2 2-4 5-4h17c4 0 7 3 8 6l3 12v9h-4a5 5 0 0 0-10 0H19a5 5 0 0 0-10 0H5v-6l4-2zm5 2v9h9V8zm12 0v9h10l-2-7c-.4-1.2-1.4-2-2.6-2z"/><circle fill="currentColor" cx="14" cy="32" r="4"/><circle fill="currentColor" cx="33" cy="32" r="4"/></svg><span>VEHICLES</span></button>
+      <button class="g2Tab" role="tab" data-cat="paint"><svg viewBox="0 0 40 48"><path fill="currentColor" d="M14 2h8v6h-8zM28 3l6-2 1 3-6 2zm0 5 7 1v3l-7-1zM11 10h14a4 4 0 0 1 4 4v28a4 4 0 0 1-4 4H11a4 4 0 0 1-4-4V14a4 4 0 0 1 4-4z"/></svg><span>PAINT</span></button>
+      <button class="g2Tab" role="tab" data-cat="horn"><svg viewBox="0 0 48 40"><path fill="currentColor" d="M4 15h7l22-11v32L11 25H4zm8 12h6l3 9h-6zM38 12a10 10 0 0 1 0 16l-2-3a6 6 0 0 0 0-10z"/></svg><span>HORNS</span></button>
+      <button class="g2Tab" role="tab" data-cat="fx"><svg viewBox="0 0 48 48"><path fill="currentColor" d="M20 6l4 12 12 4-12 4-4 12-4-12-12-4 12-4zM37 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM36 30l1.6 4.4L42 36l-4.4 1.6L36 42l-1.6-4.4L30 36l4.4-1.6z"/></svg><span>EFFECTS</span></button>
+    </nav>
+    <div class="g2Tools" aria-label="View controls">
+      <button id="g2ZoomIn" aria-label="Zoom in">+</button><button id="g2ZoomOut" aria-label="Zoom out">−</button><button id="g2Reset" aria-label="Reset view"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v5h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     </div>
-    <div class="gStage">
-      <canvas id="garageCanvas"></canvas>
-      <div class="gTurntableGlow"></div>
-      <div class="gHint">drag to rotate</div>
-      <div class="gStageSign">SHARMA MOTOR GARAGE</div>
-      <div class="gOwnedCount" id="gOwnedCount"></div>
-      <div class="gSelInfo">
-        <div class="gSelName" id="gSelName">Classic</div>
-        <div class="gSelRarity" id="gSelRarity">COMMON</div>
-        <div class="gSelDesc" id="gSelDesc"></div>
-        <div class="gStats" id="gStats"></div>
-        <div class="gPerk" id="gPerk"></div>
-        <button class="gActionBtn" id="gActionBtn">EQUIPPED</button>
-        <button class="gActionBtn test" id="gTestBtn">🧪 TEST RIDE</button>
+    <div class="g2Hint" id="g2Hint">drag to rotate · scroll to zoom</div>
+    <aside class="g2Board" aria-live="polite">
+      <div class="g2Clip"><i></i></div>
+      <div class="g2Paper">
+        <div class="g2Head"><h2 id="g2PanelTitle">YOUR RIDE</h2><div class="g2Tag" id="g2Tag">Same Galli<br>New Stories</div><svg class="g2Sky" viewBox="0 0 120 40"><path d="M2 38h116M10 38V26h8v12M14 26v-6M24 38V20l6-6 6 6v18M27 38v-8h6v8M40 38V28h10v10M54 38V12h3l3 3v23M60 38V22h8v16M72 38V16l5-8 5 8v22M75 22h4M86 38V26h6v12M96 38V30h10v8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg></div>
+        <div class="g2Seg hidden" id="gSubTabs" role="tablist" aria-label="Paint options">
+          <button class="gSubTab" role="tab" data-sub="paint">Body colour</button><button class="gSubTab" role="tab" data-sub="rearArt">Rear art</button><button class="gSubTab" role="tab" data-sub="trim">Trim</button>
+        </div>
+        <div class="g2Cards" id="gCards" role="listbox" aria-label="Items"></div>
+        <div class="g2Detail" id="g2Detail"><b id="gSelName"></b><span id="gSelDesc"></span><em id="gPerk"></em></div>
+        <div class="g2Actions">
+          <button class="g2Act" id="gActionBtn">EQUIPPED</button>
+          <button class="g2Revert hidden" id="g2Revert" title="Back to what you have equipped">↺ Revert</button>
+        </div>
+        <button class="g2Test" id="gTestBtn"><svg viewBox="0 0 40 32"><path fill="currentColor" d="M14 2h12l12 28H2zM19 6h2v5h-2zm-.4 8h2.8v6h-2.8zm-.6 9h4v6h-4z"/></svg><span class="g2TestTxt"><b>TEST RIDE</b><small id="g2TestSub">your equipped ride · 45 s practice</small></span><i>›</i></button>
+        <div class="g2Foot"><span>Different Routes<br><em>Same Dil</em></span><svg viewBox="0 0 160 40"><path d="M2 38h156M8 38V28h6v10M18 38V20h8v18M30 38V24l4-4 4 4v14M44 38V14h2l2-4 2 4h2v24M56 38V26h8v12M68 38l14-26 14 26M82 12v26M72 30l10-18 10 18M100 38V24h10v14M116 38V30h8v8M138 38V22M138 22c-6-2-10 0-12 3M138 22c6-2 10 0 12 3M138 22c-3-4-7-5-10-4M138 22c3-4 7-5 10-4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+      </div>
+    </aside>
+    <div class="g2Modal hidden" id="g2Confirm" role="dialog" aria-modal="true" aria-labelledby="g2cTitle">
+      <div class="g2mCard">
+        <h3 id="g2cTitle">Buy Desi Special?</h3>
+        <div class="g2mRow"><span>Price</span><b id="g2cPrice">2,500</b></div>
+        <div class="g2mRow"><span>Your balance</span><b id="g2cBal">3,806</b></div>
+        <div class="g2mRow total"><span>After purchase</span><b id="g2cAfter">1,306</b></div>
+        <p id="g2cNote">It will be equipped right away.</p>
+        <div class="g2mBtns"><button class="g2mNo" id="g2cNo">Cancel</button><button class="g2mYes" id="g2cYes">Buy</button></div>
       </div>
     </div>
-    <div class="gBottom">
-      <div class="gSubTabs hidden" id="gSubTabs">
-        <div class="gSubTab selected" data-sub="paint">Paint</div>
-        <div class="gSubTab" data-sub="rearArt">Rear Art</div>
-        <div class="gSubTab" data-sub="trim">Trim</div>
-      </div>
-      <div class="gRowHead"><b id="gRowTitle">RICKSHAWS</b><span id="gRowCount"></span><span class="gKeys"><kbd>← →</kbd> browse <kbd>Enter</kbd> equip / buy <kbd>T</kbd> test ride <kbd>1-4</kbd> tabs <kbd>Esc</kbd> back</span></div>
-      <div class="gCards" id="gCards"></div>
-      <div class="gNav">
-        <div class="gNavTab selected" data-cat="rickshaw"><span>🛺</span>Rickshaws</div>
-        <div class="gNavTab" data-cat="style"><span>🎨</span>Style</div>
-        <div class="gNavTab" data-cat="horn"><span>📯</span>Horns</div>
-        <div class="gNavTab" data-cat="fx"><span>✨</span>Ride FX</div>
-      </div>
+    <div class="g2Pop hidden" id="g2Settings" role="dialog" aria-label="Settings">
+      <button class="g2pRow" id="g2Sound">Sound <b id="g2SoundVal">ON</b></button>
+      <label class="g2pRow">Music <input type="range" id="g2Music" min="0" max="100" value="60"></label>
+      <div class="g2pRow g2pCode" id="g2CodeRow">Sync code <code id="g2Code">—</code></div>
     </div>
-    <button class="gTestRide" id="gTestRide">▶ TEST RIDE</button>
+    <div class="g2Flash" id="g2Flash"></div>
     <div class="gToast hidden" id="gToast"></div>
   </div>
 
@@ -1139,8 +1318,8 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 /* ---- staged asset loader: fetches every model script with a real progress bar, retries once, reports what failed,
         then runs the game script. Replaces 43 blocking <script src> tags (≈50 MB) that showed a blank page while downloading. ---- */
 (function(){
-  var FILES = ["ui-art.js", "rickshaw-model.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js"];
-  var SIZES = {"rickshaw-model.js": 704964, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 380193, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 204296, "bldg-old-model.js": 751908, "bldg-mixed-model.js": 672974, "bldg-modern-model.js": 1004411, "bldg-market-model.js": 762167, "bldg-corner-model.js": 758587, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1058357, "bus-model.js": 234786, "bus-tex-variants.js": 398002, "wagon-model.js": 259128, "wagon-tex-variants.js": 395949, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 389744, "police-model.js": 341554, "bldg-paan-model.js": 625065, "bldg-hotel-model.js": 641630, "bldg-hospital-model.js": 610881, "bldg-lodge-model.js": 667982, "bldg-clinic-model.js": 536347, "bldg-office-model.js": 756975, "bldg-police-model.js": 573151, "props-model.js": 4487335, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688, "flyover2-models.js": 783639};
+  var FILES = ["ui-art.js", "rickshaw-model.js", "garage-art.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js"];
+  var SIZES = {"rickshaw-model.js": 704964, "garage-art.js": 430300, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 380193, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 204296, "bldg-old-model.js": 751908, "bldg-mixed-model.js": 672974, "bldg-modern-model.js": 1004411, "bldg-market-model.js": 762167, "bldg-corner-model.js": 758587, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1058357, "bus-model.js": 234786, "bus-tex-variants.js": 398002, "wagon-model.js": 259128, "wagon-tex-variants.js": 395949, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 389744, "police-model.js": 341554, "bldg-paan-model.js": 625065, "bldg-hotel-model.js": 641630, "bldg-hospital-model.js": 610881, "bldg-lodge-model.js": 667982, "bldg-clinic-model.js": 536347, "bldg-office-model.js": 756975, "bldg-police-model.js": 573151, "props-model.js": 4487335, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688, "flyover2-models.js": 783639};
   var total = 0; Object.keys(SIZES).forEach(function(k){ total += SIZES[k]; });
   var done = {}, failed = [], loadedBytes = 0;
   function $(id){ return document.getElementById(id); }
@@ -1315,7 +1494,8 @@ function setRes(pr){
   window.RENDER_SCALE = pr;
 }
 function qualityTick(dtMs){
-  if (!state.running) return;
+  if (!state.running){ RES.t = RES.acc = RES.n = 0; RES.hitch = 0; RES.warm = 0; return; }
+  if ((RES.warm = (RES.warm || 0) + dtMs) < 2500) return;                        // the first 2.5 s of a run are all compiles and spawns: don't judge the device on them
   RES.t += dtMs; if (dtMs > 150) RES.hitch = (RES.hitch || 0) + 1; else { RES.acc += dtMs; RES.n++; }   // a lone hitch isn't load; a string of them is
   if (RES.t < 1000) return;
   var avg = RES.n ? RES.acc / RES.n : 999, slow = avg > 18.2 || (RES.hitch || 0) >= 3; RES.acc = 0; RES.n = 0; RES.t = 0; RES.hitch = 0;
@@ -1325,10 +1505,11 @@ function qualityTick(dtMs){
   else { RES.lowWin = 0; if (avg < 15.2 && ++RES.good >= 3 && RES.pr < RES.max - 0.01 && QUALITY.level === 0){ RES.good = 0; setRes(Math.min(RES.max, RES.pr + 0.125)); } }
 }
 function renderFrame(){
+  // quality/resolution changes resize the canvas, and a resize CLEARS it — do it before drawing, never after (that cleared frame was the black flash at run start)
+  var _qn = performance.now(); qualityTick(renderFrame._t ? Math.min(1000, _qn - renderFrame._t) : 16); renderFrame._t = _qn;
   if (useComposer && composer) composer.render();
   else renderer.render(scene, camera);
   if (window.PERF) PERF.sample(renderer);
-  var _qn = performance.now(); qualityTick(renderFrame._t ? Math.min(1000, _qn - renderFrame._t) : 16); renderFrame._t = _qn;
 }
 
 /* ===================== PERF HUD + SESSION DEBUG LOGGER =====================
@@ -1347,7 +1528,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-h';
+var BUILD_TAG = '23-Sep-i';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1372,7 +1553,7 @@ var PERF = (function(){
   });
   window.addEventListener('error', function(e){ try{ logs.push({t:+((performance.now()-started)/1000).toFixed(1), kind:'exception', msg:(e.message||'')+' @'+(e.filename||'').split('/').pop()+':'+e.lineno}); }catch(_){} });
 
-  var hud = document.createElement('div');
+  var hud = document.createElement('div'); hud.id = 'perfHud';
   hud.style.cssText='position:fixed;top:8px;left:8px;z-index:99999;font:700 12px/1.35 ui-monospace,Menlo,Consolas,monospace;'+
     'color:#8effa8;background:rgba(8,10,14,.62);padding:6px 9px;border-radius:8px;pointer-events:none;white-space:pre;letter-spacing:.3px;text-shadow:0 1px 2px #000;';
   hud.textContent='FPS —';
@@ -6175,8 +6356,8 @@ function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; profile.equipp
 /* ---- data-driven cosmetics catalog (UI + gameplay both read from here) ---- */
 var GARAGE_DATA = {
   rickshaw: [   // the VEHICLE (Phase C): each is a real GLB; paint/trim/rear art apply to whichever is equipped
-    { id:'rickshaw', name:'Decorated Auto', rarity:'common', price:0,    desc:'The hero auto — tassels, flag, marigolds and a KING plate. Balanced and honest.', stats:{speed:60, handling:70, swag:75} },
-    { id:'classic',  name:'Desi Special',   rarity:'epic',   price:2500, desc:'A hand-built street auto with a beaded windshield and a HORN OK PLEASE tailgate.', stats:{speed:60, handling:70, swag:100}, perk:'+25% coins on every pickup' }
+    { id:'rickshaw', name:'Decorated Auto', rarity:'common', price:0,    line:'Mumbai runs on personality.', desc:'The hero auto — tassels, flag, marigolds and a KING plate. Balanced and honest.', stats:{speed:60, handling:70, swag:75} },
+    { id:'classic',  name:'Desi Special',   rarity:'epic',   price:2500, line:'Simple. Solid. Desi.', desc:'A hand-built street auto with a beaded windshield and a HORN OK PLEASE tailgate.', stats:{speed:60, handling:70, swag:100}, perk:'+25% coins on every pickup' }
   ],
   paint: [
     { id:'default', name:'Default Green', rarity:'common', price:0,   color:null },
@@ -6394,7 +6575,7 @@ var CLOUD = (function(){
     s.classList.remove('hidden');
     s.innerHTML = '👤 <b>' + escHtml(profile.nick) + '</b>' + (on() ? ' · sync code <code>' + ensurePid() + '</code>' : '') + '<span class="psLink" id="psEdit">change</span>';
     var e = $('psEdit'); if (e) e.addEventListener('click', function(){ askNick(null); });
-    var gc = $('gCode'), gv = $('gCodeVal'); if (gc && gv){ gc.classList.toggle('hidden', !on()); gv.textContent = ensurePid(); }
+    var gv = $('g2Code'), gr = $('g2CodeRow'); if (gv){ gv.textContent = on() ? ensurePid() : '—'; if (gr) gr.classList.toggle('hidden', !on()); }
   }
   $('nickOk').addEventListener('click', acceptNick);
   $('nickInput').addEventListener('keydown', function(e){ if (e.key === 'Enter'){ e.preventDefault(); acceptNick(); } });
@@ -6452,6 +6633,8 @@ function clearWorld(){
   setpieces.forEach(function(S){ S.deco.forEach(function(d){ scene.remove(d); }); }); setpieces.length = 0; distSinceJunction = -200; distSinceSetpiece = -300; state.hydro = 0; state.eventSlow = 1; patrolReset(); zoneNow = 0;
 }
 function startGame(){
+  state.practice = null; var _pc = document.getElementById('practiceChip'); if (_pc) _pc.classList.add('hidden');
+  if (typeof attractStop === 'function') attractStop();   // menu traffic (trucks!) must leave with the menu — it used to stay parked on the road as a solid obstacle
   initAudio();
   if (AC && AC.state==='suspended') AC.resume();
   if (!startGame._noHonk) honk(); startGame._noHonk = false;
@@ -6486,7 +6669,7 @@ function startGame(){
   if (engineGain) engineGain.gain.setTargetAtTime(0.10, AC.currentTime, 0.3);
 }
 function gameOver(){
-  if (typeof endTestRide === 'function') endTestRide();   // trial kit is over; the ride itself is rebuilt at the next start
+  if (typeof endTestRide === 'function' && !state.practice) endTestRide();   // trial kit is over; the ride itself is rebuilt at the next start
   badshahMusic(false); if (flyover){ copSiren(0); }
   state.running = false; state.over = true;
   bossShow(false);
@@ -6496,6 +6679,7 @@ function gameOver(){
   crashSound();
   if (engineGain) engineGain.gain.setTargetAtTime(0.0, AC.currentTime, 0.2);
   state.score = Math.floor(state.dist) + state.bonus;
+  if (state.practice){ practiceFinish('crash'); return; }                            // garage test ride: no coins banked, no board, no cloud row — straight back to the garage
   if (state.coins > 0){ profile.coins += state.coins; saveProfile(); }   // bank this run's coins into the wallet
   var qualifies = scoreQualifies(state.score);
   var newBest = state.score > (profile.best||0);
@@ -7287,11 +7471,21 @@ function vehicleModelFor(id){
 var trialSel = null;                                        // test-ride: unowned garage picks applied for ONE run
 function equippedOrTrial(cat){ return (trialSel && trialSel[cat]) || equippedItem(cat); }
 /* ---- D: horns (procedural; `playHorn(id)` previews any of them; `hornNow()` is the player's input) ---- */
+var _hornOut = null, _hornPrevBus = null;                    // garage previews play through their own bus so the next preview can cut the last one
+var HORN_LEN = { classic:0.36, truck:0.98, musical:0.95, dhol:0.8, tiny:0.22, royal:1.05 };
+function previewHorn(id){                                   // returns false when there is no audio (muted / not started)
+  if (typeof initAudio === 'function' && !AC) initAudio(); if (!AC || state.muted) return false;
+  if (AC.state === 'suspended') AC.resume();
+  if (_hornPrevBus){ var old = _hornPrevBus; try { old.gain.cancelScheduledValues(AC.currentTime); old.gain.setTargetAtTime(0, AC.currentTime, 0.012); } catch(e){} setTimeout(function(){ try { old.disconnect(); } catch(e){} }, 120); }
+  var bus = AC.createGain(); bus.gain.value = 1; bus.connect(masterGain); _hornPrevBus = bus; _hornOut = bus;
+  try { playHorn(id); } finally { _hornOut = null; }
+  return true;
+}
 function _tone(type, f0, f1, t0, dur, vol, filt){
   var o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t0); if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t0+dur);
   var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0+0.02); g.gain.setValueAtTime(vol, t0+dur*0.75); g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
   if (filt){ var f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = filt; o.connect(f); f.connect(g); } else o.connect(g);
-  g.connect(masterGain); o.start(t0); o.stop(t0+dur+0.03);
+  g.connect(_hornOut || masterGain); o.start(t0); o.stop(t0+dur+0.03);
 }
 function playHorn(id){
   if (!AC || state.muted) return;
@@ -7315,7 +7509,7 @@ function beepHorn(t, dur){                                  // pure, rounded ton
     var o = AC.createOscillator(), g = AC.createGain(); o.type = v[0]; g.gain.value = v[2];
     o.frequency.setValueAtTime(f*v[1]*0.97, t); o.frequency.exponentialRampToValueAtTime(f*v[1], t + 0.03);   // tiny upward chirp on attack
     o.connect(g); g.connect(lp); o.start(t); o.stop(t + dur + 0.02); });
-  lp.connect(out); out.connect(masterGain);
+  lp.connect(out); out.connect(_hornOut || masterGain);
 }
 var _hornCurve = null;
 function autoHorn(t, dur){                                  // electric disc horn: buzzy diaphragm (square + detuned saw), pitch sags on attack as the 12 V battery loads,
@@ -7382,304 +7576,488 @@ function emitRideFx(dt){
     if (fx.pop && Math.random() < 0.06) coinPop(p.position.x, p.position.y + 0.3, p.position.z);
   }
 }
-/* ---- F: test ride — one run with the current (even unowned) garage picks, then back to the equipped kit ---- */
+/* ---- F: test ride — a 45 s practice run with the garage preview (even unowned picks); nothing is charged, equipped or banked ---- */
+var TEST_RIDE_SECS = 45;
 function startTestRide(sel){
   trialSel = JSON.parse(JSON.stringify(sel));
   if (trialSel.rickshaw && (trialSel.rickshaw === 'rickshaw' || trialSel.rickshaw === 'classic')) selectedVehicle = trialSel.rickshaw;
   applyPlayerVehicle();
-  popup('🧪 TEST RIDE — try before you buy', 'popEvent', 50, 20); popup('kit reverts after this run', 'popSub', 50, 36);
 }
-function endTestRide(){ if (!trialSel) return; trialSel = null; selectedVehicle = profile.equipped.rickshaw || 'rickshaw'; }
+function endTestRide(){ if (!trialSel) return; trialSel = null; selectedVehicle = profile.equipped.rickshaw || 'rickshaw'; if (typeof applyPlayerVehicle === 'function') applyPlayerVehicle(); }
+function practiceBegin(ret){                                    // called right after startGame() for a garage test ride
+  state.practice = { t:0, dur:TEST_RIDE_SECS, ret:ret, ending:false };
+  nextBikeScore = nextCopScore = nextBadshahScore = 1e9; nextFlyoverScore = 1e9;   // no bosses in a 45 s practice lap
+  var ch = $('practiceChip'); if (ch){ ch.classList.remove('hidden'); ch.textContent = 'TEST RIDE · 0:' + TEST_RIDE_SECS; }
+  popup('🧪 TEST RIDE — ' + TEST_RIDE_SECS + ' s practice', 'popEvent', 50, 20); popup('nothing is bought · coins aren’t banked', 'popSub', 50, 36);
+}
+function practiceTick(rawDt){
+  var P = state.practice; if (!P || P.ending) return;
+  P.t += rawDt; var left = Math.max(0, Math.ceil(P.dur - P.t)), ch = $('practiceChip');
+  if (ch) ch.textContent = 'TEST RIDE · 0:' + (left < 10 ? '0' : '') + left;
+  if (P.t >= P.dur) practiceFinish('time');
+}
+function practiceFinish(why){                                   // back to the garage exactly as you left it
+  var P = state.practice; if (!P || P.ending) return; P.ending = true;
+  if (why === 'time'){ state.running = false; popup('🏁 TEST RIDE OVER', 'popEvent', 50, 30); if (engineGain && AC) engineGain.gain.setTargetAtTime(0.0, AC.currentTime, 0.2); }
+  badshahMusic(false);
+  setTimeout(function(){
+    state.running = false; state.over = false; state.practice = null;
+    var ch = $('practiceChip'); if (ch) ch.classList.add('hidden');
+    $('hud').classList.add('hidden'); $('controls').classList.remove('show'); $('gameOverScreen').classList.add('hidden');
+    if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.stop) try { GAME_AUDIO.stop(); } catch(e){}
+    endTestRide(); clearWorld();
+    GARAGE.open(P.ret);
+  }, why === 'time' ? 900 : 1200);
+}
 
 var GARAGE = (function(){
-  var isOpen=false, activeCat='rickshaw', activeSub='paint';
-  var sel = {};                                   // transient selection per category (drives live preview)
-  var gRenderer, gScene, gCam, gModelHolder, gModel, gTurn, gRing, gShadow, gRaf=null, gSpot=null, gFan=null, gMotes=null, gBhaiya=null;
-  var dragging=false, lastX=0, yaw=0, yawVel=0, idleT=0, BASE_YAW=0;   // rear faces the garage camera by default
-
+  var isOpen = false, activeCat = 'rickshaw', activeSub = 'paint', sel = {}, busy = false;
+  var gRenderer, gScene, gCam, gPlate, gHolder, gModel, gRoll = null, gRaf = null, gSun, gCatch, gBlob, gMotes, gSteam = [], gClock = null, gLaunch = null;
+  var CATS = ['rickshaw','paint','rearArt','trim','horn','fx'];
+  var TAB_OF = { rickshaw:'rickshaw', paint:'paint', rearArt:'paint', trim:'paint', horn:'horn', fx:'fx' };
   function $g(id){ return document.getElementById(id); }
+  function RM(){ try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){ return false; } }
   function catList(cat){ return GARAGE_DATA[cat] || []; }
-  function stateOf(cat,id){ if(equippedItem(cat)===id) return 'equipped'; if(ownsItem(cat,id)) return 'owned'; return 'buy'; }
+  function stateOf(cat, id){ if (equippedItem(cat) === id) return 'equipped'; if (ownsItem(cat, id)) return 'owned'; return 'buy'; }
+  function currentCat(){ return activeCat === 'paint' ? activeSub : activeCat; }
+  function fmt(n){ return Math.round(n).toLocaleString('en-IN'); }
 
-  /* ---------- 3D turntable preview ---------- */
-  function initPreview(){
-    if (gRenderer) return;
+  /* ================= stage: painted workshop plate + real 3D auto, aligned through one fixed camera ================= */
+  // The plate was painted from a camera ~1.64 m up, ~9.2 m back, 23° vertical FOV, looking ~2° down. The turntable in the plate
+  // sits at (44 %, 84 %). We rebuild that camera, hang the plate on a card 40 m out that exactly fills the frustum, and only
+  // ever ROTATE or ZOOM (fov) the camera — both keep the painted floor and the 3D auto locked together.
+  var PL = { h:1.64, d:9.2, fov:23.4, pitch:-0.035, yaw:-0.043, dist:40, aspect:2048/1143, tt:{ u:0.443, v:0.84 } };
+  var Q0 = new THREE.Quaternion(), camPos = new THREE.Vector3(), BASE_T = Math.tan(THREE.MathUtils.degToRad(PL.fov/2));
+  var view = { yaw:0, yawVel:0, zoom:1, aimX:0, aimY:0, touched:0, userYaw:false };
+  var FOCUS = {                        // per category: vehicle yaw (0 = tail to camera), zoom, and the world point to aim at when zoomed
+    rickshaw:{ yaw:Math.PI + 0.62, zoom:1.0,  aim:[0, 0.95, 0] },
+    paint:   { yaw:Math.PI + 1.35, zoom:1.18, aim:[0, 0.85, 0] },
+    trim:    { yaw:Math.PI + 0.95, zoom:1.2,  aim:[0, 0.7, 0] },
+    rearArt: { yaw:0.28,           zoom:1.55, aim:[0.1, 0.75, 0.6] },
+    horn:    { yaw:Math.PI + 0.3,  zoom:1.4,  aim:[0.1, 0.85, 0.8] },
+    fx:      { yaw:0.7,            zoom:1.12, aim:[0.4, 0.6, 0.6] }
+  };
+  function focusFor(){ return FOCUS[currentCat()] || FOCUS.rickshaw; }
+  function initStage(){
+    if (gRenderer) return true;
     var canvas = $g('garageCanvas');
-    try { gRenderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:true }); }
-    catch(e){ return; }
-    gRenderer.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
-    if (THREE.sRGBEncoding) gRenderer.outputEncoding = THREE.sRGBEncoding;
-    if (THREE.ACESFilmicToneMapping){ gRenderer.toneMapping = THREE.ACESFilmicToneMapping; gRenderer.toneMappingExposure = 1.02; }
-    gScene = new THREE.Scene();
-    gCam = new THREE.PerspectiveCamera(30, 1, 0.1, 100);   // longer lens = less distortion
-    gCam.position.set(0.75, 1.45, 5.7); gCam.lookAt(0, 0.82, 0);   // mostly REAR (matches chase cam; hides the front wheel)
-    gScene.add(new THREE.HemisphereLight(0xfff1d6, 0x2a1c12, 0.75));
-    var key=new THREE.DirectionalLight(0xffe6b4, 1.5); key.position.set(4,7,5); gScene.add(key);
-    var rim=new THREE.DirectionalLight(0xff9d4a, 0.85); rim.position.set(-5,3,-4); gScene.add(rim);
-    var fill=new THREE.DirectionalLight(0x88aaff, 0.35); fill.position.set(-2,2,5); gScene.add(fill);
-    gTurn=new THREE.Mesh(new THREE.CylinderGeometry(2.5,2.7,0.25,44), new THREE.MeshStandardMaterial({color:0x2c2118, roughness:0.72, metalness:0.35}));
-    gTurn.position.y=-0.14; gScene.add(gTurn);
-    gRing=new THREE.Mesh(new THREE.TorusGeometry(2.55,0.06,10,52), new THREE.MeshStandardMaterial({color:0xffb020, emissive:0xff8c10, emissiveIntensity:1.3}));
-    gRing.rotation.x=Math.PI/2; gRing.position.y=0.02; gScene.add(gRing);
-    var scv=document.createElement('canvas'); scv.width=scv.height=128; var sx=scv.getContext('2d');
-    var sg=sx.createRadialGradient(64,64,4,64,64,62); sg.addColorStop(0,'rgba(0,0,0,0.55)'); sg.addColorStop(1,'rgba(0,0,0,0)');
-    sx.fillStyle=sg; sx.fillRect(0,0,128,128);
-    gShadow=new THREE.Mesh(new THREE.PlaneGeometry(3,2), new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(scv), transparent:true, depthWrite:false}));
-    gShadow.rotation.x=-Math.PI/2; gShadow.position.y=0.02; gScene.add(gShadow);
-    gModelHolder=new THREE.Group(); gScene.add(gModelHolder);
-    // the workshop: painted brick back wall with posters and shelves, a string of bulbs, a striped floor mat
-    var wallTex = canvasTex(1024, 512, function(g,w,h){
-      g.fillStyle = '#3a2418'; g.fillRect(0,0,w,h);
-      for (var y=0;y<h;y+=32){ for (var x=((y/32)%2)*32; x<w; x+=64){ g.fillStyle = 'rgb('+(78+Math.random()*22|0)+','+(44+Math.random()*14|0)+','+(30+Math.random()*12|0)+')'; g.fillRect(x+2,y+2,60,28); } }
-      g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(0,0,w,h*0.12);                                   // shadow under the ceiling
-      function poster(x,y,pw,ph,bg,txt,col){ g.fillStyle = bg; g.fillRect(x,y,pw,ph); g.fillStyle = col; g.font = 'bold '+(ph*0.22|0)+'px Impact, sans-serif'; g.textAlign='center'; g.fillText(txt, x+pw/2, y+ph*0.55); g.strokeStyle='rgba(0,0,0,.4)'; g.lineWidth=3; g.strokeRect(x,y,pw,ph); }
-      poster(70, 150, 150, 190, '#e8c24a', 'HORN OK', '#c0392b');
-      g.fillStyle = '#c0392b'; g.font = 'bold 34px Impact, sans-serif'; g.fillText('PLEASE', 145, 300);
-      poster(720, 140, 210, 130, '#1c6e9e', 'ROADSTAR TYRES', '#fff'); poster(770, 300, 170, 100, '#2f8f4d', 'CNG FIT', '#ffe27a');
-      g.fillStyle = '#3a2a1a'; g.fillRect(300, 370, 380, 12); g.fillRect(300, 450, 380, 12);           // shelves
-      var cols = ['#c0392b','#2f6fb5','#f2c200','#8e44ad','#e8791a']; for (var i=0;i<9;i++){ g.fillStyle = cols[i%5]; g.fillRect(310+i*40, 332, 26, 38); g.fillStyle = '#ddd'; g.fillRect(314+i*40, 338, 18, 8); }   // paint tins
-      for (var j=0;j<6;j++){ g.fillStyle = '#555'; g.beginPath(); g.arc(330+j*60, 430, 16, 0, 7); g.fill(); g.fillStyle = '#222'; g.beginPath(); g.arc(330+j*60, 430, 7, 0, 7); g.fill(); }   // spare tyres
-      g.strokeStyle = '#111'; g.lineWidth = 3; g.beginPath(); g.moveTo(0,70); g.quadraticCurveTo(w/2, 140, w, 70); g.stroke();
-      for (var b=0;b<9;b++){ var bx = 60 + b*110, by = 70 + Math.sin(b/8*Math.PI)*62, bc = ['#ffd24a','#ff6a6a','#6affb0','#7ab8ff'][b%4]; var gr = g.createRadialGradient(bx, by+10, 2, bx, by+10, 26); gr.addColorStop(0, bc); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.beginPath(); g.arc(bx, by+10, 26, 0, 7); g.fill(); g.fillStyle = '#fff8e0'; g.beginPath(); g.arc(bx, by+10, 5, 0, 7); g.fill(); }
-    });
-    if (window.UI_ART && UI_ART.garage){ var wimg = new THREE.TextureLoader().load(UI_ART.garage); wimg.minFilter = THREE.LinearFilter; wimg.generateMipmaps = false; wallTex = wimg; }   // Higgsfield workshop wall painting
-    if (THREE.sRGBEncoding){ wallTex.encoding = THREE.sRGBEncoding; }                          // painted canvas is sRGB — without this the wall renders washed-out
-    var wall = new THREE.Mesh(new THREE.PlaneGeometry((window.UI_ART && UI_ART.garage) ? 14.4 : 15, (window.UI_ART && UI_ART.garage) ? 8.1 : 4.3), new THREE.MeshStandardMaterial({ map:wallTex, roughness:0.95, color:(window.UI_ART && UI_ART.garage) ? 0xffffff : 0xbdbdbd })); wall.position.set(0, (window.UI_ART && UI_ART.garage) ? 3.78 : 1.85, -4.8); gScene.add(wall);
-    var floorTex = canvasTex(256, 256, function(g,w,h){ g.fillStyle='#2a2320'; g.fillRect(0,0,w,h); g.fillStyle='rgba(255,206,58,0.18)'; for (var i=-h;i<w;i+=48){ g.beginPath(); g.moveTo(i,h); g.lineTo(i+h,0); g.lineTo(i+h+18,0); g.lineTo(i+18,h); g.closePath(); g.fill(); } });
-    floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(4,4); if (THREE.sRGBEncoding) floorTex.encoding = THREE.sRGBEncoding;
-    var floor = new THREE.Mesh(new THREE.PlaneGeometry(16, 10), new THREE.MeshStandardMaterial({ map:floorTex, roughness:0.9 })); floor.rotation.x = -Math.PI/2; floor.position.set(0,-0.27,-1); gScene.add(floor);
-    var spot = new THREE.SpotLight(0xffe0b0, 1.2, 14, 0.7, 0.5); spot.position.set(0, 6, 1.5); spot.target.position.set(0,0,0); gScene.add(spot); gScene.add(spot.target); gSpot = spot;
-    // ceiling fan (wobbly, like every Mumbai workshop fan), dust motes in the spotlight, and the garage bhaiya by the shelves
-    gFan = new THREE.Group(); var fanMat = new THREE.MeshStandardMaterial({ color:0x3b4048, roughness:0.6, metalness:0.4 });
-    var rod = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.9,6), fanMat); rod.position.y = 0.45; gFan.add(rod);
-    var hub = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.1,10), fanMat); gFan.add(hub);
-    for (var fb=0; fb<3; fb++){ var bl = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.02,0.16), new THREE.MeshStandardMaterial({ color:0x6b6f78, roughness:0.5, metalness:0.5 })); bl.position.set(Math.cos(fb*2.094)*0.5, -0.02, Math.sin(fb*2.094)*0.5); bl.rotation.y = -fb*2.094; bl.rotation.x = 0.18; gFan.add(bl); }
-    gFan.position.set(-1.2, 4.1, -1.6); gScene.add(gFan);
-    gMotes = new THREE.Group(); for (var mi=0; mi<40; mi++){ var mo = new THREE.Mesh(new THREE.PlaneGeometry(0.03,0.03), new THREE.MeshBasicMaterial({ color:0xffe9b0, transparent:true, opacity:0.55, depthWrite:false })); mo.position.set(rand(-1.8,1.8), rand(0.3,3.6), rand(-1.5,1.5)); mo.userData.ph = rand(0,6); gMotes.add(mo); } gScene.add(gMotes);
-    if (typeof makePerson === 'function'){ var bh = makePerson(); if (bh){ bh.position.set(-3.7, 0, 0.6); bh.rotation.y = 0.75; if (bh.userData.mixer) bh.userData.mixer.timeScale = 0.12; gScene.add(bh); gBhaiya = bh; } }
-    canvas.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; yawVel=0; canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); });
-    canvas.addEventListener('pointermove', function(e){ if(!dragging)return; var dx=e.clientX-lastX; lastX=e.clientX; yaw+=dx*0.011; yawVel=dx*0.011; });
-    canvas.addEventListener('pointerup', function(){ dragging=false; });
-    canvas.addEventListener('pointercancel', function(){ dragging=false; });
+    try { gRenderer = new THREE.WebGLRenderer({ canvas:canvas, antialias:true, alpha:false, powerPreference:'high-performance' }); } catch(e){ return false; }
+    gRenderer.setPixelRatio(Math.min(1.75, window.devicePixelRatio || 1));
+    gRenderer.outputEncoding = THREE.sRGBEncoding; gRenderer.toneMapping = THREE.ACESFilmicToneMapping; gRenderer.toneMappingExposure = 1.0;
+    gRenderer.shadowMap.enabled = true; gRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    gScene = new THREE.Scene(); gScene.background = new THREE.Color(0x1a140f);
+    gCam = new THREE.PerspectiveCamera(PL.fov, 16/9, 0.1, 200);
+    camPos.set(0, PL.h, PL.d); gCam.position.copy(camPos);
+    var e = new THREE.Euler(PL.pitch - Math.atan(PL.h / PL.d) * 0, PL.yaw, 0, 'YXZ'); Q0.setFromEuler(e); gCam.quaternion.copy(Q0);
+    // the plate: a card in front of the default camera that exactly fills its vertical FOV
+    var ph = 2 * PL.dist * BASE_T, pw = ph * PL.aspect;
+    gPlate = new THREE.Mesh(new THREE.PlaneGeometry(pw, ph), new THREE.MeshBasicMaterial({ color:0xffffff, toneMapped:false, depthWrite:false, fog:false }));
+    gPlate.renderOrder = -10; placeOnPlate(gPlate, 0.5, 0.5, PL.dist); gPlate.quaternion.copy(Q0); gScene.add(gPlate);
+    setPlateTexture();
+    // light that matches the painting: low sun through the shutter behind, warm bounce from the floor, cool fill from the shop
+    gScene.add(new THREE.HemisphereLight(0xffe7c4, 0x4a3522, 0.85));
+    gSun = new THREE.DirectionalLight(0xffc98a, 2.3); gSun.position.set(3.2, 5.2, -5.5); gSun.castShadow = true;
+    gSun.shadow.mapSize.set(1024, 1024); var sc = gSun.shadow.camera; sc.left = -3.5; sc.right = 3.5; sc.top = 3.5; sc.bottom = -3.5; sc.near = 1; sc.far = 20; gSun.shadow.bias = -0.0008; gSun.shadow.radius = 4;
+    gScene.add(gSun); gScene.add(gSun.target);
+    var key = new THREE.DirectionalLight(0xfff0dc, 1.15); key.position.set(-4, 4.5, 6); gScene.add(key);
+    var bounce = new THREE.DirectionalLight(0xffb070, 0.35); bounce.position.set(0, -2, 4); gScene.add(bounce);
+    // shadow catcher: invisible floor that only darkens where the auto shades it, plus a soft contact blob that turns with it
+    gCatch = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.ShadowMaterial({ opacity:0.5 })); gCatch.rotation.x = -Math.PI/2; gCatch.position.y = 0.003; gCatch.receiveShadow = true; gScene.add(gCatch);
+    var scv = document.createElement('canvas'); scv.width = scv.height = 128; var sx = scv.getContext('2d'), sg = sx.createRadialGradient(64,64,6,64,64,62);
+    sg.addColorStop(0, 'rgba(0,0,0,0.8)'); sg.addColorStop(0.5, 'rgba(0,0,0,0.45)'); sg.addColorStop(1, 'rgba(0,0,0,0)'); sx.fillStyle = sg; sx.fillRect(0,0,128,128);
+    gBlob = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map:new THREE.CanvasTexture(scv), transparent:true, depthWrite:false, toneMapped:false })); gBlob.rotation.x = -Math.PI/2; gBlob.position.y = 0.006;
+    gHolder = new THREE.Group(); gHolder.add(gBlob); gScene.add(gHolder);
+    // dust motes drifting in the shutter light, and steam off the chai glass (placed ON the painting so it stays on the glass)
+    gMotes = new THREE.Group(); for (var i=0; i<46; i++){ var mo = new THREE.Mesh(new THREE.PlaneGeometry(0.028, 0.028), new THREE.MeshBasicMaterial({ color:0xfff0c8, transparent:true, opacity:0.5, depthWrite:false, toneMapped:false }));
+      mo.position.set(rand(-2.5, 3.5), rand(0.3, 4.2), rand(-7, -1)); mo.userData.ph = rand(0, 6); gMotes.add(mo); } gScene.add(gMotes);
+    var stc = document.createElement('canvas'); stc.width = stc.height = 64; var stx = stc.getContext('2d'), stg = stx.createRadialGradient(32,32,2,32,32,30); stg.addColorStop(0,'rgba(255,255,255,0.55)'); stg.addColorStop(1,'rgba(255,255,255,0)'); stx.fillStyle = stg; stx.fillRect(0,0,64,64);
+    var stTex = new THREE.CanvasTexture(stc);
+    for (var k=0; k<4; k++){ var st = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map:stTex, transparent:true, opacity:0, depthWrite:false, toneMapped:false })); st.userData.ph = k/4; st.quaternion.copy(Q0); gScene.add(st); gSteam.push(st); }
+    wireStage(canvas);
+    return true;
   }
-  function buildPreviewModel(){
-    if (!gModelHolder) return;
-    while(gModelHolder.children.length) gModelHolder.remove(gModelHolder.children[0]);
-    var m = vehicleModelFor(sel.rickshaw || equippedItem('rickshaw'))
-              || (typeof makeProceduralRickshaw==='function' ? makeProceduralRickshaw() : new THREE.Group());
-    var box=new THREE.Box3().setFromObject(m), size=box.getSize(new THREE.Vector3()), c=box.getCenter(new THREE.Vector3());
-    var s = 2.0 / Math.max(size.x, size.y, size.z, 0.001);
-    m.scale.multiplyScalar(s);
-    box=new THREE.Box3().setFromObject(m); c=box.getCenter(new THREE.Vector3());
-    m.position.set(-c.x, -box.min.y, -c.z);          // feet on the turntable, centered
-    gModelHolder.add(m); gModel=m;
-    if (typeof applyGarageConfig==='function') applyGarageConfig(gModel, sel);   // Phase C fills this in
+  function setPlateTexture(){
+    if (!gPlate || gPlate.material.map || !window.GARAGE_ART) return;
+    var tex = new THREE.TextureLoader().load(GARAGE_ART.bg, function(){ if (isOpen) draw(); }); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+    gPlate.material.map = tex; gPlate.material.needsUpdate = true;
   }
-  function resizePreview(){
-    if (!gRenderer) return;
-    var canvas=$g('garageCanvas'), w=canvas.clientWidth||canvas.offsetWidth||600, h=canvas.clientHeight||canvas.offsetHeight||400;
-    gRenderer.setSize(w, h, false); gCam.aspect=w/h; gCam.updateProjectionMatrix();
+  if (typeof whenModel === 'function') whenModel('GARAGE_ART', setPlateTexture);
+  function placeOnPlate(obj, u, v, dist){                      // a point on the painting (u,v in 0..1) at distance dist along the default camera
+    var t = BASE_T, x = (u - 0.5) * 2 * t * PL.aspect, y = (0.5 - v) * 2 * t;
+    var dir = new THREE.Vector3(x, y, -1).applyQuaternion(Q0);
+    obj.position.copy(camPos).addScaledVector(dir, dist);
   }
-  function loop(){
-    if (!isOpen){ gRaf=null; return; }
-    gRaf=requestAnimationFrame(loop);
-    if (!dragging){
-      if (Math.abs(yawVel) > 0.0004){ yaw += yawVel; yawVel *= 0.93; }        // drag inertia
-      else { idleT += 0.016; var ty = BASE_YAW + Math.sin(idleT*0.55)*0.16;    // ease back to a gentle REAR sway
-             yaw += (ty - yaw) * 0.05; }
+  function anglesTo(p){                                         // yaw/pitch offsets (camera-local) that put world point p on the optical axis
+    var v = new THREE.Vector3().subVectors(p, camPos).applyQuaternion(Q0.clone().invert());
+    return { x:Math.atan2(-v.x, -v.z), y:Math.atan2(v.y, Math.sqrt(v.x*v.x + v.z*v.z)) };
+  }
+  function stageAspect(){ var c = $g('garageCanvas'); return (c.clientWidth || 16) / (c.clientHeight || 9); }
+  function baseTan(){ var A = stageAspect(); return A > PL.aspect ? BASE_T * PL.aspect / A : BASE_T; }   // ultra-wide: fit the width instead
+  function updateCamera(dt){
+    var f = focusFor(), A = stageAspect(), narrow = A < 1.45;
+    var k = RM() ? 1 : 1 - Math.exp(-dt * 7);
+    if (!view.userZoom && narrow) zoomTarget = 1 + (f.zoom - 1) * 0.45;          // narrow stages already crop the painting: go easy on the detail zoom
+    var zoomT = view.zoom; gCam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(baseTan() / zoomT));
+    var tc = Math.tan(THREE.MathUtils.degToRad(gCam.fov/2));
+    // aim: none at full width (the painting frames the shot); follow the auto as you zoom in or when the stage is narrow
+    var yawNow = gHolder ? gHolder.rotation.y : 0, ap = new THREE.Vector3(f.aim[0], f.aim[1], f.aim[2]).applyAxisAngle(new THREE.Vector3(0,1,0), yawNow);
+    if (currentCat() === 'rickshaw' || view.userZoom) ap.set(0, 0.95, 0);
+    var a = anglesTo(ap), s = Math.min(1, Math.max(0, (zoomT - 1) / 0.25));
+    var tx = a.x * s, ty = a.y * s;
+    if (narrow){                                                   // not the painting's own 16:9: put the auto in the middle of the free stage (between rail and clipboard)
+      var ox = 0, c = $g('garageCanvas').getBoundingClientRect(), rl = document.querySelector('.g2Rail').getBoundingClientRect(), bd = document.querySelector('.g2Board').getBoundingClientRect();
+      if (bd.left > c.width * 0.45 && rl.right < c.width * 0.4){ var mid = (rl.right + bd.left) / 2; ox = (mid / c.width - 0.5) * 2; }
+      tx = Math.atan(ox * tc * A) + a.x;
     }
-    if (gModelHolder) gModelHolder.rotation.y = yaw;
-    if (gRing) gRing.material.emissiveIntensity = 1.1 + Math.sin(Date.now()*0.004)*0.3;
-    gCam.position.lerp(camTarget.pos, 0.06); gLook.lerp(camTarget.look, 0.06); gCam.lookAt(gLook);
-    gFxTick();
-    var gt = Date.now()*0.001;
-    if (gFan){ gFan.rotation.y += 0.11; gFan.rotation.z = Math.sin(gt*6)*0.015; }
-    if (gSpot){ gSpot.intensity = 1.15 + Math.sin(gt*30)*0.03 + (Math.random()<0.01 ? -0.25 : 0); }   // tungsten buzz + the odd flicker
-    if (gMotes){ for (var mi=0; mi<gMotes.children.length; mi++){ var mo = gMotes.children[mi]; mo.position.y += 0.0015 + Math.sin(gt*0.7+mo.userData.ph)*0.001; mo.position.x += Math.sin(gt*0.9+mo.userData.ph)*0.0012; if (mo.position.y > 3.8) mo.position.y = 0.2; mo.lookAt(gCam.position); } }
-    if (gBhaiya && gBhaiya.userData.mixer){ gBhaiya.userData.mixer.update(1/60); gBhaiya.rotation.y = 0.7 + Math.sin(gt*0.5)*0.15; }
-    gRenderer.render(gScene, gCam);
+    var mx = Math.max(0, BASE_T * PL.aspect - tc * A) * 0.98, my = Math.max(0, BASE_T - tc) * 0.98;   // never show past the painting's edge
+    tx = -Math.atan(Math.max(-mx, Math.min(mx, Math.tan(-tx)))); ty = Math.atan(Math.max(-my, Math.min(my, Math.tan(ty))));
+    view.aimX += (tx - view.aimX) * k; view.aimY += (ty - view.aimY) * k;
+    var q = Q0.clone().multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(view.aimY, view.aimX, 0, 'YXZ')));
+    gCam.quaternion.copy(q); gCam.aspect = A; gCam.updateProjectionMatrix();
   }
-  // live ride-FX preview: the selected effect puffs out of the exhaust on the turntable
-  var gParts = [], gLook = new THREE.Vector3(0,0.82,0);
-  function gFxTick(){
-    var fx = RIDE_FX[sel.fx || equippedItem('fx')] || RIDE_FX.default, dt = 1/60;
-    var n = 0, r = fx.rate*dt*0.7; while (r > 0){ if (Math.random() < r) n++; r -= 1; }
-    for (var i=0;i<n && gParts.length < 160;i++){
+  var zoomTarget = 1;
+  function setFocus(instant){                                    // category → yaw + zoom; the user's own drag/zoom is dropped
+    var f = focusFor(); view.userYaw = false; view.userZoom = false; zoomTarget = f.zoom; view.yawTarget = f.yaw;
+    if (instant || RM()){ view.zoom = zoomTarget; if (gHolder) gHolder.rotation.y = f.yaw; view.yaw = f.yaw; }
+  }
+  function resetView(){ setFocus(false); toast('View reset'); }
+
+  /* ---------- the auto on the turntable ---------- */
+  function buildPreviewModel(roll){
+    if (!gHolder) return;
+    if (gModel){ gHolder.remove(gModel); if (gModel.userData.garageAddons && gModel.userData.garageAddons.parent) gModel.userData.garageAddons.parent.remove(gModel.userData.garageAddons); }
+    var id = sel.rickshaw || equippedItem('rickshaw');
+    var m = vehicleModelFor(id) || (typeof makeProceduralRickshaw === 'function' ? makeProceduralRickshaw() : new THREE.Group());
+    var wrap = new THREE.Group(); wrap.add(m); wrap.userData.vehicleId = id;
+    var box = new THREE.Box3().setFromObject(wrap), size = box.getSize(new THREE.Vector3());
+    var s = Math.min(2.75 / Math.max(size.x, size.z, 0.001), 2.1 / Math.max(size.y, 0.001)); wrap.scale.setScalar(s); wrap.userData.raw = [size.x, size.y, size.z];
+    box.setFromObject(wrap); var c = box.getCenter(new THREE.Vector3());
+    m.position.x -= c.x / s; m.position.z -= c.z / s; m.position.y -= box.min.y / s;
+    wrap.traverse(function(o){ if (o.isMesh){ o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
+    m.userData.vehicleId = id;
+    gHolder.add(wrap); gModel = wrap;
+    box.setFromObject(wrap); var sz = box.getSize(new THREE.Vector3()); gBlob.scale.set(sz.x * 1.25, sz.z * 1.2, 1);
+    if (typeof applyGarageConfig === 'function') try { applyGarageConfig(m, sel); } catch(e){}
+    gRoll = (roll && !RM()) ? { t:0, dur:0.42 } : null;
+  }
+  function applyLook(){ if (gModel && gModel.children[0]) try { applyGarageConfig(gModel.children[0], sel); } catch(e){} }
+
+  function resize(){
+    if (!gRenderer) return; var c = $g('garageCanvas'), w = c.clientWidth || 800, h = c.clientHeight || 450;
+    gRenderer.setSize(w, h, false); gCam.aspect = w/h; gCam.updateProjectionMatrix();
+  }
+  function tick(dt){
+    // turntable: user drag with inertia, else ease to the category's yaw (shortest way round) with a slow idle sway
+    if (!view.dragging){
+      if (view.userYaw){ if (Math.abs(view.yawVel) > 0.0003){ view.yaw += view.yawVel; view.yawVel *= Math.pow(0.9, dt*60); } }
+      else { var tgt = view.yawTarget + (RM() ? 0 : Math.sin(performance.now()*0.00045) * 0.05), d = tgt - view.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); view.yaw += d * (RM() ? 1 : 1 - Math.exp(-dt*5)); }
+    }
+    if (!view.userZoom) view.zoom += (zoomTarget - view.zoom) * (RM() ? 1 : 1 - Math.exp(-dt*6));
+    if (gHolder){ gHolder.rotation.y = view.yaw; gHolder.position.set(0, 0, 0); }
+    if (gRoll && gModel){ gRoll.t += dt; var p = Math.min(1, gRoll.t / gRoll.dur), e = 1 - Math.pow(1-p, 3);   // new ride rolls in from behind and settles
+      gModel.position.z = -1.4 * (1 - e); gModel.rotation.y = 0.35 * (1 - e); gModel.position.y = Math.sin(p*Math.PI) * 0.03; if (p >= 1){ gRoll = null; gModel.position.set(0,0,0); gModel.rotation.y = 0; } }
+    if (gLaunch) launchTick(dt);
+    updateCamera(dt);
+    fxTick(dt);
+    var t = performance.now() * 0.001;
+    if (gMotes && !RM()) for (var i=0; i<gMotes.children.length; i++){ var mo = gMotes.children[i]; mo.position.y += dt*0.07 + Math.sin(t*0.7 + mo.userData.ph)*0.0006; mo.position.x += Math.sin(t*0.5 + mo.userData.ph)*0.0008; if (mo.position.y > 4.4) mo.position.y = 0.3; mo.quaternion.copy(gCam.quaternion); }
+    for (var k=0; k<gSteam.length; k++){ var st = gSteam[k], ph = ((t*0.33 + st.userData.ph) % 1);        // chai steam curling off the glass (painted at 11.6 %, 76 %)
+      placeOnPlate(st, 0.117 + Math.sin(t*1.3 + k)*0.004 + ph*0.006, 0.755 - ph*0.07, PL.dist - 0.2); var sz = (0.35 + ph*0.9) * PL.dist/40; st.scale.set(sz, sz*1.4, 1); st.material.opacity = RM() ? 0 : Math.sin(ph*Math.PI) * 0.32; }
+  }
+  function draw(){ if (gRenderer) gRenderer.render(gScene, gCam); }
+  function loop(){
+    if (!isOpen){ gRaf = null; return; }
+    gRaf = requestAnimationFrame(loop);
+    var dt = Math.min(0.05, gClock.getDelta());
+    tick(dt); draw();
+  }
+
+  /* ---------- inspect: drag to turn, wheel / pinch / buttons to zoom ---------- */
+  function wireStage(canvas){
+    var ptrs = {}, pinch0 = 0, zoom0 = 1, lastX = 0;
+    function nPtr(){ return Object.keys(ptrs).length; }
+    canvas.addEventListener('pointerdown', function(e){
+      if (gLaunch) return; ptrs[e.pointerId] = { x:e.clientX, y:e.clientY }; try { canvas.setPointerCapture(e.pointerId); } catch(err){}
+      if (nPtr() === 1){ view.dragging = true; lastX = e.clientX; view.yawVel = 0; }
+      else if (nPtr() === 2){ var p = Object.values(ptrs); pinch0 = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); zoom0 = view.zoom; view.dragging = false; }
+      hideHint();
+    });
+    canvas.addEventListener('pointermove', function(e){
+      if (!ptrs[e.pointerId]) return; ptrs[e.pointerId] = { x:e.clientX, y:e.clientY };
+      if (nPtr() === 2){ var p = Object.values(ptrs), d = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); if (pinch0 > 0) setZoom(zoom0 * d / pinch0); return; }
+      if (!view.dragging) return; var dx = e.clientX - lastX; lastX = e.clientX; view.userYaw = true; view.yaw += dx * 0.011; view.yawVel = dx * 0.011;
+    });
+    function up(e){ delete ptrs[e.pointerId]; if (nPtr() === 0) view.dragging = false; if (nPtr() === 1){ var p = Object.values(ptrs)[0]; lastX = p.x; view.dragging = true; } }
+    canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+    canvas.addEventListener('wheel', function(e){ e.preventDefault(); setZoom(view.zoom * Math.exp(-e.deltaY * 0.0015)); hideHint(); }, { passive:false });
+  }
+  function setZoom(z){ view.userZoom = true; view.zoom = zoomTarget = Math.max(1, Math.min(2.3, z)); }
+  function hideHint(){ var h = $g('g2Hint'); if (h) h.classList.add('gone'); }
+
+  /* ---------- ride FX on the turntable: the real RIDE_FX recipe puffing out of the tail pipe ---------- */
+  var gParts = [];
+  function fxTick(dt){
+    var fx = RIDE_FX[sel.fx || equippedItem('fx')] || RIDE_FX.default, showFx = activeCat === 'fx' || gLaunch;
+    var n = 0, r = fx.rate * dt * (showFx ? 0.9 : 0.25); while (r > 0){ if (Math.random() < r) n++; r -= 1; }
+    var yw = gHolder ? gHolder.rotation.y : 0, tail = new THREE.Vector3(0.35, 0.3, 1.3).applyAxisAngle(new THREE.Vector3(0,1,0), yw), back = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0,1,0), yw);
+    if (gHolder) tail.add(gHolder.position).add(gModel ? gModel.position : new THREE.Vector3());
+    for (var i=0; i<n && gParts.length < 180; i++){
       var col = (fx.color2 && Math.random() < 0.45) ? fx.color2 : fx.color;
       var m = new THREE.Mesh(partGeo, new THREE.MeshBasicMaterial({ map:softTex, color:col, transparent:true, opacity:1, depthWrite:false, blending: fx.add ? THREE.AdditiveBlending : THREE.NormalBlending }));
-      var sz = rand(fx.size[0], fx.size[1])*0.8; m.scale.set(sz, sz*(fx.streak?2:1), sz);
-      var yw = gModelHolder ? gModelHolder.rotation.y : 0;                                   // exhaust sits at the tail (+Z in holder space)
-      m.position.set(Math.sin(yw)*0.95 + rand(-0.15,0.15), 0.22 + rand(0,0.15), Math.cos(yw)*0.95);
-      m.userData.v = new THREE.Vector3(Math.sin(yw)*1.2 + rand(-fx.spread,fx.spread)*0.5, rand(fx.up*0.4, fx.up)*0.8, Math.cos(yw)*1.2);
-      m.userData.life = 1; m.userData.decay = fx.decay; m.userData.grav = fx.grav*0.6; m.userData.jitter = !!fx.jitter;
+      var sz = rand(fx.size[0], fx.size[1]) * 0.9; m.scale.set(sz, sz*(fx.streak ? 2 : 1), sz);
+      m.position.copy(tail).add(new THREE.Vector3(rand(-0.08,0.08), rand(0,0.1), rand(-0.05,0.05)));
+      m.userData.v = back.clone().multiplyScalar(1.4 + rand(0,0.8)).add(new THREE.Vector3(rand(-fx.spread,fx.spread)*0.5, rand(fx.up*0.4, fx.up)*0.8, 0));
+      m.userData.life = 1; m.userData.decay = fx.decay; m.userData.grav = fx.grav * 0.6; m.userData.jitter = !!fx.jitter;
       gScene.add(m); gParts.push(m);
     }
-    for (var k=gParts.length-1;k>=0;k--){ var p = gParts[k]; p.userData.life -= dt*p.userData.decay;
+    for (var k=gParts.length-1; k>=0; k--){ var p = gParts[k]; p.userData.life -= dt * p.userData.decay;
       if (p.userData.life <= 0){ gScene.remove(p); p.material.dispose(); gParts.splice(k,1); continue; }
-      p.position.addScaledVector(p.userData.v, dt); p.userData.v.y -= p.userData.grav*dt; p.material.opacity = p.userData.life; p.lookAt(gCam.position);
-      if (p.userData.jitter){ p.position.x += rand(-0.05,0.05); p.position.y += rand(-0.05,0.05); } }
+      p.position.addScaledVector(p.userData.v, dt); p.userData.v.y -= p.userData.grav * dt; if (p.position.y < 0.02){ p.position.y = 0.02; p.userData.v.y *= -0.3; }
+      p.material.opacity = p.userData.life; p.quaternion.copy(gCam.quaternion); if (p.userData.jitter){ p.position.x += rand(-0.04,0.04); p.position.y += rand(-0.04,0.04); } }
   }
 
-  /* ---------- thumbnails ---------- */
-  function swatch(hex){ return '<div class="gThumb" style="background:'+hex+'"></div>'; }
-  function iconThumb(emoji, bg){ return '<div class="gThumb" style="background:'+(bg||'rgba(0,0,0,0.28)')+'">'+emoji+'</div>'; }
-  function thumbFor(cat, it){
-    if (cat==='rickshaw'){ var col = it.id==='classic' ? 'linear-gradient(135deg,#f2c200,#2a2a2a)' : 'linear-gradient(135deg,#2f8f4d,#f2c200)'; return '<div class="gThumb" style="background:'+col+'">🛺</div>'; }
-    if (cat==='paint'){ var pc = it.color!=null ? '#'+it.color.toString(16).padStart(6,'0') : 'linear-gradient(135deg,#2f8f4d,#f2c200)'; return '<div class="gThumb swatch" style="background:'+pc+'"></div>'; }
-    if (cat==='trim'){ return '<div class="gThumb metal" style="--c:#'+it.color.toString(16).padStart(6,'0')+'"></div>'; }
-    if (cat==='rearArt'){ return it.id==='none' ? iconThumb('🚫','rgba(0,0,0,0.28)') : '<div class="gThumb" data-art="'+it.id+'"></div>'; }   // the real canvas panel is drawn in after render
-    if (cat==='horn'){ return iconThumb({classic:'🛺',truck:'🚛',musical:'🎵',dhol:'🥁',tiny:'🐭',royal:'👑'}[it.id]||'📯','rgba(0,0,0,0.28)'); }
-    if (cat==='fx'){ var fc = '#'+it.color.toString(16).padStart(6,'0'); return '<div class="gThumb fx" style="--c:'+fc+'"><i></i><i></i><i></i></div>'; }
-    return iconThumb('🎨');
+  /* ================= panel ================= */
+  var TITLES = { rickshaw:['YOUR RIDE','Same Galli<br>New Stories'], paint:['PAINT SHOP','Rang Do<br>Apni Galli'], horn:['HORNS','Horn OK<br>Please'], fx:['EFFECTS','Thoda<br>Style Maaro'] };
+  var HORN_ICON = { classic:'🛺', truck:'🚛', musical:'🎵', dhol:'🥁', tiny:'🐭', royal:'👑' };
+  var SVG_CHECK = '<svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var SVG_LOCK = '<svg class="g2Lock" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10V7a5 5 0 0 1 10 0v3h1.5A1.5 1.5 0 0 1 20 11.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 20.5v-9A1.5 1.5 0 0 1 5.5 10zm2.5 0h5V7a2.5 2.5 0 0 0-5 0z"/></svg>';
+  var SVG_PLAY = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7 4.5v15l12.5-7.5z"/></svg>';
+  function hex(c){ return '#' + (c >>> 0).toString(16).padStart(6, '0'); }
+  function priceHTML(it, st){
+    if (st === 'equipped') return '';
+    if (st === 'owned') return '<span class="g2State">OWNED</span>';
+    var short = it.price - profile.coins;
+    return '<div class="g2Price"><span class="g2Coin"></span>' + fmt(it.price) + '</div>' + (short > 0 ? '<span class="g2Need">need ' + fmt(short) + ' more</span>' : '');
   }
-
-  /* ---------- card list ---------- */
-  function currentCat(){ return activeCat==='style' ? activeSub : activeCat; }
-  function renderCards(){
-    var cat=currentCat(), list=catList(cat), host=$g('gCards'); if(!host) return;
-    host.innerHTML='';
+  function cardClass(cat, it, extra){
+    var st = stateOf(cat, it.id), c = 'g2Card ' + (extra || '');
+    c += st === 'equipped' ? ' isEq' : st === 'owned' ? ' isOwned' : ' isLocked' + (profile.coins < it.price ? ' isPoor' : '');
+    if (sel[cat] === it.id) c += ' isSel';
+    return c;
+  }
+  function badge(cat, it){ var st = stateOf(cat, it.id); return st === 'equipped' ? '<span class="g2Badge">' + SVG_CHECK + 'EQUIPPED</span>' : (sel[cat] === it.id ? '<span class="g2PrevTag">PREVIEW</span>' : ''); }
+  function renderPanel(){
+    var cat = currentCat(), list = catList(cat), host = $g('gCards'); if (!host) return;
+    var fid = host.contains(document.activeElement) && document.activeElement.getAttribute ? document.activeElement.getAttribute('data-id') : null;
+    var T = TITLES[activeCat]; $g('g2PanelTitle').textContent = T[0]; $g('g2Tag').innerHTML = T[1];
+    $g('gSubTabs').classList.toggle('hidden', activeCat !== 'paint');
+    [].forEach.call(document.querySelectorAll('#gSubTabs .gSubTab'), function(b){ var on = b.getAttribute('data-sub') === activeSub; b.classList.toggle('selected', on); b.setAttribute('aria-selected', on); });
+    [].forEach.call(document.querySelectorAll('.g2Tab'), function(b){ var on = b.getAttribute('data-cat') === activeCat; b.classList.toggle('selected', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+    host.className = 'g2Cards ' + ({ rickshaw:'c2', paint:'c4', trim:'c4', rearArt:'c3', horn:'c1', fx:'c2' }[cat]);
+    var html = '';
     list.forEach(function(it){
-      var st=stateOf(cat,it.id), selected = sel[cat]===it.id;
-      var card=document.createElement('div');
-      card.className='gCard '+it.rarity+(selected?' selected':'');
-      var meta = st==='equipped' ? '<div class="gCardMeta equipped">EQUIPPED</div>'
-               : st==='owned'    ? '<div class="gCardMeta owned">OWNED</div>'
-               : '<div class="gCardMeta price">🪙 '+it.price.toLocaleString()+'</div>';
-      var rarTag = '<div class="gRarityTag" style="background:'+RARITY_COLOR[it.rarity]+'">'+it.rarity.toUpperCase()+'</div>';
-      var playBtn = cat==='horn' ? '<div class="gPreviewMini" data-play="1">▶</div>' : '';
-      card.innerHTML = rarTag + playBtn + thumbFor(cat,it) + '<div class="gCardName">'+it.name+'</div>' + meta;
-      card.addEventListener('click', function(ev){
-        if (ev.target && ev.target.getAttribute('data-play')){ hornPreview(it.id); ev.stopPropagation(); return; }
-        selectItem(cat, it.id);
-      });
-      if (st==='buy' && profile.coins < it.price) card.classList.add('cantAfford');
-      if (st==='buy') card.insertAdjacentHTML('beforeend', '<div class="gLock">🔒</div>');
-      host.appendChild(card);
+      var st = stateOf(cat, it.id), aria = ' role="option" aria-selected="' + (sel[cat] === it.id) + '" data-id="' + it.id + '" aria-label="' + it.name + ', ' + (st === 'equipped' ? 'equipped' : st === 'owned' ? 'owned' : fmt(it.price) + ' coins') + '"';
+      if (cat === 'rickshaw'){
+        var img = window.RIDE_THUMB && RIDE_THUMB[it.id] ? '<img alt="" src="' + RIDE_THUMB[it.id] + '">' : '<span style="font-size:54px">🛺</span>';
+        html += '<button class="' + cardClass(cat, it, 'big') + '"' + aria + '>' + badge(cat, it) + '<div class="g2Img">' + img + (st === 'buy' ? SVG_LOCK : '') + '</div><div class="g2Name">' + it.name + '</div><div class="g2Line">' + (it.line || '') + '</div>' + priceHTML(it, st) + '</button>';
+      } else if (cat === 'horn'){
+        html += '<div tabindex="0" class="' + cardClass(cat, it, 'row') + '"' + aria + '><button class="g2Play" data-play="' + it.id + '" aria-label="Play ' + it.name + '">' + SVG_PLAY + '</button><div><div class="g2Name">' + HORN_ICON[it.id] + ' ' + it.name + '</div><div class="g2Line">' + ((GARAGE_DESC.horn || {})[it.id] || '') + '</div></div><div class="g2Right">' + (st === 'equipped' ? '<span class="g2State" style="background:#2f7a4e">✓ EQUIPPED</span>' : priceHTML(it, st)) + '</div></div>';
+      } else {
+        var thumb = cat === 'paint' ? '<div class="g2Chip" style="background:' + (it.color != null ? hex(it.color) : 'linear-gradient(135deg,#2f8f4d 50%,#f2c200 50%)') + '"></div>'
+                  : cat === 'trim' ? '<div class="g2Chip metal" style="--c:' + hex(it.color) + '"></div>'
+                  : cat === 'rearArt' ? '<div class="g2Art" data-art="' + it.id + '">' + (it.id === 'none' ? '∅' : '') + '</div>'
+                  : '<div class="g2Fx" style="--c:' + hex(it.color) + '"><i></i><i></i><i></i><i></i></div>';
+        html += '<button class="' + cardClass(cat, it, 'sm') + '"' + aria + '>' + (stateOf(cat, it.id) === 'equipped' ? '<span class="g2Badge" style="left:4px;top:3px">' + SVG_CHECK + '</span>' : '') + thumb + '<div class="g2Name">' + it.name + '</div>' + (st === 'equipped' ? '<span class="g2State">EQUIPPED</span>' : priceHTML(it, st)) + '</button>';
+      }
     });
-    // rear-art thumbnails: draw the actual tailgate panels
-    [].forEach.call(host.querySelectorAll('.gThumb[data-art]'), function(t){ var id = t.getAttribute('data-art'), cv = document.createElement('canvas'); cv.width = 256; cv.height = 160; var g = cv.getContext('2d'); (REAR_ART[id]||REAR_ART.tiger)(g, 256, 160); t.appendChild(cv); });
-    var rt = $g('gRowTitle'), rc = $g('gRowCount'); if (rt){ rt.textContent = ({rickshaw:'RICKSHAWS',paint:'PAINT',rearArt:'REAR ART',trim:'TRIM',horn:'HORNS',fx:'RIDE FX'}[cat]||cat).toUpperCase(); var ow = list.filter(function(it){ return ownsItem(cat,it.id); }).length; rc.textContent = ow + ' / ' + list.length + ' owned'; }
-    var oc = $g('gOwnedCount'); if (oc){ var owned = list.filter(function(it){ return ownsItem(cat,it.id); }).length; oc.textContent = ({rickshaw:'rides',paint:'paints',rearArt:'rear art',trim:'trims',horn:'horns',fx:'ride fx'}[cat]||cat) + ' · ' + owned + ' / ' + list.length + ' owned'; }
-    updateSelInfo();
+    host.innerHTML = html;
+    if (fid){ var fe = host.querySelector('[data-id="' + fid + '"]'); if (fe) try { fe.focus({ preventScroll:true }); } catch(e){} }   // keep keyboard focus through re-renders
+    [].forEach.call(host.querySelectorAll('.g2Art[data-art]'), function(t){ var id = t.getAttribute('data-art'); if (id === 'none' || !REAR_ART[id]) return; var cv = document.createElement('canvas'); cv.width = 256; cv.height = 160; REAR_ART[id](cv.getContext('2d'), 256, 160); t.appendChild(cv); });
+    updateDetail();
   }
-  function selectItem(cat, id){
-    sel[cat]=id;
-    if (cat==='horn') hornPreview(id);
-    if (cat==='rickshaw'){ buildPreviewModel(); renderCards(); return; }   // different vehicle → rebuild the turntable model
-    if (typeof applyGarageConfig==='function' && gModel) applyGarageConfig(gModel, sel);
-    renderCards();
-  }
-  function updateSelInfo(){
-    var cat=currentCat(), id=sel[cat], it=garageItem(cat,id); if(!it) return;
+  function updateDetail(){
+    var cat = currentCat(), id = sel[cat], it = garageItem(cat, id); if (!it) return;
     $g('gSelName').textContent = it.name;
-    var rar=$g('gSelRarity'); rar.textContent=it.rarity.toUpperCase(); rar.style.background=RARITY_COLOR[it.rarity];
-    var desc = it.desc || (GARAGE_DESC[cat] && GARAGE_DESC[cat][id]) || ''; $g('gSelDesc').textContent = desc;
-    var stats = $g('gStats'); stats.innerHTML = '';
-    if (it.stats){ Object.keys(it.stats).forEach(function(k){ stats.insertAdjacentHTML('beforeend', '<div class="gStat"><span class="lbl">'+k.toUpperCase()+'</span><div class="bar"><div class="fill" style="width:'+it.stats[k]+'%"></div></div></div>'); }); }
-    $g('gPerk').textContent = it.perk ? '★ Perk: ' + it.perk : '';
-    var btn=$g('gActionBtn'), st=stateOf(cat,id);
-    btn.className='gActionBtn';
-    if (st==='equipped'){ btn.textContent='EQUIPPED'; btn.classList.add('equipped'); }
-    else if (st==='owned'){ btn.textContent='EQUIP'; }
-    else if (profile.coins < it.price){ btn.textContent='BUY — '+it.price.toLocaleString()+' 🪙  (need '+(it.price-profile.coins).toLocaleString()+' more)'; btn.classList.add('buy'); }
-    else { btn.textContent='BUY — '+it.price.toLocaleString()+' 🪙'; btn.classList.add('buy'); }
-    frameFor(cat);
+    $g('gSelDesc').textContent = it.desc || (GARAGE_DESC[cat] && GARAGE_DESC[cat][id]) || '';
+    $g('gPerk').textContent = it.perk ? '★ ' + it.perk : '';
+    var btn = $g('gActionBtn'), st = stateOf(cat, id);
+    btn.className = 'g2Act' + (busy ? ' busy' : ''); btn.disabled = false; btn.removeAttribute('aria-disabled');
+    if (st === 'equipped'){ btn.innerHTML = '✓ EQUIPPED'; btn.classList.add('equipped'); btn.setAttribute('aria-disabled', 'true'); }
+    else if (st === 'owned'){ btn.textContent = 'EQUIP ' + it.name.toUpperCase(); }
+    else if (profile.coins < it.price){ btn.textContent = 'NEED ' + fmt(it.price - profile.coins) + ' MORE COINS'; btn.classList.add('poor'); btn.setAttribute('aria-disabled', 'true'); }
+    else { btn.innerHTML = 'BUY · <span class="g2Coin" style="display:inline-flex;width:.9em;height:.9em;vertical-align:-2px"></span> ' + fmt(it.price); btn.classList.add('buy'); }
+    // revert: only while something in this tab is a preview that isn't what you have equipped
+    var dirty = tabCats().some(function(c){ return sel[c] !== equippedItem(c); });
+    $g('g2Revert').classList.toggle('hidden', !dirty);
+    // test ride says exactly what it will launch
+    var any = CATS.some(function(c){ return sel[c] !== equippedItem(c); });
+    $g('g2TestSub').textContent = any ? 'your preview · ' + TEST_RIDE_SECS + ' s practice' : 'your equipped ride · ' + TEST_RIDE_SECS + ' s practice';
+    $g('gTestBtn').setAttribute('aria-label', 'Test ride ' + (any ? 'the previewed setup' : 'your equipped ride') + ', ' + TEST_RIDE_SECS + ' second practice');
   }
-  // camera framing: each category shows the part it changes
-  var camTarget = { pos:new THREE.Vector3(0.75,1.45,5.7), look:new THREE.Vector3(0,0.82,0) }, camYawBase = 0;
-  function frameFor(cat){
-    if (cat==='rearArt'){ camTarget.pos.set(0.1,1.15,3.6); camTarget.look.set(0,0.95,0); camYawBase = 0; }
-    else if (cat==='trim'){ camTarget.pos.set(3.4,1.2,3.2); camTarget.look.set(0,0.7,0); camYawBase = 0.35; }
-    else if (cat==='paint'){ camTarget.pos.set(-2.6,1.5,4.4); camTarget.look.set(0,0.8,0); camYawBase = -0.5; }
-    else if (cat==='fx'){ camTarget.pos.set(1.6,1.3,5.4); camTarget.look.set(0,0.8,-0.5); camYawBase = 0.2; }
-    else { camTarget.pos.set(0.75,1.45,5.7); camTarget.look.set(0,0.82,0); camYawBase = 0; }
-    BASE_YAW = camYawBase;
+  function tabCats(){ return activeCat === 'paint' ? ['paint','rearArt','trim'] : [activeCat]; }
+  function selectItem(cat, id, fromKey){
+    var prevVeh = sel.rickshaw; sel[cat] = id;
+    if (cat === 'horn') playPreview(id);
+    if (cat === 'rickshaw' && id !== prevVeh) buildPreviewModel(true); else applyLook();
+    renderPanel();
+    var el = $g('gCards').querySelector('[data-id="' + id + '"]'); if (el){ if (fromKey) el.focus({ preventScroll:true }); if (el.scrollIntoView) el.scrollIntoView({ block:'nearest' }); }
   }
+  function revert(){ tabCats().forEach(function(c){ sel[c] = equippedItem(c); }); if (activeCat === 'rickshaw') buildPreviewModel(true); else applyLook(); renderPanel(); toast('Back to your equipped setup'); }
+  var playT = null;
+  function playPreview(id){
+    var ok = previewHorn(id); [].forEach.call(document.querySelectorAll('.g2Play'), function(b){ b.classList.toggle('playing', ok && b.getAttribute('data-play') === id); });
+    clearTimeout(playT); playT = setTimeout(function(){ [].forEach.call(document.querySelectorAll('.g2Play.playing'), function(b){ b.classList.remove('playing'); }); }, (HORN_LEN[id] || 0.5) * 1000 + 100);
+    if (!ok && state.muted) toast('Sound is off — turn it on in ⚙', true);
+  }
+
+  /* ---------- buy / equip ---------- */
   function doAction(){
-    var cat=currentCat(), id=sel[cat], it=garageItem(cat,id); if(!it) return;
-    var st=stateOf(cat,id);
-    if (st==='equipped') return;
-    if (st==='owned'){ equipItem(cat,id); flash('EQUIPPED'); if(typeof GAME_AUDIO!=='undefined')GAME_AUDIO.bell(); }
-    else {                                                // buy
-      if (profile.coins < it.price){ toast('NOT ENOUGH COINS', true); return; }
-      buyItem(cat,id); equipItem(cat,id);
-      updateWallet(true);
-      toast('UNLOCKED! '+it.name); if(typeof GAME_AUDIO!=='undefined')GAME_AUDIO.bell();
-      var fl = document.createElement('div'); fl.className = 'gBuyFlash'; fl.textContent = '🪙✨'; document.body.appendChild(fl); setTimeout(function(){ fl.remove(); }, 950);
-      if (cat==='horn') playHorn(id);
-    }
-    renderCards(); updateSelInfo();
+    if (busy) return; var cat = currentCat(), id = sel[cat], it = garageItem(cat, id); if (!it) return;
+    var st = stateOf(cat, id);
+    if (st === 'equipped') return;
+    if (st === 'owned'){ equipItem(cat, id); afterEquip(cat, id, 'Equipped ' + it.name); return; }
+    if (profile.coins < it.price){ toast('You need ' + fmt(it.price - profile.coins) + ' more coins', true); return; }
+    openConfirm(cat, it);
   }
-  function flash(msg){ toast(msg); }
-  var toastT=null;
-  function toast(msg, err){
-    var el=$g('gToast'); if(!el) return;
-    el.textContent=msg; el.className='gToast'+(err?' err':''); el.classList.remove('hidden');
-    void el.offsetWidth; if(err){ el.classList.remove('err'); void el.offsetWidth; el.classList.add('err'); }
-    clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.add('hidden'); }, 1400);
+  var pending = null, lastFocus = null;
+  function openConfirm(cat, it){
+    pending = { cat:cat, id:it.id }; lastFocus = document.activeElement;
+    $g('g2cTitle').textContent = 'Buy ' + it.name + '?'; $g('g2cPrice').textContent = fmt(it.price); $g('g2cBal').textContent = fmt(profile.coins); $g('g2cAfter').textContent = fmt(profile.coins - it.price);
+    $g('g2cNote').textContent = 'It will be unlocked for good and equipped right away.'; $g('g2cYes').textContent = 'Buy for ' + fmt(it.price);
+    $g('g2Confirm').classList.remove('hidden'); setTimeout(function(){ $g('g2cYes').focus(); }, 30);
   }
-  function updateWallet(anim){
-    var el=$g('garageCoins'); if(el) el.textContent = profile.coins.toLocaleString();
+  function closeConfirm(){ $g('g2Confirm').classList.add('hidden'); pending = null; if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch(e){} }
+  function confirmBuy(){
+    if (!pending || busy) return; var p = pending, it = garageItem(p.cat, p.id); busy = true; $g('g2cYes').disabled = true;
+    var before = profile.coins, ok = !ownsItem(p.cat, p.id) && profile.coins >= it.price && buyItem(p.cat, p.id);   // buyItem deducts once, pushes ownership, saves + syncs
+    $g('g2Confirm').classList.add('hidden'); pending = null; $g('g2cYes').disabled = false; busy = false;
+    if (!ok){ toast(ownsItem(p.cat, p.id) ? 'Already yours' : 'Not enough coins', true); renderPanel(); return; }
+    if (window.PERF) PERF.mark('garage buy ' + p.cat + ':' + p.id + ' ' + before + '→' + profile.coins);
+    equipItem(p.cat, p.id); updateWallet(true);
+    var fl = document.createElement('div'); fl.className = 'gBuyFlash'; fl.textContent = '🪙✨'; document.body.appendChild(fl); setTimeout(function(){ fl.remove(); }, 950);
+    afterEquip(p.cat, p.id, 'Unlocked ' + it.name + '!');
+    var bc = $g('gCards').querySelector('[data-id="' + p.id + '"]'); if (bc) try { bc.focus({ preventScroll:true }); } catch(e){}
   }
-  function hornPreview(id){ if (typeof playHorn==='function') playHorn(id); }   // Phase D
+  function afterEquip(cat, id, msg){
+    if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.bell(); } catch(e){}
+    if (cat === 'horn') playPreview(id);
+    renderPanel(); toast(msg);
+    var el = $g('gCards').querySelector('[data-id="' + id + '"]'); if (el && !RM()){ el.classList.add('stamp'); setTimeout(function(){ el.classList.remove('stamp'); }, 950); }
+  }
+  var toastT = null;
+  function toast(msg, err){ var el = $g('gToast'); if (!el) return; el.textContent = msg; el.className = 'gToast' + (err ? ' err' : ''); void el.offsetWidth; clearTimeout(toastT); toastT = setTimeout(function(){ el.classList.add('hidden'); }, 1500); }
+  function updateWallet(bump){ var el = $g('garageCoins'); if (el) el.textContent = fmt(profile.coins); var w = $g('g2Wallet'); if (bump && w){ w.classList.remove('bump'); void w.offsetWidth; w.classList.add('bump'); } }
 
   /* ---------- tabs ---------- */
-  function setCat(cat){
-    activeCat=cat;
-    [].forEach.call(document.querySelectorAll('.gNavTab'), function(t){ t.classList.toggle('selected', t.getAttribute('data-cat')===cat); });
-    $g('gSubTabs').classList.toggle('hidden', cat!=='style');
-    renderCards();
+  function setCat(cat, keepView){ activeCat = cat; renderPanel(); if (!keepView) setFocus(false); }
+  function setSub(sub){ activeSub = sub; renderPanel(); setFocus(false); }
+
+  /* ---------- test ride: the auto turns for the shutter and rolls out into the light, the game picks up behind it ---------- */
+  function testRide(){
+    if (gLaunch || busy) return;
+    initAudio(); if (AC && AC.state === 'suspended') AC.resume();
+    var ret = snapshot();
+    if (RM()){ go(); return; }
+    playPreview(sel.horn || equippedItem('horn'));
+    gLaunch = { t:0, yaw0:view.yaw, ret:ret }; view.userYaw = false; view.dragging = false;
+    function go(){ launchDone(ret); }
+    gLaunch.done = go;
   }
-  function setSub(sub){
-    activeSub=sub;
-    [].forEach.call(document.querySelectorAll('.gSubTab'), function(t){ t.classList.toggle('selected', t.getAttribute('data-sub')===sub); });
-    renderCards();
+  function launchTick(dt){
+    var L = gLaunch; L.t += dt; var p = Math.min(1, L.t / 1.1);
+    var turn = Math.min(1, p / 0.45), e = turn*turn*(3 - 2*turn), d = (0 - L.yaw0); d = Math.atan2(Math.sin(d), Math.cos(d));   // face the shutter (tail to camera)
+    view.yaw = L.yaw0 + d * e; view.yawTarget = view.yaw;
+    var drive = Math.max(0, (p - 0.35) / 0.65); gHolder.position.set(0, 0, -7.5 * drive * drive);
+    zoomTarget = 1 + 0.25 * drive; view.zoom = zoomTarget;
+    if (p > 0.6) $g('g2Flash').classList.add('on');
+    if (p >= 1 && !L.fired){ L.fired = true; setTimeout(L.done, 60); }
   }
+  function launchDone(ret){
+    gLaunch = null; if (gHolder) gHolder.position.set(0,0,0);
+    isOpen = false; document.body.classList.remove('inGarage'); if (gRaf){ cancelAnimationFrame(gRaf); gRaf = null; }
+    $g('garageScreen').classList.add('hidden'); $g('g2Flash').classList.remove('on');
+    startTestRide(sel); startGame._noHonk = true; startGame(); practiceBegin(ret);
+  }
+  function snapshot(){ return { cat:activeCat, sub:activeSub, sel:JSON.parse(JSON.stringify(sel)), yaw:view.yaw, userYaw:view.userYaw, zoom:view.zoom, userZoom:view.userZoom }; }
 
   /* ---------- open / close ---------- */
-  function open(){
-    isOpen=true;
-    ['rickshaw','paint','rearArt','trim','horn','fx'].forEach(function(c){ sel[c]=equippedItem(c); });
-    $g('startScreen').classList.add('hidden');
-    $g('garageScreen').classList.remove('hidden');
-    initPreview(); buildPreviewModel(); resizePreview(); updateWallet();
-    if (typeof CLOUD !== 'undefined') CLOUD.updateStrip();                       // sync code badge in the top bar
-    if (typeof bendClear === 'function') bendClear();                          // flat floor for the turntable
-    setCat('rickshaw'); setSub('paint');
-    frameFor('rickshaw'); yaw=BASE_YAW; yawVel=0; idleT=0;   // default to the REAR view (chase-cam angle + rear art)
+  function open(restore){
+    isOpen = true; busy = false; pending = null; document.body.classList.add('inGarage');
+    CATS.forEach(function(c){ sel[c] = equippedItem(c); });
+    if (restore && restore.sel) CATS.forEach(function(c){ if (restore.sel[c] && garageItem(c, restore.sel[c])) sel[c] = restore.sel[c]; });
+    $g('startScreen').classList.add('hidden'); $g('gameOverScreen').classList.add('hidden');
+    var gs = $g('garageScreen'); gs.classList.remove('hidden');
+    if (!initStage()){ toast('3D preview unavailable', true); }
+    if (typeof bendClear === 'function') bendClear();
+    gClock = new THREE.Clock(); resize(); updateWallet();
+    if (typeof CLOUD !== 'undefined') try { CLOUD.updateStrip(); } catch(e){}
+    if (typeof rideThumbs === 'function') try { rideThumbs(); } catch(e){}
+    activeCat = restore ? restore.cat : 'rickshaw'; activeSub = restore ? restore.sub : 'paint';
+    buildPreviewModel(!restore); renderPanel(); setFocus(true);
+    if (restore){ view.yaw = restore.yaw; view.userYaw = restore.userYaw; if (restore.userZoom){ view.zoom = zoomTarget = restore.zoom; view.userZoom = true; } }
+    var h = $g('g2Hint'); if (h) h.classList.remove('gone');
+    closeSettings();
     if (!gRaf) loop();
+    thumbWait();
+  }
+  function thumbWait(){                                         // the Desi Special kit streams in late: swap its card image in when it lands
+    if (!isOpen) return; if (window.RIDE_THUMB && RIDE_THUMB.rickshaw && RIDE_THUMB.classic) return;
+    setTimeout(function(){ if (!isOpen) return; try { rideThumbs(); } catch(e){} if (activeCat === 'rickshaw' && window.RIDE_THUMB && RIDE_THUMB.classic) renderPanel(); thumbWait(); }, 1000);
   }
   function close(){
-    isOpen=false;
-    if (gRaf){ cancelAnimationFrame(gRaf); gRaf=null; }
-    $g('garageScreen').classList.add('hidden');
-    $g('startScreen').classList.remove('hidden');
-    if (typeof renderBoard==='function' && $g('startBoard')) renderBoard($g('startBoard'), -1);
+    if (!isOpen) return; isOpen = false; gLaunch = null; document.body.classList.remove('inGarage');
+    if (gRaf){ cancelAnimationFrame(gRaf); gRaf = null; }
+    closeSettings(); $g('g2Confirm').classList.add('hidden');
+    $g('garageScreen').classList.add('hidden'); $g('startScreen').classList.remove('hidden');
+    if (typeof applyPlayerVehicle === 'function') applyPlayerVehicle();                       // menu hero = what is equipped
+    if (typeof renderBoard === 'function' && $g('startBoard')) renderBoard($g('startBoard'), -1);
     if (typeof menuFromGarage === 'function') menuFromGarage();
   }
+  function toggleSettings(){ var p = $g('g2Settings'); if (p.classList.contains('hidden')){ $g('g2SoundVal').textContent = state.muted ? 'OFF' : 'ON'; var vs = $('volSlider'); if (vs) $g('g2Music').value = vs.value; p.classList.remove('hidden'); } else closeSettings(); }
+  function closeSettings(){ var p = $g('g2Settings'); if (p) p.classList.add('hidden'); }
 
   /* ---------- wire DOM ---------- */
   function wire(){
-    var gb=$g('garageBtn'); if(gb) gb.addEventListener('click', function(){ if (typeof menuToGarage === 'function') menuToGarage(open); else open(); });
-    var bk=$g('garageBack'); if(bk) bk.addEventListener('click', close);
-    var act=$g('gActionBtn'); if(act) act.addEventListener('click', doAction);
-    var tst=$g('gTestBtn'); if(tst) tst.addEventListener('click', function(){ close(); startTestRide(sel); if (typeof startGame === 'function') startGame(); });
-    [].forEach.call(document.querySelectorAll('.gNavTab'), function(t){ t.addEventListener('click', function(){ setCat(t.getAttribute('data-cat')); }); });
-    [].forEach.call(document.querySelectorAll('.gSubTab'), function(t){ t.addEventListener('click', function(){ setSub(t.getAttribute('data-sub')); }); });
-    var tr=$g('gTestRide'); if(tr) tr.addEventListener('click', function(){ if(typeof garageTestRide==='function') garageTestRide(); });
-    window.addEventListener('resize', function(){ if(isOpen) resizePreview(); });
-    window.addEventListener('keydown', function(e){                            // keyboard: browse, equip, test, tabs, back
+    var gb = $g('garageBtn'); if (gb) gb.addEventListener('click', function(){ if (typeof menuToGarage === 'function') menuToGarage(function(){ open(); }); else open(); });
+    $g('garageBack').addEventListener('click', close);
+    $g('gActionBtn').addEventListener('click', doAction);
+    $g('g2Revert').addEventListener('click', revert);
+    $g('gTestBtn').addEventListener('click', testRide);
+    $g('g2Reset').addEventListener('click', resetView);
+    $g('g2ZoomIn').addEventListener('click', function(){ setZoom(view.zoom * 1.2); });
+    $g('g2ZoomOut').addEventListener('click', function(){ setZoom(view.zoom / 1.2); });
+    $g('g2Gear').addEventListener('click', function(e){ e.stopPropagation(); toggleSettings(); });
+    $g('g2Sound').addEventListener('click', function(){ $('muteBtn').click(); $g('g2SoundVal').textContent = state.muted ? 'OFF' : 'ON'; });
+    $g('g2Music').addEventListener('input', function(){ var vs = $('volSlider'); if (vs){ vs.value = this.value; vs.dispatchEvent(new Event('input')); } });
+    $g('g2cNo').addEventListener('click', closeConfirm); $g('g2cYes').addEventListener('click', confirmBuy);
+    $g('g2Confirm').addEventListener('click', function(e){ if (e.target === this) closeConfirm(); });
+    $g('garageScreen').addEventListener('click', function(e){ var p = $g('g2Settings'); if (!p.classList.contains('hidden') && !p.contains(e.target)) closeSettings(); });
+    [].forEach.call(document.querySelectorAll('.g2Tab'), function(t){ t.addEventListener('click', function(){ setCat(t.getAttribute('data-cat')); }); });
+    [].forEach.call(document.querySelectorAll('#gSubTabs .gSubTab'), function(t){ t.addEventListener('click', function(){ setSub(t.getAttribute('data-sub')); }); });
+    $g('gCards').addEventListener('click', function(e){
+      var pl = e.target.closest && e.target.closest('[data-play]'); if (pl){ e.stopPropagation(); var pid = pl.getAttribute('data-play'); if (sel.horn !== pid) selectItem('horn', pid); else playPreview(pid); return; }
+      var c = e.target.closest && e.target.closest('[data-id]'); if (!c) return; var cid = c.getAttribute('data-id');
+      if (e.detail === 0 && sel[currentCat()] === cid){ doAction(); return; }            // keyboard Enter/Space on the card you are already previewing = equip / buy
+      selectItem(currentCat(), cid);
+    });
+    $g('gCards').addEventListener('dblclick', function(e){ var c = e.target.closest && e.target.closest('[data-id]'); if (c && !(e.target.closest('[data-play]'))) doAction(); });
+    window.addEventListener('resize', function(){ if (isOpen) resize(); });
+    window.addEventListener('keydown', function(e){
       if (!isOpen || (e.target && e.target.tagName === 'INPUT')) return;
+      var modal = !$g('g2Confirm').classList.contains('hidden');
+      if (modal){ if (e.code === 'Escape'){ closeConfirm(); e.preventDefault(); } else if (e.code === 'Tab'){ var a = $g('g2cNo'), b = $g('g2cYes'); if (document.activeElement === b && !e.shiftKey){ a.focus(); e.preventDefault(); } else if (document.activeElement === a && e.shiftKey){ b.focus(); e.preventDefault(); } } return; }
+      if (gLaunch) return;
       var cat = currentCat(), list = catList(cat), i = list.findIndex(function(it){ return it.id === sel[cat]; });
-      if (e.code === 'Escape'){ close(); e.preventDefault(); }
-      else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft'){ var n = list[(i + (e.code === 'ArrowRight' ? 1 : list.length - 1)) % list.length]; if (n) selectItem(cat, n.id); var sc = $g('gCards').querySelector('.gCard.selected'); if (sc && sc.scrollIntoView) sc.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' }); e.preventDefault(); }
-      else if (e.code === 'Enter'){ doAction(); e.preventDefault(); }
-      else if (e.code === 'KeyT'){ var tb = $g('gTestBtn'); if (tb) tb.click(); }
-      else if (/^Digit[1-4]$/.test(e.code)){ setCat(['rickshaw','style','horn','fx'][+e.code.slice(5) - 1]); }
+      var onButton = e.target && (e.target.tagName === 'BUTTON' || e.target.getAttribute('role') === 'option');
+      if (e.code === 'Escape'){ if (!$g('g2Settings').classList.contains('hidden')) closeSettings(); else close(); e.preventDefault(); }
+      else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft' || ((e.code === 'ArrowDown' || e.code === 'ArrowUp') && e.target && e.target.closest && e.target.closest('#gCards'))){
+        var fwd = e.code === 'ArrowRight' || e.code === 'ArrowDown';
+        if (e.target && e.target.classList && e.target.classList.contains('g2Tab')){ var tabs = ['rickshaw','paint','horn','fx']; var ti = tabs.indexOf(activeCat); if (e.code === 'ArrowDown' || e.code === 'ArrowUp' || true){ setCat(tabs[(ti + (fwd ? 1 : 3)) % 4]); var nt = document.querySelector('.g2Tab.selected'); if (nt) nt.focus(); } e.preventDefault(); return; }
+        var n = list[(i + (fwd ? 1 : list.length - 1)) % list.length]; if (n) selectItem(cat, n.id, true); e.preventDefault(); }
+      else if ((e.code === 'Enter' || e.code === 'Space') && e.target && e.target.getAttribute && e.target.getAttribute('role') === 'option' && e.target.tagName !== 'BUTTON'){ var rid = e.target.getAttribute('data-id'); if (sel[cat] === rid) doAction(); else selectItem(cat, rid, true); e.preventDefault(); }
+      else if (e.code === 'Enter' && !onButton){ doAction(); e.preventDefault(); }
+      else if (e.code === 'KeyE' && !e.repeat){ doAction(); }
+      else if (e.code === 'KeyT' && !e.repeat){ testRide(); }
+      else if (e.code === 'KeyR'){ resetView(); }
+      else if (e.code === 'Equal' || e.code === 'NumpadAdd'){ setZoom(view.zoom * 1.2); }
+      else if (e.code === 'Minus' || e.code === 'NumpadSubtract'){ setZoom(view.zoom / 1.2); }
+      else if (/^Digit[1-4]$/.test(e.code)){ setCat(['rickshaw','paint','horn','fx'][+e.code.slice(5) - 1]); }
     });
   }
-  function refresh(){ if (!isOpen) return; ['rickshaw','paint','rearArt','trim','horn','fx'].forEach(function(c){ sel[c]=equippedItem(c); }); buildPreviewModel(); updateWallet(); renderCards(); updateSelInfo(); }
-  return { open:open, close:close, wire:wire, refresh:refresh, isOpen:function(){return isOpen;}, sel:function(){return sel;}, rebuildPreview:function(){ if (isOpen) buildPreviewModel(); } };
+  function refresh(){ if (!isOpen) return; CATS.forEach(function(c){ sel[c] = equippedItem(c); }); buildPreviewModel(false); updateWallet(); renderPanel(); }
+  return { open:open, close:close, wire:wire, refresh:refresh, isOpen:function(){ return isOpen; }, sel:function(){ return sel; },
+           rebuildPreview:function(){ if (isOpen) buildPreviewModel(false); }, view:function(){ return view; }, cat:function(){ return currentCat(); },
+           _debug:function(){ return { cam:gCam, scene:gScene, plate:gPlate, holder:gHolder, PL:PL, renderer:gRenderer }; }, draw:function(){ draw(); }, tick:function(dt){ tick(dt); } };
 })();
 GARAGE.wire();
 
@@ -7945,7 +8323,7 @@ function rideThumbs(){                                                 // real r
       cam.position.set(c.x + R*0.35, c.y + R*0.28, c.z + R); cam.lookAt(c);
       _thumbR.render(sc, cam);
       var url = _thumbR.domElement.toDataURL('image/png'), icon = document.querySelector('.vehCard[data-veh="' + k + '"] .vehIcon');
-      if (icon){ icon.innerHTML = '<img alt="" src="' + url + '">'; } _thumbDone[k] = true; });
+      if (icon){ icon.innerHTML = '<img alt="" src="' + url + '">'; } (window.RIDE_THUMB = window.RIDE_THUMB || {})[k] = url; _thumbDone[k] = true; });
     if (Object.keys(_thumbDone).length >= 3){ _thumbR.dispose(); if (_thumbR.forceContextLoss) _thumbR.forceContextLoss(); _thumbR = null; }
   } catch(e){ console.warn('ride thumbs', e); }
 }
@@ -7974,7 +8352,9 @@ function animate(){
     renderFrame();
     return;
   }
-  if (!state.running){ if (attractActive()) attractTick(rawDt); else { if (attract.on) attractStop(); if ((animate._pw = (animate._pw || 0) + rawDt) > 1.5){ animate._pw = 0; menuPrewarm(); } } renderFrame(); return; }
+  if (!state.running){ if (typeof GARAGE !== 'undefined' && GARAGE.isOpen()){ if (attract.on) attractStop(); return; }   // the garage draws its own stage: don't render a hidden street behind it
+    if (attractActive()) attractTick(rawDt); else { if (attract.on) attractStop(); if ((animate._pw = (animate._pw || 0) + rawDt) > 1.5){ animate._pw = 0; menuPrewarm(); } } renderFrame(); return; }
+  if (state.practice) practiceTick(rawDt);
 
   var dt = rawDt * state.timeScale;
   if (state.ducking){ state.duckT = (state.duckT || 0) - dt; if (state.duckT <= 0){ state.ducking = false; state.duckT = 0; } }
