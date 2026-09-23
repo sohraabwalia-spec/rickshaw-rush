@@ -321,6 +321,56 @@ window.addEventListener('error', function(e){
   @keyframes gToastPop { 0%{opacity:0; transform:translateX(-50%) scale(.8);} 100%{opacity:1; transform:translateX(-50%) scale(1);} }
   @keyframes gShake { 0%,100%{transform:translateX(-50%);} 25%{transform:translateX(-54%);} 75%{transform:translateX(-46%);} }
   @media (min-width:820px){ .gCards{ justify-content:flex-start; } .gCard{ width:132px; } }
+
+  /* ===== menu polish (23-Sep): entrances, button row, icon nav, credits modal, garage finish ===== */
+  @keyframes uiIn { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+  @keyframes uiPop { 0% { transform:scale(.96); } 60% { transform:scale(1.03); } 100% { transform:scale(1); } }
+  #startScreen:not(.hidden) > * { animation:uiIn .55s cubic-bezier(.2,.8,.2,1) both; }
+  #startScreen:not(.hidden) > *:nth-child(2) { animation-delay:.05s } #startScreen:not(.hidden) > *:nth-child(5) { animation-delay:.12s }
+  #startScreen:not(.hidden) > *:nth-child(6) { animation-delay:.18s } #startScreen:not(.hidden) > *:nth-child(7) { animation-delay:.24s } #startScreen:not(.hidden) > *:nth-child(8) { animation-delay:.3s }
+  #gameOverScreen:not(.hidden) > * { animation:uiIn .45s cubic-bezier(.2,.8,.2,1) both; }
+  #garageScreen:not(.hidden) { animation:uiIn .35s ease both; }
+  #startScreen .instructions { padding:8px 14px; line-height:1.55; font-size:clamp(11.5px,1.6vw,13.5px); max-width:min(92vw,540px); }
+  .btnRow { display:flex; gap:12px; align-items:center; margin-top:14px; }
+  .btnRow .btn { margin-top:0; } .btnRow .btnGarage { margin-top:0; font-size:clamp(15px,2.6vw,20px); padding:14px 26px; }
+  .btn:hover { filter:brightness(1.06); } .btn:focus-visible, .vehCard:focus-visible, .gCard:focus-visible, .iconBtn:focus-visible { outline:3px solid #7df9ff; outline-offset:2px; }
+  .vehCard { transition:transform .18s, border-color .18s, box-shadow .18s; }
+  .vehCard.selected { animation:uiPop .35s ease; box-shadow:0 0 0 2px rgba(255,206,58,.35), 0 10px 26px rgba(0,0,0,.45); }
+  .iconNav { position:absolute; top:14px; right:16px; display:flex; gap:8px; pointer-events:auto; }
+  .iconBtn { cursor:pointer; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px;
+    background:rgba(24,10,34,.55); border:2px solid rgba(255,255,255,.18); color:#ffe9bf; backdrop-filter:blur(4px); transition:transform .15s, border-color .15s; }
+  .iconBtn:hover { transform:translateY(-2px); border-color:rgba(255,206,58,.7); }
+  .keyHints { position:absolute; left:4vw; bottom:10px; font-size:11px; letter-spacing:1px; color:rgba(255,233,191,.55); }
+  .keyHints kbd { display:inline-block; font:900 10px/1 'Courier New',monospace; color:#3a1650; background:rgba(255,206,58,.85); border-radius:4px; padding:2px 5px; margin:0 2px 0 6px; }
+  @media (max-width:760px){ .keyHints { display:none; } .btnRow { flex-direction:column; } }
+  #creditsModal { position:fixed; inset:0; z-index:61; display:flex; align-items:center; justify-content:center; background:rgba(8,4,14,.8); backdrop-filter:blur(4px); pointer-events:auto; }
+  #creditsModal.hidden { display:none; }
+  #creditsModal .nmCard { width:min(92vw,560px); max-height:88vh; overflow:auto; text-align:left; animation:uiIn .3s ease both; }
+  #creditsModal .nmTitle { text-align:center; }
+  .crSec { margin:12px 0 0; color:#ffe9bf; font-size:13px; line-height:1.5; }
+  .crSec b { color:#ffce3a; letter-spacing:1px; font-size:12px; display:block; margin-bottom:2px; }
+  .crSec a { color:#7df9ff; }
+  .crClose { margin-top:16px; }
+  /* garage finish */
+  .gStageSign { display:none; }
+  .gTitleSub { display:block; }
+  .gBack { border-radius:12px; background:rgba(255,255,255,0.08); border:2px solid rgba(255,255,255,0.14); font-weight:900; letter-spacing:1px; transition:transform .15s, background .15s; }
+  .gBack:hover { background:rgba(255,255,255,0.16); }
+  .gRowHead { display:flex; align-items:baseline; gap:10px; padding:0 6px 2px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:rgba(244,234,214,0.55); }
+  .gRowHead b { color:#ffce3a; font-size:13px; letter-spacing:2px; }
+  .gRowHead .gKeys { margin-left:auto; letter-spacing:.5px; text-transform:none; }
+  .gRowHead .gKeys kbd { display:inline-block; font:900 10px/1 'Courier New',monospace; color:#3a1650; background:rgba(255,206,58,.8); border-radius:4px; padding:2px 5px; margin:0 2px 0 6px; }
+  @media (max-width:760px){ .gRowHead .gKeys { display:none; } }
+  .gOwnedCount { display:none; }
+  .gCard { transition:transform .18s, box-shadow .18s, border-color .18s; }
+  .gCard:hover { transform:translateY(-4px); }
+  .gCard.selected { animation:uiPop .3s ease; }
+  .gCards { padding-bottom:10px; min-height:150px; }
+  .gNavTab { transition:transform .15s, background .15s; } .gNavTab:hover { transform:translateY(-2px); }
+  .gWallet.bump { animation:chipBump .35s ease; }
+  .gStage::after { content:""; position:absolute; inset:auto 0 0 0; height:22%; background:linear-gradient(180deg, rgba(15,11,8,0), rgba(15,11,8,.55)); pointer-events:none; }
+  #gameOverScreen .keyHintGo { font-size:11px; color:rgba(255,233,191,.55); margin-top:8px; letter-spacing:1px; }
+  .goShare { background:linear-gradient(180deg,#5aa9ff,#2f6fb5); color:#fff; box-shadow:0 5px 0 #1c4a80; }
 </style>
 </head>
 <body>
@@ -356,10 +406,8 @@ window.addEventListener('error', function(e){
     <div id="assetBar" style="width:min(70vw,420px);height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin:-4px auto 4px;overflow:hidden"><div id="assetFill" style="height:100%;width:0%;background:linear-gradient(90deg,#2f8f4d,#f2c200);transition:width .25s"></div></div>
     <div id="assetStatus" style="font-size:11px;opacity:.75;margin:0 0 6px;letter-spacing:.5px;max-width:92vw;word-break:break-word"></div>
     <div class="instructions">
-      <b>← →</b> or swipe — change lanes &nbsp;|&nbsp; <b>↑</b> or swipe up — wheelie jump<br>
-      <b>↓</b> or swipe down — duck under banners<br>
-      🐄 Cows always have right of way. &nbsp; ☕ Cutting chai = slow-mo.<br>
-      🛡 Ganesh idol = one free crash. &nbsp; ⚡ Jugaad turbo = full speed ahead!
+      <b>← →</b> lanes &nbsp;·&nbsp; <b>↑</b> jump &nbsp;·&nbsp; <b>↓</b> duck &nbsp;·&nbsp; <b>H</b> horn &nbsp;·&nbsp; swipe &amp; tap on phones<br>
+      🐄 cows have right of way &nbsp;·&nbsp; ☕ chai = slow-mo &nbsp;·&nbsp; 🛡 Ganesh = free crash &nbsp;·&nbsp; ⚡ turbo
     </div>
     <div class="chooseLabel">CHOOSE YOUR RIDE — अपनी सवारी चुनो</div>
     <div id="vehSelect">
@@ -367,8 +415,9 @@ window.addEventListener('error', function(e){
       <div class="vehCard" data-veh="car"><div class="vehIcon">🚗</div><div class="vehName">City Car</div><div class="vehTag">sleek &amp; quick</div></div>
       <div class="vehCard" data-veh="classic"><div class="vehIcon">🎨</div><div class="vehName">Desi Special</div><div class="vehTag">unlock in garage</div></div>
     </div>
-    <button class="btn" id="startBtn">🔉 HORN OK — PLEASE START</button>
-    <button class="btn btnGarage" id="garageBtn">🛠️ GARAGE</button>
+    <div class="btnRow"><button class="btn" id="startBtn">🔉 HORN OK — PLEASE START</button><button class="btn btnGarage" id="garageBtn">🛠️ GARAGE</button></div>
+    <div class="iconNav"><div class="iconBtn" id="creditsBtn" title="Credits &amp; licences">ℹ</div></div>
+    <div class="keyHints"><kbd>← →</kbd> ride <kbd>Enter</kbd> start <kbd>G</kbd> garage <kbd>H</kbd> horn <kbd>I</kbd> credits</div>
     <div id="playerStrip" class="hidden"></div>
     <div class="credit">HORN OK PLEASE</div>
     <div class="boardPanel">
@@ -380,8 +429,8 @@ window.addEventListener('error', function(e){
 
   <div id="garageScreen" class="hidden">
     <div class="gTopBar">
-      <div class="gBack" id="garageBack"><span class="gBackChev">‹</span> MENU</div>
-      <div class="gTitle">GARAGE<span class="gTitleSub">customize · ride · repeat</span></div>
+      <div class="gBack" id="garageBack"><span class="gBackChev">‹</span> BACK</div>
+      <div class="gTitle">GARAGE<span class="gTitleSub">Sharma Motor Garage · customize · ride · repeat</span></div>
       <div class="gWallet">🪙 <span id="garageCoins">0</span></div>
       <div class="gCode hidden" id="gCode">🔑 SYNC CODE <code id="gCodeVal"></code></div>
     </div>
@@ -407,6 +456,7 @@ window.addEventListener('error', function(e){
         <div class="gSubTab" data-sub="rearArt">Rear Art</div>
         <div class="gSubTab" data-sub="trim">Trim</div>
       </div>
+      <div class="gRowHead"><b id="gRowTitle">RICKSHAWS</b><span id="gRowCount"></span><span class="gKeys"><kbd>← →</kbd> browse <kbd>Enter</kbd> equip / buy <kbd>T</kbd> test ride <kbd>1-4</kbd> tabs <kbd>Esc</kbd> back</span></div>
       <div class="gCards" id="gCards"></div>
       <div class="gNav">
         <div class="gNavTab selected" data-cat="rickshaw"><span>🛺</span>Rickshaws</div>
@@ -433,14 +483,27 @@ window.addEventListener('error', function(e){
     <div class="board" id="goBoard"></div>
     <div class="boardNote" id="goBoardNote"></div>
     <button class="btn" id="restartBtn">EK AUR ROUND 🛺</button>
+    <div class="keyHintGo">Enter — again · Esc — menu · G — garage</div>
     <div class="goBtnRow">
+      <button class="btn btnSmall goShare" id="shareBtn">📤 SHARE SCORE</button>
       <button class="btn btnSmall" id="menuBtn">🏠 MENU</button>
       <button class="btn btnSmall btnGarage" id="goGarageBtn">🛠️ GARAGE</button>
     </div>
-    <button class="btn btnSmall" id="dbgLogBtn" style="margin-top:10px;opacity:.85">📊 EXPORT DEBUG LOG</button>
+    <button id="dbgLogBtn" style="margin-top:12px;background:none;border:0;color:rgba(255,233,191,.55);font:700 11px 'Trebuchet MS',sans-serif;letter-spacing:1px;text-decoration:underline;cursor:pointer;pointer-events:auto">export debug log</button>
   </div>
 </div>
 
+<div id="creditsModal" class="hidden">
+  <div class="nmCard">
+    <div class="nmTitle">🛺 RICKSHAW RUSH: MUMBAI</div>
+    <div class="crSec"><b>MADE BY</b>Sohraab Walia — design, code and every questionable joke. A love letter to Mumbai's autos.</div>
+    <div class="crSec"><b>MADE WITH AI</b>3D models were generated with Higgsfield (concept art) and Tripo / Meshy (mesh, rig and walk cycles), then optimised for the browser. Voices are synthesised in-game; no real person's voice is used. All vehicles, shops and signage are original designs — any resemblance to real brands is unintended.</div>
+    <div class="crSec"><b>OPEN SOURCE</b>three.js (MIT) · meshoptimizer &amp; glTF-Transform (MIT) · Web Audio for every horn, engine and beat.</div>
+    <div class="crSec"><b>YOUR DATA</b>Scores, coins and garage unlocks are saved on this device and, under your nickname and sync code, to the world leaderboard. Nothing else is collected; the occasional performance report (frame rate, device type) helps tune the game.</div>
+    <div class="crSec"><b>VERSION</b><span id="crVersion"></span></div>
+    <button class="nmBtn crClose" id="creditsClose">BACK</button>
+  </div>
+</div>
 <div id="nickModal" class="hidden">
   <div class="nmCard">
     <div id="nmNickPane">
@@ -1118,11 +1181,12 @@ function qualityStepDown(){
   if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
   else if (QUALITY.level === 2){ renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); if (composer) composer.setSize(window.innerWidth, window.innerHeight); }
   else if (QUALITY.level === 3){ renderer.shadowMap.enabled = false; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }
+  else if (QUALITY.level === 4){ scene.fog.far = FOG_FAR = Math.min(FOG_FAR, 85); if (typeof skyTowers !== 'undefined') skyTowers.forEach(function(k){ k.visible = false; k.userData.off = true; }); }   // last resort for weak phones: shorter draw distance, no back row
   window.QUALITY_LEVEL = QUALITY.level;
   console.warn('Quality stepped down to level ' + QUALITY.level);
 }
 function qualityTick(dtMs){
-  if (QUALITY.level >= 3 || !state.running) return;
+  if (QUALITY.level >= 4 || !state.running) return;
   if (dtMs > 18.5) QUALITY.slow += dtMs; else QUALITY.slow = Math.max(0, QUALITY.slow - dtMs*0.5);
   if (QUALITY.slow > 1500) { QUALITY.slow = 0; qualityStepDown(); }          // ~1.5 s of sub-54fps frames
 }
@@ -1149,7 +1213,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-a';
+var BUILD_TAG = '23-Sep-c';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1753,9 +1817,17 @@ function makeHoarding(){
     c.fillStyle='#3a1a0a'; c.font='800 15px "Trebuchet MS",sans-serif'; c.textAlign='center'; c.fillText('★ NOW SHOWING ★',w*0.65,h*0.80+16);
     c.strokeStyle='#0d0d0d'; c.lineWidth=6; c.strokeRect(3,3,w-6,h-6);
   });
-  var board=new THREE.Mesh(new THREE.BoxGeometry(4.6,2.9,0.2),
-    new THREE.MeshLambertMaterial({map:tex, side:THREE.DoubleSide}));
-  board.position.y=5.2; board.castShadow=true; g.add(board);
+  // double-sided hoarding (as they stand on Mumbai roads): steel frame, a poster on each face, catwalks and floodlights both sides
+  var steel = new THREE.MeshStandardMaterial({ color:0x4a4c50, roughness:0.55, metalness:0.7 });
+  var frame = new THREE.Mesh(new THREE.BoxGeometry(4.9, 3.2, 0.22), steel); frame.position.y = 5.2; frame.castShadow = true; g.add(frame);
+  var pm = new THREE.MeshLambertMaterial({ map:tex }), tex2 = _pt.length > 1 ? pick(_pt) : tex, pm2 = new THREE.MeshLambertMaterial({ map:tex2 });
+  var lampMat = new THREE.MeshStandardMaterial({ color:0xfff1c8, emissive:0xffd27a, emissiveIntensity:0.9 });
+  [1, -1].forEach(function(f){
+    var poster = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.9), f > 0 ? pm : pm2); poster.position.set(0, 5.2, f*0.115); if (f < 0) poster.rotation.y = Math.PI; g.add(poster);
+    var walk = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.06, 0.45), steel); walk.position.set(0, 3.58, f*0.33); g.add(walk);
+    [-1.4, 1.4].forEach(function(x){ var arm = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.6), steel); arm.position.set(x, 6.9, f*0.4); g.add(arm);
+      var head = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.18, 0.22), lampMat); head.position.set(x, 6.85, f*0.72); head.rotation.x = f*0.7; g.add(head); g.userData.bulb = head; });
+  });
   return g;
 }
 // Higher-quality roadside stall for scenery: clone the bhelpuri food-stall GLB when it's
@@ -2219,13 +2291,13 @@ function layoutAlleys(){                                   // the painted alley 
     L.forEach(function(a, i){ a.position.z = 30 - i*sp - sp*0.5; a.userData.wrap = wrap; }); });
 }
 /* ---- skyline: a second row of tower blocks behind the street, one merged mesh per side (2 draw calls, ~1.5k tris) ---- */
-var skyline = [], SKY_WRAP = 420;
+var skyTowers = [], SKY_WRAP = 420;
 var skyTex = canvasTex(256, 256, function(g, w, h){
   g.fillStyle = '#c9c4bb'; g.fillRect(0, 0, w, h);
   for (var y=0;y<h;y+=32) for (var x=0;x<w;x+=32){ var lit = Math.random() < 0.22; g.fillStyle = lit ? '#ffe2a0' : (Math.random() < 0.5 ? '#3a3f4c' : '#566070'); g.fillRect(x+7, y+6, 18, 20); }
   g.fillStyle = 'rgba(0,0,0,0.12)'; for (var yy=0;yy<h;yy+=32) g.fillRect(0, yy, w, 3);
 });
-skyTex.wrapS = skyTex.wrapT = THREE.RepeatWrapping;
+skyTex.wrapS = skyTex.wrapT = THREE.RepeatWrapping; skyTex.encoding = THREE.sRGBEncoding;
 (function makeSkyline(){
   var TINTS = [0xd8cfc0, 0xc7b8a6, 0xe0d5c8, 0xb9c4cc, 0xd6c3b0, 0xcfd3c9, 0xe3cfb8, 0xbfb6ad];
   [-1, 1].forEach(function(side){
@@ -2244,8 +2316,8 @@ skyTex.wrapS = skyTex.wrapT = THREE.RepeatWrapping;
     geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
     geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); geo.setIndex(idx);
     var m = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ map: skyTex, vertexColors: true }));
-    m.frustumCulled = false; m.receiveShadow = false; m.castShadow = false; m.position.z = 0; scene.add(m); skyline.push(m);
-    var m2 = m.clone(); m2.position.z = -SKY_WRAP; scene.add(m2); skyline.push(m2);   // second copy so the ring is seamless
+    m.frustumCulled = false; m.receiveShadow = false; m.castShadow = false; m.position.z = 0; scene.add(m); skyTowers.push(m);
+    var m2 = m.clone(); m2.position.z = -SKY_WRAP; scene.add(m2); skyTowers.push(m2);   // second copy so the ring is seamless
   });
 })();
 
@@ -2794,8 +2866,12 @@ function createRickshaw(){
 
 var player = createRickshaw();
 // shield aura
-var aura = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12),
-  new THREE.MeshBasicMaterial({ color:0xffc040, transparent:true, opacity:0.22 }));
+var auraMat = new THREE.ShaderMaterial({ transparent:true, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+  uniforms:{ t:{ value:0 }, col:{ value:new THREE.Color(0xffc040) } },
+  vertexShader:'varying vec3 vN; varying vec3 vV; varying vec3 vP; void main(){ vN = normalize(normalMatrix * normal); vec4 mv = modelViewMatrix * vec4(position,1.0); vV = normalize(-mv.xyz); vP = position; gl_Position = projectionMatrix * mv; }',
+  fragmentShader:'uniform float t; uniform vec3 col; varying vec3 vN; varying vec3 vV; varying vec3 vP; void main(){ float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.2); float hex = 0.55 + 0.45*sin(vP.y*14.0 + atan(vP.x, vP.z)*6.0 + t*4.0); gl_FragColor = vec4(col * (0.3 + 0.3*hex), rim*0.7 + 0.02); }' });
+auraMat.userData.noBend = true;
+var aura = new THREE.Mesh(new THREE.SphereGeometry(1.75, 24, 16), auraMat);
 aura.position.y = 1.1; aura.visible = false; aura.name = 'aura'; player.add(aura);
 player.userData.aura = aura;
 player.position.set(0,0,PLAYER_Z);
@@ -4944,6 +5020,7 @@ function worldMood(){
   else if (t === 'dusk'){ tall.car = 2.6; veh.taxi = 1.5; veh.bus = 1.3; sp.baraat = 2.2; sp.ganpati = 1.6; sp.cows = 0.5; }
   else { tall.car = 2.4; tall.stall = 0.5; tall.chaat = 0.5; tall.dabbawala = 0.4; tall.cow = 0.6; veh.truck = 2.4; veh.tempo = 1.6; veh.taxi = 0.7; veh.bus = 0.5; veh.hatch = 0.6; sp.baraat = 1.8; sp.ganpati = 2.2; sp.cows = 0.2; }
   if (z === 1){ tall.car *= 1.8; }                                   // rush hour: traffic doubles
+  if (typeof badshah !== 'undefined' && badshah){ tall.car *= 0.45; tall.stall *= 0.6; tall.chaat *= 0.6; }   // Badshah on the road: thinner traffic so he can actually set up his lunges (live run: 2 tells in 50 s)
   else if (z === 2){ tall.chaat *= 1.7; tall.stall *= 1.6; sp.ganpati *= 1.5; }   // chowpatty nights: food carts, processions
   else if (z >= 4){ tall.car *= 1.3; veh.truck *= 1.3; }
   var BASE_T = { car:2, stall:1, chaat:1, cow:1, cart:1, dabbawala:1, fullbar:1, overheadbar:1 }, BASE_V = { car:1, taxi:1.2, hatch:1, truck:0.7, bus:0.8, tempo:0.8, tanker:0.25 }, BASE_S = { cows:1, baraat:1, ganpati:1 };
@@ -5300,9 +5377,11 @@ var zoneNow = 0;
 function heat(){ return Math.min(3, Math.max(0, (state.score - 20000) / 10000)); }
 function bossInterval(base){ return Math.round(base * (1 - 0.12*Math.min(3, heat()))); }   // 0 → −36 % at 50k
 function zoneIndex(){ var z = 0; for (var i=0;i<ZONES.length;i++) if (state.score >= ZONES[i].at) z = i; return z; }
+var pendingZoneCard = 0;
+function zoneCard(z){ popup('🏙 ' + ZONES[z].name, 'popEvent', 50, 20); popup(ZONES[z].sub, 'popSub', 50, 36); tihai(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn(); }
 function updateZone(){
   var z = zoneIndex();
-  if (z !== zoneNow){ zoneNow = z; if (z > 0 && state.running){ popup('🏙 ' + ZONES[z].name, 'popEvent', 50, 20); popup(ZONES[z].sub, 'popSub', 50, 36); tihai(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn(); } }
+  if (z !== zoneNow){ zoneNow = z; if (z > 0 && state.running){ if (flyover){ pendingZoneCard = z; } else zoneCard(z); } }
   return z;
 }
 /* --- Patrol jeep from behind (zone ≥ 2): siren + your lane flashes red behind you; vacate it within ~2.5 s or eat a chalaan.
@@ -5767,6 +5846,36 @@ function beginStart(){
   })();
 }
 $('restartBtn').addEventListener('click', startGame);
+// ---- menu keyboard navigation + credits + share ----
+function screenUp(id){ var el = $(id); return !!el && !el.classList.contains('hidden'); }
+window.addEventListener('keydown', function(e){
+  if (e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable)) return;
+  if (screenUp('creditsModal')){ if (e.code === 'Escape' || e.code === 'Enter' || e.code === 'KeyI'){ $('creditsModal').classList.add('hidden'); e.preventDefault(); } return; }
+  if (screenUp('nickModal')) return;
+  if (screenUp('startScreen') && !state.running){
+    var cards = [].slice.call(document.querySelectorAll('#vehSelect .vehCard')), ci = cards.findIndex(function(c){ return c.classList.contains('selected'); });
+    if (e.code === 'ArrowRight' || e.code === 'ArrowLeft'){ var nx = cards[(ci + (e.code === 'ArrowRight' ? 1 : cards.length - 1)) % cards.length]; if (nx) nx.click(); e.preventDefault(); }
+    else if (e.code === 'Enter' || e.code === 'Space'){ $('startBtn').click(); e.preventDefault(); }
+    else if (e.code === 'KeyG'){ $('garageBtn').click(); }
+    else if (e.code === 'KeyI'){ openCredits(); }
+  } else if (screenUp('gameOverScreen')){
+    if (e.code === 'Enter' || e.code === 'Space'){ if (!screenUp('nameEntry')){ $('restartBtn').click(); e.preventDefault(); } }
+    else if (e.code === 'Escape'){ $('menuBtn').click(); }
+    else if (e.code === 'KeyG'){ $('goGarageBtn').click(); }
+  }
+});
+function openCredits(){ var v = $('crVersion'); if (v) v.textContent = 'build ' + BUILD_TAG + ' · three.js r' + (THREE.REVISION||'') + ' · ' + (MOBILE ? 'mobile tier' : 'desktop tier'); $('creditsModal').classList.remove('hidden'); }
+$('creditsBtn').addEventListener('click', openCredits);
+$('creditsClose').addEventListener('click', function(){ $('creditsModal').classList.add('hidden'); });
+$('creditsModal').addEventListener('click', function(e){ if (e.target === $('creditsModal')) $('creditsModal').classList.add('hidden'); });
+$('shareBtn').addEventListener('click', function(){
+  var url = location.origin + location.pathname, nick = (profile && profile.nick) ? profile.nick : 'I';
+  var text = nick + ' scored ' + state.score.toLocaleString() + ' in Rickshaw Rush: Mumbai 🛺 — dodge cows, bosses and the Sea Link. Beat it: ' + url;
+  var done = function(msg){ popup(msg, 'popNear', 50, 60); };
+  if (navigator.share){ navigator.share({ title:'Rickshaw Rush: Mumbai', text:text, url:url }).then(function(){ done('📤 SHARED!'); }).catch(function(){}); }
+  else if (navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ done('📋 COPIED — paste it anywhere'); }, function(){ done('Copy failed'); }); }
+  else { try { window.prompt('Copy your score:', text); } catch(e){} }
+});
 $('menuBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); $('startScreen').classList.remove('hidden'); if(typeof renderBoard==='function') renderBoard($('startBoard'), -1); });
 $('goGarageBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); GARAGE.open(); });
 $('dbgLogBtn').addEventListener('click', function(){ try{ PERF.export(); var b=$('dbgLogBtn'); var o=b.textContent; b.textContent='✅ SAVED + COPIED'; setTimeout(function(){ b.textContent=o; },1600); }catch(e){ console.warn('debug export failed', e); } });
@@ -5968,7 +6077,7 @@ var GARAGE_DATA = {
     { id:'diwali',  name:'Diwali Sparks',   rarity:'epic',   price:1500, color:0xffcf4a }
   ]
 };
-var GARAGE_DESC = {"paint": {"default": "Factory green over Bombay yellow.", "red": "Matte red \u2014 the dabbawala\\u2019s choice.", "blue": "Electric blue, Bandra nights.", "orange": "Sunset over Marine Drive.", "mint": "Cool mint, cooler driver.", "purple": "Royal purple, filmy vibes.", "black": "Stealth auto. Cops look twice.", "ivory": "Ivory white \u2014 wedding season ready."}, "rearArt": {"king": "The classic KING plate.", "tiger": "Sher-e-Mumbai on your tail.", "peacock": "National bird, peacock eyes.", "lotus": "Lotus on a blue pond.", "flowers": "Truck-art flowers, Punjab style.", "flames": "Flames \u2014 for the ones who overtake buses.", "rajasthan": "Elephant and jharokha arches.", "mumbai_st": "The skyline, the sun, HORN OK PLEASE."}, "trim": {"chrome": "Polished chrome skirts, bumpers and roof rails.", "black": "Murdered-out black trim.", "gold": "Gold trim \u2014 pure Bollywood.", "red": "Red trim to match the flames.", "blue": "Blue trim, sea-link style."}, "horn": {"classic": "The auto\\u2019s own paa-paa. Peds jump.", "truck": "A truck air horn \u2014 traffic ahead flinches.", "musical": "Seven-note musical horn, wedding-band energy.", "dhol": "Dhol beats out of the horn.", "tiny": "A ridiculous little chirp. Everyone laughs.", "royal": "Royal fanfare, arrive like a maharaja."}, "fx": {"default": "Plain exhaust puff.", "dust": "A dust cloud like a Kutch highway.", "neon": "Neon streaks behind you at night.", "fire": "Fire out the exhaust \u2014 turbo doubles it.", "flower": "Petals trail behind the auto.", "monsoon": "Spray like you\\u2019re always in the rain.", "electric": "Crackling sparks.", "diwali": "Golden sparks with the occasional pop."}};
+var GARAGE_DESC = {"paint": {"default": "Factory green over Bombay yellow.", "red": "Matte red \u2014 the dabbawala\u2019s choice.", "blue": "Electric blue, Bandra nights.", "orange": "Sunset over Marine Drive.", "mint": "Cool mint, cooler driver.", "purple": "Royal purple, filmy vibes.", "black": "Stealth auto. Cops look twice.", "ivory": "Ivory white \u2014 wedding season ready."}, "rearArt": {"king": "The classic KING plate.", "tiger": "Sher-e-Mumbai on your tail.", "peacock": "National bird, peacock eyes.", "lotus": "Lotus on a blue pond.", "flowers": "Truck-art flowers, Punjab style.", "flames": "Flames \u2014 for the ones who overtake buses.", "rajasthan": "Elephant and jharokha arches.", "mumbai_st": "The skyline, the sun, HORN OK PLEASE."}, "trim": {"chrome": "Polished chrome skirts, bumpers and roof rails.", "black": "Murdered-out black trim.", "gold": "Gold trim \u2014 pure Bollywood.", "red": "Red trim to match the flames.", "blue": "Blue trim, sea-link style."}, "horn": {"classic": "The auto\u2019s own paa-paa. Peds jump.", "truck": "A truck air horn \u2014 traffic ahead flinches.", "musical": "Seven-note musical horn, wedding-band energy.", "dhol": "Dhol beats out of the horn.", "tiny": "A ridiculous little chirp. Everyone laughs.", "royal": "Royal fanfare, arrive like a maharaja."}, "fx": {"default": "Plain exhaust puff.", "dust": "A dust cloud like a Kutch highway.", "neon": "Neon streaks behind you at night.", "fire": "Fire out the exhaust \u2014 turbo doubles it.", "flower": "Petals trail behind the auto.", "monsoon": "Spray like you\u2019re always in the rain.", "electric": "Crackling sparks.", "diwali": "Golden sparks with the occasional pop."}};
 var RARITY_COLOR = { common:'#4bbf6b', rare:'#3f7fe0', epic:'#a24bff' };
 var scores = loadScores();
 scores.sort(function(a,b){ return b.score - a.score; });
@@ -6278,7 +6387,14 @@ function gameOver(){
    that switches once. +15 % speed, 1.5× score on the deck, a bonus at the toll. Bosses, rain and crossings wait. */
 var FLYOVER_FIRST = 10000, flyover = null, nextFlyoverScore = FLYOVER_FIRST, FLYOVER_EVERY = 15000, sceneryHidden = false;   // first Sea Link at 10k (most runs never reached 15k), then every 15k
 var FLY = { ramp:210, deck:1150, toll:130, exit:200, drop:9.5 };
-var flyGroup = null, flyLamps = [], flyPylons = [], flySea = null, flyParapets = [];
+var flyGroup = null, flyLamps = [], flyPylons = [], flySea = null, flyParapets = [], flyCity = [], flyDeck = null, flyRails = [];
+function mergedTubes(segs, r){                               // [[x1,y1,z1,x2,y2,z2],...] → one BufferGeometry of thin cylinders (1 draw call)
+  var pos = [], nor = [], idx = [], base = 0, up = new THREE.Vector3(0,1,0), a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), q = new THREE.Quaternion(), m = new THREE.Matrix4();
+  segs.forEach(function(sg){ a.set(sg[0],sg[1],sg[2]); b.set(sg[3],sg[4],sg[5]); dir.subVectors(b, a); var len = dir.length(); dir.normalize(); q.setFromUnitVectors(up, dir);
+    var g = new THREE.CylinderGeometry(r, r, len, 5, 1, true); m.compose(a.clone().lerp(b, 0.5), q, new THREE.Vector3(1,1,1)); g.applyMatrix4(m);
+    var P = g.attributes.position, N = g.attributes.normal, I = g.index; for (var i=0;i<P.count;i++){ pos.push(P.getX(i),P.getY(i),P.getZ(i)); nor.push(N.getX(i),N.getY(i),N.getZ(i)); } for (var j=0;j<I.count;j++) idx.push(I.getX(j)+base); base += P.count; g.dispose(); });
+  var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos,3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor,3)); geo.setIndex(idx); return geo;
+}
 function buildFlyoverDressing(){
   if (flyGroup) return;
   flyGroup = new THREE.Group(); scene.add(flyGroup);
@@ -6296,11 +6412,47 @@ function buildFlyoverDressing(){
   for (var k=0;k<3;k++){ var py = new THREE.Group();
     [-1,1].forEach(function(sd){ var leg = new THREE.Mesh(new THREE.BoxGeometry(1.6, 52, 2.2), pylMat); leg.position.set(sd*7.2, 26 - FLY.drop, 0); leg.rotation.z = -sd*0.06; leg.castShadow = false; py.add(leg); });
     var beam = new THREE.Mesh(new THREE.BoxGeometry(17, 1.6, 2.4), pylMat); beam.position.set(0, 38, 0); py.add(beam);
-    var pts = []; for (var c=1;c<=8;c++){ var zc = c*7.5; [-1,1].forEach(function(sd){ [-1,1].forEach(function(dir){ pts.push(sd*7.2, 46 - FLY.drop, 0, sd*(ROAD_W/2 + 0.5), 1.3, dir*zc); }); }); }
-    var cg = new THREE.BufferGeometry(); cg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3)); py.add(new THREE.LineSegments(cg, cableMat));
+    // stay cables: real tubes (one merged mesh per pylon), fanning from the pylon head to the deck edge both ways
+    var cab = mergedTubes((function(){ var L = []; for (var c=1;c<=9;c++){ var zc = c*7; [-1,1].forEach(function(sd){ [-1,1].forEach(function(dir){ L.push([sd*7.2, 47 - FLY.drop - c*0.9, 0, sd*(ROAD_W/2 + 0.5), 1.3, dir*zc]); }); }); } return L; })(), 0.07);
+    py.add(new THREE.Mesh(cab, new THREE.MeshStandardMaterial({ color:0xf2f4f6, roughness:0.4, metalness:0.5 })));
     py.position.z = -k*135 - 20; flyGroup.add(py); flyPylons.push(py); }
-  flySea = new THREE.Mesh(new THREE.PlaneGeometry(900, 700, 1, 1), new THREE.MeshStandardMaterial({ color:0x24618f, roughness:0.12, metalness:0.4, envMapIntensity:1.4 }));
-  flySea.rotation.x = -Math.PI/2; flySea.position.set(0, -FLY.drop + 0.4, -200); flySea.material.userData.noBend = true; flyGroup.add(flySea);
+  // parapet railing posts (merged) — the wall reads as a bridge, not a kerb
+  [-1,1].forEach(function(sd){ var L = []; for (var q=0;q<100;q++){ var z = -q*4 + 40; L.push([sd*(ROAD_W/2 + 0.5), 0.95, z, sd*(ROAD_W/2 + 0.5), 1.3, z]); }
+    var pm = new THREE.Mesh(mergedTubes(L, 0.03), rail); flyGroup.add(pm); flyRails.push(pm); });
+  // deck edge: a raised drainage kerb and a dark contact line so the parapet sits ON the deck instead of floating
+  [-1,1].forEach(function(sd){ var kerb = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.12, 400, 1, 1, 100), new THREE.MeshStandardMaterial({ color:0x9a958c, roughness:0.9 })); kerb.position.set(sd*(ROAD_W/2 + 0.17), 0.06, -160); kerb.receiveShadow = true; flyGroup.add(kerb); flyParapets.push(kerb);
+    var line = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 400, 1, 100), new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.28, depthWrite:false })); line.rotation.x = -Math.PI/2; line.position.set(sd*(ROAD_W/2 + 0.55), 0.02, -160); flyGroup.add(line); flyParapets.push(line); });
+  // the deck itself: clean concrete with highway markings laid over the street asphalt (hides its cracks and patches)
+  var deckTex = canvasTex(256, 256, function(g, w, h){ g.fillStyle = '#5c5e62'; g.fillRect(0,0,w,h); for (var i=0;i<1400;i++){ g.fillStyle = 'rgba(' + (Math.random()<0.5?'255,255,255':'0,0,0') + ',' + (0.03+Math.random()*0.07) + ')'; g.fillRect(Math.random()*w, Math.random()*h, 2, 2); }
+    g.fillStyle = '#e9e6dc'; g.fillRect(w*0.5 - w*0.36/2.7 - 3, 0, 6, h*0.55); g.fillRect(w*0.5 + w*0.36/2.7 - 3, 0, 6, h*0.55);   // dashed lane lines at ±1.35 m
+    g.fillStyle = '#f2c94c'; g.fillRect(4, 0, 6, h); g.fillRect(w-10, 0, 6, h); });                    // solid yellow edge lines
+  deckTex.wrapS = THREE.ClampToEdgeWrapping; deckTex.wrapT = THREE.RepeatWrapping; deckTex.repeat.set(1, 50); deckTex.encoding = THREE.sRGBEncoding; deckTex.anisotropy = 4;
+  flyDeck = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 400, 1, 100), new THREE.MeshStandardMaterial({ map:deckTex, roughness:0.95 }));
+  flyDeck.rotation.x = -Math.PI/2; flyDeck.position.set(0, 0.015, -160); flyDeck.receiveShadow = true; flyGroup.add(flyDeck);
+  // the sea: a slow-scrolling shimmer texture on a glossy plane
+  var seaTex = canvasTex(256, 256, function(g, w, h){ g.fillStyle = '#2b6a99'; g.fillRect(0,0,w,h); for (var i=0;i<900;i++){ var a = Math.random(); g.fillStyle = 'rgba(' + (a<0.5?'120,180,220':'20,60,100') + ',' + (0.08 + Math.random()*0.18) + ')'; var ww = 6 + Math.random()*26; g.fillRect(Math.random()*w, Math.random()*h, ww, 1 + Math.random()*2); } });
+  seaTex.wrapS = seaTex.wrapT = THREE.RepeatWrapping; seaTex.repeat.set(60, 46); seaTex.encoding = THREE.sRGBEncoding;
+  var seaMat = new THREE.ShaderMaterial({ fog:true, uniforms:THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { t:{ value:0 }, sunDir:{ value:new THREE.Vector3(0.3, 0.6, -0.7) }, deep:{ value:new THREE.Color(0x1d4f7a) }, shallow:{ value:new THREE.Color(0x3d8fb8) }, skyCol:{ value:new THREE.Color(0x9fc3da) }, storm:{ value:0 } }]),
+    vertexShader:'varying vec3 vW; varying vec2 vUv;\n#include <fog_pars_vertex>\nvoid main(){ vec4 wp = modelMatrix * vec4(position,1.0); vW = wp.xyz; vUv = uv; vec4 mvPosition = viewMatrix * wp; gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}',
+    fragmentShader:'uniform float t; uniform vec3 sunDir; uniform vec3 deep; uniform vec3 shallow; uniform vec3 skyCol; uniform float storm; varying vec3 vW; varying vec2 vUv;\n#include <fog_pars_fragment>\n'+
+      'float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n'+
+      'void main(){ vec2 p = vW.xz * 0.11; float a = sin(p.x*1.9 + t*1.1) + sin(p.y*2.6 - t*1.4)*0.8 + sin((p.x+p.y)*1.3 + t*0.7)*0.6;\n'+
+      ' vec3 n = normalize(vec3(cos(p.x*1.9 + t*1.1)*0.18 + cos((p.x+p.y)*1.3 + t*0.7)*0.08, 1.0, cos(p.y*2.6 - t*1.4)*0.16 + cos((p.x+p.y)*1.3 + t*0.7)*0.08));\n'+
+      ' vec3 v = normalize(cameraPosition - vW); float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);\n'+
+      ' vec3 col = mix(deep, shallow, 0.5 + 0.2*a); col = mix(col, skyCol, fres*0.4); col = mix(col, vec3(0.32,0.38,0.44), storm*0.7);\n'+
+      ' vec3 h = normalize(normalize(sunDir) + v); float spec = pow(max(dot(n, h), 0.0), 180.0);\n'+
+      ' float g = step(0.982, hash(floor(vW.xz*2.5 + floor(t*3.0)))) * step(0.2, spec);\n'+
+      ' col += vec3(1.0, 0.96, 0.85) * (spec*0.45 + g*0.7) * (1.0 - storm*0.8);\n'+
+      ' gl_FragColor = vec4(min(col, vec3(0.92)), 1.0);\n#include <fog_fragment>\n}' });
+  seaMat.userData.noBend = true;
+  flySea = new THREE.Mesh(new THREE.PlaneGeometry(900, 700, 1, 1), seaMat);
+  flySea.rotation.x = -Math.PI/2; flySea.position.set(0, -FLY.drop + 0.4, -200); flyGroup.add(flySea);
+  // the city across the water: two far rows of hazy tower silhouettes (merged, 2 draw calls), scrolled slowly for parallax
+  [-1,1].forEach(function(sd){ var pos = [], idx = [], base = 0, z = 60; var c = new THREE.Color();
+    while (z > -560){ var w = rand(10, 26), d = rand(10, 20), h = rand(14, 70), x = sd * rand(70, 150); var g = new THREE.BoxGeometry(w, h, d); var P = g.attributes.position, I = g.index;
+      for (var i=0;i<P.count;i++) pos.push(P.getX(i) + x, P.getY(i) + h/2 - FLY.drop + 0.3, P.getZ(i) + z); for (var j=0;j<I.count;j++) idx.push(I.getX(j) + base); base += P.count; z -= w + rand(2, 12); g.dispose(); }
+    var geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx); geo.computeVertexNormals();
+    var city = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color:0x7d8aa0 })); city.material.userData.noBend = true; city.frustumCulled = false; city.userData.far = true; flyGroup.add(city); flyCity.push(city); });
   flyGroup.visible = false;
   flyGantries = [];
 }
@@ -6316,7 +6468,7 @@ function startFlyover(){
   flyover = { phase:'signs', d0:state.dist, drop:0, gust:0, gustDir:0, gustT:rand(5, 9), jeep:null, jeepZ:16, jeepLane:state.lane, tollDone:false, tollOpen:1, tollSwitched:false, coinsT:0 };
   popup('🌉 SEA LINK AHEAD', 'popEvent', 50, 20); popup('AUTOS NOT ALLOWED — take it anyway', 'popSub', 50, 36); tihai();
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '🌉 SEA LINK'; bossShow(true); bossFill(0);
-  bossHint('flyover', '🌉 SEA LINK — NO AUTOS', 'Highway rules up here: truck convoys, debris off the trucks ' + bhKey('jump') + ', gantries to duck ' + bhKey('duck') + ', crosswinds that shove you sideways. A cop is on your tail — reach the toll and pick the GREEN booth.');
+  bossHint('flyover', '🌉 SEA LINK — NO AUTOS', 'Highway pace. Debris: jump ' + bhKey('jump') + '. Gantries: duck ' + bhKey('duck') + '. Crosswind shoves you — hold your lane. At the toll take the GREEN booth (it may switch!).');
   bendPlan.lock = true; bendPlan.curve = 0; bendPlan.hill = 0.00034; bendPlan.amp = 0; bendPlan.intro = 0;
   say('driver', pick(['Flyover? Auto ke liye nahi… par chalo.', 'Sea Link! Meter band, dil chalu.']), 50);
   if (window.PERF) PERF.mark('flyover start');
@@ -6329,6 +6481,15 @@ function flyoverSpawnToll(z){                              // three booths acros
     var ob = { root:arm, hit:{ hw:1.05, d:0.8 }, type:'toll', kind:'toll', lane:l, toll:true }; obstacles.push(ob);
     F.tollBooths.push({ booth:booth, ob:ob, lane:l });
   }
+  // canopy over the plaza: two columns, a flat roof, an underside light strip and a fascia board
+  var can = new THREE.Group(), cm = new THREE.MeshStandardMaterial({ color:0xd9d4c8, roughness:0.85 }), fm = new THREE.MeshStandardMaterial({ color:0x1f6f3a, roughness:0.6 });
+  [-1,1].forEach(function(sd){ var col = new THREE.Mesh(new THREE.BoxGeometry(0.5, 5.2, 0.5), cm); col.position.set(sd*(ROAD_W/2 - 0.25), 2.6, 0); col.castShadow = true; can.add(col); });
+  var roof = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 0.6, 0.35, 6), cm); roof.position.set(0, 5.4, 0); roof.castShadow = true; can.add(roof);
+  var strip = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 2.6, 0.08, 0.5), new THREE.MeshStandardMaterial({ color:0xfff4d6, emissive:0xffe2a0, emissiveIntensity:1.2 })); strip.position.set(0, 5.2, 1.6); can.add(strip);
+  var fascia = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 0.6, 1.0, 0.16), fm); fascia.position.set(0, 6.05, 3.0); can.add(fascia);
+  var tt = canvasTex(1024, 128, function(g, w, h){ g.fillStyle = '#1f6f3a'; g.fillRect(0,0,w,h); g.fillStyle = '#ffffff'; g.font = '900 78px "Arial Black",Impact,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('SEA LINK TOLL PLAZA  ·  टोल नाका', w/2, h/2 + 4); }); tt.encoding = THREE.sRGBEncoding;
+  var sign = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 0.2, 0.9), new THREE.MeshBasicMaterial({ map:tt })); sign.position.set(0, 6.05, 3.09); can.add(sign);
+  can.position.set(0, 0, z + 0.4); scene.add(can); F.tollCanopy = can;
   flyoverTollLights(); flyoverTollClear();
   popup('🏁 TOLL PLAZA — GREEN LANE ONLY', 'popNear', 50, 34);
 }
@@ -6363,10 +6524,12 @@ function flyoverEnd(){
   var F = flyover; if (!F) return;
   if (F.jeep){ scene.remove(F.jeep); F.jeep = null; } copSiren(0);
   if (F.tollBooths) F.tollBooths.forEach(function(tb){ scene.remove(tb.booth); scene.remove(tb.ob.root); var i2 = obstacles.indexOf(tb.ob); if (i2 >= 0) obstacles.splice(i2, 1); });
-  flyover = null; sceneryHidden = false; nextFlyoverScore = Math.max(nextFlyoverScore, state.score + 5000); bossShow(false);   // every 15k from the START of the last one (set in startFlyover), never sooner than 5k after it ends
+  if (F.tollCanopy){ scene.remove(F.tollCanopy); F.tollCanopy = null; }
+  flyover = null; sceneryHidden = false; nextFlyoverScore = Math.max(nextFlyoverScore, state.score + 5000); bossShow(false);
+  if (pendingZoneCard){ var _pz = pendingZoneCard; pendingZoneCard = 0; setTimeout(function(){ if (state.running) zoneCard(_pz); }, 2600); }   // every 15k from the START of the last one (set in startFlyover), never sooner than 5k after it ends
   bendPlan.lock = false; bendPlan.hold = 0;
   buildings.forEach(function(b){ b.group.visible = true; b.group.position.y = 0; b.group.position.x = b.baseX; });
-  alleys.forEach(function(a){ a.position.y = 0; }); streetParts.forEach(function(k){ k.position.y = k.userData.baseY || 0; k.visible = true; });
+  alleys.forEach(function(a){ a.position.y = 0; }); skyTowers.forEach(function(k){ k.position.y = 0; k.visible = true; }); streetParts.forEach(function(k){ k.position.y = k.userData.baseY || 0; k.visible = true; });
   props.forEach(function(p){ p.position.y = 0; }); pedestrians.forEach(function(pd){ pd.position.y = 0; pd.visible = true; }); roadModules.forEach(function(mod){ mod.visible = true; });
   if (flyGroup) flyGroup.visible = false;
 }
@@ -6381,6 +6544,7 @@ function updateFlyover(dt, dz){
   if (F.phase === 'toll' && !F.tollSpawned){ F.tollSpawned = true; flyoverSpawnToll(SPAWN_AHEAD - 6); state.lastSpawnZ -= 60; }
   if (F.tollBooths){                                       // booths (and the raised boom of the open lane) scroll with the road
     F.tollBooths.forEach(function(tb){ tb.booth.position.z += dz; if (obstacles.indexOf(tb.ob) < 0) tb.ob.root.position.z += dz; else tb.booth.position.z = tb.ob.root.position.z - 1.2; });
+    if (F.tollCanopy){ F.tollCanopy.position.z += dz; if (F.tollCanopy.position.z > 60){ scene.remove(F.tollCanopy); F.tollCanopy = null; } }
   }
   if (F.phase === 'toll' && F.tollBooths){
     var tz = F.tollBooths[0].booth.position.z + 1.2; flyoverTollClear();
@@ -6396,15 +6560,19 @@ function updateFlyover(dt, dz){
   var dy = -FLY.drop * F.drop, hide = F.drop > 0.985; sceneryHidden = hide;
   buildings.forEach(function(b){ b.group.position.y = dy; b.group.position.x = b.baseX * (1 + 0.8*F.drop); if (hide) b.group.visible = false; });
   alleys.forEach(function(a){ a.position.y = dy; if (hide) a.visible = false; });
+  skyTowers.forEach(function(k){ k.position.y = dy*2.2; if (hide) k.visible = false; });                 // the back row drops out of sight first
   streetParts.forEach(function(k){ if (k.userData.baseY == null) k.userData.baseY = k.position.y; k.position.y = k.userData.baseY + dy; k.visible = !hide; });
   props.forEach(function(p){ p.position.y = dy; if (hide) p.visible = false; });
   pedestrians.forEach(function(pd){ pd.position.y = dy; if (hide) pd.visible = false; });
-  roadModules.forEach(function(mod){ var deco = mod.userData.variant !== 'STRAIGHT' && mod.userData.variant !== 'DAMAGED'; mod.visible = !(hide && deco); });   // market stalls / flyover pillars / crossings belong to the street
+  roadModules.forEach(function(mod){ var deco = mod.userData.variant !== 'STRAIGHT'; mod.visible = !(hide && deco); });   // a bridge deck has no potholes, patches or stalls   // market stalls / flyover pillars / crossings belong to the street
   if (flyGroup){ flyGroup.visible = F.drop > 0.15; flyGroup.position.y = -(1 - F.drop) * 2.2;
     flyLamps.forEach(function(lp){ lp.position.z += dz; if (lp.position.z > 20) lp.position.z -= 12*34; lp.userData.bulb.material.emissiveIntensity = 0.4 + 0.9*(typeof dayNight !== 'undefined' ? dayNight : 0.5); });
     flyPylons.forEach(function(py){ py.position.z += dz; if (py.position.z > 40) py.position.z -= 3*135; });
+    flyRails.forEach(function(r){ r.position.z += dz; if (r.position.z > 4) r.position.z -= 4; });   // railing posts scroll (4 m period)
     flyAddGantries(); flyGantries.forEach(function(gt){ gt.position.z += dz; if (gt.position.z > 30) gt.position.z -= 600; });
-    if (flySea){ flySea.position.x = player.position.x*0.2; flySea.material.color.setHex((monsoon && monsoon.active) ? 0x223a50 : 0x24618f); }
+    if (flySea){ flySea.position.x = player.position.x*0.2; var su = flySea.material.uniforms; su.t.value += dt; su.storm.value += (((monsoon && monsoon.active) ? 1 : 0) - su.storm.value) * Math.min(1, dt*2); su.sunDir.value.copy(sun.position).normalize(); }
+    flyCity.forEach(function(c){ c.position.z += dz*0.3; if (c.position.z > 300) c.position.z -= 300; });
+    if (flyDeck){ flyDeck.material.map.offset.y += dz/8; flyDeck.visible = F.drop > 0.6; }
   }
   // crosswind gusts on the deck
   if (F.phase === 'deck' || F.phase === 'toll'){
@@ -6574,12 +6742,13 @@ function updateBadshah(dt, dz){
       var esc = [b.lane-1, b.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, b.z - 16, b.z + 9); });
       if (esc.length){ b.lane = pick(esc); b.stuck = 0; b.roamT = rand(1.0, 2.0); } else b.tz = Math.max(b.tz, b.z); }
     var teleNow = Math.max(0.9, 1.25 - zoneNow*0.07);
-    if (b.t > 50 && b.lunges < b.need){ say('badshah', pick(['Papa ka phone… bach gaya tu.', 'Time nahi hai mere paas — nikal.']), 50 + b.x*6, 26); badshahEnd(true); return; }   // he never gets his run-in on a jammed road → papa calls anyway
-    if ((b.hold = (b.hold||0) + dt) > rand(2.5, 4.5) && Math.abs(b.z - b.tz) < 6 && !state.jumping && badshahEscapable(teleNow) && bLaneClear(state.lane, -18, 3)){   // set up a lunge — only when you can dodge AND his run-in is clear
+    if (b.t > 70 && b.lunges < b.need){ say('badshah', pick(['Papa ka phone… bach gaya tu.', 'Time nahi hai mere paas — nikal.']), 50 + b.x*6, 26); badshahEnd(true); return; }   // he never gets his run-in on a jammed road → papa calls anyway
+    if (b.hold > 1.2 && b.tz < -34) b.tz = rand(-32, -24);                                      // lining up a lunge: he closes in first so the run-in is short
+    if ((b.hold = (b.hold||0) + dt) > rand(1.8, 3.2) && Math.abs(b.z - b.tz) < 6 && !state.jumping && badshahEscapable(teleNow) && bLaneClear(state.lane, b.z - 2, 3)){   // set up a lunge — only when you can dodge AND his whole run-in is clear
       b.hold = 0; b.stuck = 0;
       if (b.lunges >= 1 && !b.swiped && Math.random() < 0.45 && [state.lane-1, state.lane+1].some(function(l){ return l>=0 && l<=2 && bLaneClear(l, -16, 6); })){   // once per encounter: the side-swipe threat (not lethal)
         b.swiped = true; b.phase = 'swipe'; b.swipeT = 0; b.lane = pick([state.lane-1, state.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, -16, 6); }));
-        badshahHorn(true); say('badshah', pick(['Chal hat, side!', 'Dabba hai tera, dabba!', 'Ghar pe bolke aaya hai?']), 50 + b.x*6, 26);
+        badshahHorn(true); say('badshah', pick(['Chal hat, side!', 'Dabba hai tera, dabba!', 'Ghar pe bolke aaya hai?']), 50 + b.x*6, 26); popup('SHOWING OFF — HOLD YOUR LANE (or honk him off)', 'popSub', 50, 44);
       } else {
         b.lane = state.lane; b.phase = 'tell'; b.tele = teleNow; b.hornWindow = false; b.near = false; b.fake = false; b.approachT = 0;
         badshahHorn(true); say('badshah', pick(BADSHAH_LINES.lunge), 50 + b.x*6, 26);
@@ -6592,12 +6761,14 @@ function updateBadshah(dt, dz){
     var into = (b.z > -3 && b.swipeT > 0.6 && b.swipeT < 1.6) ? (player.position.x < LANES[b.lane] ? -0.75 : 0.75) : 0;
     b.xOff = (b.xOff||0) + (into - (b.xOff||0)) * Math.min(1, dt*7); b.lean = -into*0.09;
     if (into && !b.swipeHit && Math.abs((LANES[b.lane] + b.xOff) - player.position.x) < BADSHAH_HW + PLAYER_HW + 0.15){ b.swipeHit = true; state.shake = 0.35; burst((LANES[b.lane] + player.position.x)/2, 1.0, 0, 0xffd24a, 8, 2, 2); popup('😤 SIDE-SWIPE!', 'popNear', 50 + b.x*5, 44); say('driver', pick(['Arre gaadi ko haath mat laga!', 'Scratch pad gaya toh papa ko bolega?']), 50, 48); }
-    if (b.swipeT > 2.3){ b.phase = 'recover'; b.tz = rand(-55, -35); b.xOff = 0; b.lean = 0; b.swipeHit = false; }
+    if (b.shooed && b.swipeT < 2.0){ b.swipeT = 2.0; }
+    if (b.swipeT > 2.3){ b.phase = 'recover'; b.tz = rand(-55, -35); b.xOff = 0; b.lean = 0; b.swipeHit = false; b.shooed = false; }
   } else if (b.phase === 'tell'){                            // brake lights + horn; he drops right onto your bumper, THEN the honk window opens
     b.approachT += dt; b.z += (-8 - b.z) * Math.min(1, dt*2.6);
     if (!b.near && (b.z > -12.5 || b.approachT > 1.3)){ b.near = true; b.hornWindow = true; if (b.earlyHonk != null && b.t - b.earlyHonk < 0.5){ badshahHonkBack(); return; } popup('🎺 HONK BACK ' + (IS_TOUCH ? '— TAP 📯' : '— PRESS H'), 'popNear', 50, 40); }
     if (b.near) b.tele -= dt;
-    if (!badshahEscapable(b.tele + 0.1) || !bLaneClear(b.lane, b.z - 1, 2)){ b.phase = 'recover'; b.tz = rand(-52, -36); b.hornWindow = false; b.near = false; burst(b.x, 0.6, b.z + 1.5, 0xc9b79a, 6, 2, 2); }   // traffic closed the gap since the tell began → he peels off (no strike)
+    b.noEsc = (!badshahEscapable(b.tele + 0.1) || !bLaneClear(b.lane, b.z - 1, 2)) ? (b.noEsc||0) + dt : 0;
+    if (b.noEsc > 0.3){ b.phase = 'recover'; b.tz = rand(-52, -36); b.hornWindow = false; b.near = false; b.noEsc = 0; burst(b.x, 0.6, b.z + 1.5, 0xc9b79a, 6, 2, 2); }   // traffic closed the gap for good since the tell began → he peels off (no strike); a one-frame flicker doesn't count
     else if (b.near && b.tele <= 0){ b.hornWindow = false; if (b.fake){ b.phase = 'recover'; b.tz = rand(-55, -35); } else { b.phase = 'strike'; b.strikeT = 0.75; if (window.PERF) PERF.mark('badshah strike lane=' + b.lane + ' you=' + state.lane); } }
   } else if (b.phase === 'strike'){                          // brake-check: right in front of you — lethal in his lane
     b.strikeT -= dt; b.z += (-2.2 - b.z) * Math.min(1, dt*9);
@@ -6631,6 +6802,7 @@ function badshahHonkBack(){                                 // your horn during 
   var b = badshah; if (!b) return;
   if (window.PERF && b.phase !== 'roam') PERF.mark('honk @' + b.phase + (b.hornWindow ? ' window' : '') + ' z=' + b.z.toFixed(1));
   if (b.phase === 'tell' && !b.hornWindow){ b.earlyHonk = b.t; if (!b.earlyTold){ b.earlyTold = true; popup('…wait till he is on your bumper', 'popSub', 50, 44); } return; }   // remembered: a honk just before the window still counts
+  if (b.phase === 'swipe' && !b.shooed && b.swipeT > 0.3){ b.shooed = true; b.xOff = 0; state.bonus += 40*state.mult; popup('🎺 SHOO! +' + (40*state.mult), 'popNear', 50, 40); say('badshah', pick(['Theek hai, theek hai!', 'Chill, bro!']), 50 + b.x*6, 26); return; }   // honking at the show-off sends him back to his lane
   if (b.phase !== 'tell' || !b.hornWindow) return;
   b.hornWindow = false; b.phase = 'recover'; b.tz = rand(-50, -34); b.lane = b.lane === 1 ? pick([0,2]) : 1;
   b.lunges++; bossFill(b.lunges / b.need); var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE ' + b.lunges + ' / ' + b.need;
@@ -6680,8 +6852,10 @@ function popup(text, cls, xPct, yPct){
   _pops = _pops.filter(function(p){ return p.until > now; });
   for (var i=0;i<_pops.length;i++) if (_pops[i].text === text && _pops[i].until - now > 300) return;   // same message already up → don't double it
   // push the new one below anything occupying the same band (and keep it on screen)
-  var h = cls==='popArrest' ? 13 : cls==='popShout' ? 6 : cls==='popEvent' ? 15 : 8, guard = 0;
+  var h = cls==='popArrest' ? 13 : cls==='popShout' ? 6 : cls==='popEvent' ? 20 : 8, guard = 0;
   var fixed = (cls === 'popEvent' || cls === 'popSub');                                          // title cards keep their slot; smaller messages stack around them
+  if (fixed){ var busyUntil = 0; _pops.forEach(function(p){ if (p.fixed && p.cls === cls && p.until > busyUntil) busyUntil = p.until; });   // a second title card waits for the first (zone card over the Sea Link card was unreadable)
+    if (busyUntil > now + 250){ setTimeout(function(){ popup(text, cls, xPct, yPct); }, busyUntil - now + 120); return; } }
   while (!fixed && guard++ < 8 && _pops.some(function(p){ return Math.abs(p.x - x) < 28 && Math.abs(p.y - y) < h; })) y += h;
   if (y > 78) y = 78;
   var el = document.createElement('div');
@@ -6690,7 +6864,7 @@ function popup(text, cls, xPct, yPct){
   el.style.left = x + '%'; el.style.top = y + '%';
   layer.appendChild(el);
   var life = cls==='popShout' ? 1650 : cls==='popArrest' ? 1250 : (cls==='popEvent'||cls==='popSub') ? 2200 : 950;
-  var rec = { el:el, x:x, y:y, text:text, until: now + life - 150 }; _pops.push(rec);
+  var rec = { el:el, x:x, y:y, text:text, cls:cls, fixed:fixed, until: now + life - 150 }; _pops.push(rec);
   setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); var k = _pops.indexOf(rec); if (k >= 0) _pops.splice(k,1); }, life);
 }
 function bumpEl(id){ var e=$(id); if(!e) return; e.classList.remove('bump'); void e.offsetWidth; e.classList.add('bump'); }
@@ -7042,7 +7216,7 @@ var GARAGE = (function(){
     for (var fb=0; fb<3; fb++){ var bl = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.02,0.16), new THREE.MeshStandardMaterial({ color:0x6b6f78, roughness:0.5, metalness:0.5 })); bl.position.set(Math.cos(fb*2.094)*0.5, -0.02, Math.sin(fb*2.094)*0.5); bl.rotation.y = -fb*2.094; bl.rotation.x = 0.18; gFan.add(bl); }
     gFan.position.set(-1.2, 4.1, -1.6); gScene.add(gFan);
     gMotes = new THREE.Group(); for (var mi=0; mi<40; mi++){ var mo = new THREE.Mesh(new THREE.PlaneGeometry(0.03,0.03), new THREE.MeshBasicMaterial({ color:0xffe9b0, transparent:true, opacity:0.55, depthWrite:false })); mo.position.set(rand(-1.8,1.8), rand(0.3,3.6), rand(-1.5,1.5)); mo.userData.ph = rand(0,6); gMotes.add(mo); } gScene.add(gMotes);
-    if (typeof makePerson === 'function'){ var bh = makePerson(); if (bh){ bh.position.set(-3.6, 0, -2.8); bh.rotation.y = 0.9; if (bh.userData.mixer) bh.userData.mixer.timeScale = 0.12; gScene.add(bh); gBhaiya = bh; } }
+    if (typeof makePerson === 'function'){ var bh = makePerson(); if (bh){ bh.position.set(-3.7, 0, 0.6); bh.rotation.y = 0.75; if (bh.userData.mixer) bh.userData.mixer.timeScale = 0.12; gScene.add(bh); gBhaiya = bh; } }
     canvas.addEventListener('pointerdown', function(e){ dragging=true; lastX=e.clientX; yawVel=0; canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); });
     canvas.addEventListener('pointermove', function(e){ if(!dragging)return; var dx=e.clientX-lastX; lastX=e.clientX; yaw+=dx*0.011; yawVel=dx*0.011; });
     canvas.addEventListener('pointerup', function(){ dragging=false; });
@@ -7082,7 +7256,7 @@ var GARAGE = (function(){
     if (gFan){ gFan.rotation.y += 0.11; gFan.rotation.z = Math.sin(gt*6)*0.015; }
     if (gSpot){ gSpot.intensity = 1.15 + Math.sin(gt*30)*0.03 + (Math.random()<0.01 ? -0.25 : 0); }   // tungsten buzz + the odd flicker
     if (gMotes){ for (var mi=0; mi<gMotes.children.length; mi++){ var mo = gMotes.children[mi]; mo.position.y += 0.0015 + Math.sin(gt*0.7+mo.userData.ph)*0.001; mo.position.x += Math.sin(gt*0.9+mo.userData.ph)*0.0012; if (mo.position.y > 3.8) mo.position.y = 0.2; mo.lookAt(gCam.position); } }
-    if (gBhaiya && gBhaiya.userData.mixer){ gBhaiya.userData.mixer.update(1/60); gBhaiya.rotation.y = 0.9 + Math.sin(gt*0.5)*0.15; }
+    if (gBhaiya && gBhaiya.userData.mixer){ gBhaiya.userData.mixer.update(1/60); gBhaiya.rotation.y = 0.7 + Math.sin(gt*0.5)*0.15; }
     gRenderer.render(gScene, gCam);
   }
   // live ride-FX preview: the selected effect puffs out of the exhaust on the turntable
@@ -7144,6 +7318,7 @@ var GARAGE = (function(){
     });
     // rear-art thumbnails: draw the actual tailgate panels
     [].forEach.call(host.querySelectorAll('.gThumb[data-art]'), function(t){ var id = t.getAttribute('data-art'), cv = document.createElement('canvas'); cv.width = 256; cv.height = 160; var g = cv.getContext('2d'); (REAR_ART[id]||REAR_ART.tiger)(g, 256, 160); t.appendChild(cv); });
+    var rt = $g('gRowTitle'), rc = $g('gRowCount'); if (rt){ rt.textContent = ({rickshaw:'RICKSHAWS',paint:'PAINT',rearArt:'REAR ART',trim:'TRIM',horn:'HORNS',fx:'RIDE FX'}[cat]||cat).toUpperCase(); var ow = list.filter(function(it){ return ownsItem(cat,it.id); }).length; rc.textContent = ow + ' / ' + list.length + ' owned'; }
     var oc = $g('gOwnedCount'); if (oc){ var owned = list.filter(function(it){ return ownsItem(cat,it.id); }).length; oc.textContent = ({rickshaw:'rides',paint:'paints',rearArt:'rear art',trim:'trims',horn:'horns',fx:'ride fx'}[cat]||cat) + ' · ' + owned + ' / ' + list.length + ' owned'; }
     updateSelInfo();
   }
@@ -7252,6 +7427,15 @@ var GARAGE = (function(){
     [].forEach.call(document.querySelectorAll('.gSubTab'), function(t){ t.addEventListener('click', function(){ setSub(t.getAttribute('data-sub')); }); });
     var tr=$g('gTestRide'); if(tr) tr.addEventListener('click', function(){ if(typeof garageTestRide==='function') garageTestRide(); });
     window.addEventListener('resize', function(){ if(isOpen) resizePreview(); });
+    window.addEventListener('keydown', function(e){                            // keyboard: browse, equip, test, tabs, back
+      if (!isOpen || (e.target && e.target.tagName === 'INPUT')) return;
+      var cat = currentCat(), list = catList(cat), i = list.findIndex(function(it){ return it.id === sel[cat]; });
+      if (e.code === 'Escape'){ close(); e.preventDefault(); }
+      else if (e.code === 'ArrowRight' || e.code === 'ArrowLeft'){ var n = list[(i + (e.code === 'ArrowRight' ? 1 : list.length - 1)) % list.length]; if (n) selectItem(cat, n.id); var sc = $g('gCards').querySelector('.gCard.selected'); if (sc && sc.scrollIntoView) sc.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' }); e.preventDefault(); }
+      else if (e.code === 'Enter'){ doAction(); e.preventDefault(); }
+      else if (e.code === 'KeyT'){ var tb = $g('gTestBtn'); if (tb) tb.click(); }
+      else if (/^Digit[1-4]$/.test(e.code)){ setCat(['rickshaw','style','horn','fx'][+e.code.slice(5) - 1]); }
+    });
   }
   function refresh(){ if (!isOpen) return; ['rickshaw','paint','rearArt','trim','horn','fx'].forEach(function(c){ sel[c]=equippedItem(c); }); buildPreviewModel(); updateWallet(); renderCards(); updateSelInfo(); }
   return { open:open, close:close, wire:wire, refresh:refresh, isOpen:function(){return isOpen;}, sel:function(){return sel;}, rebuildPreview:function(){ if (isOpen) buildPreviewModel(); } };
@@ -7538,7 +7722,7 @@ function animate(){
   });
   player.userData.driver.rotation.y = (targetX - state.x)*0.18 + Math.sin(tNow*0.0008)*0.06;
   player.userData.aura.visible = state.shield;
-  if (state.shield) player.userData.aura.rotation.y += dt*2;
+  if (state.shield){ player.userData.aura.rotation.y += dt*2; auraMat.uniforms.t.value += dt; }
 
   // exhaust / ride FX trail (garage-equipped look)
   emitRideFx(dt);
@@ -7556,7 +7740,7 @@ function animate(){
     b.group.visible = b.group.position.z > FAR_CULL && !sceneryHidden;
   });
   for (var _ai=0; _ai<alleys.length; _ai++){ var _al = alleys[_ai]; _al.position.z += dz; if (_al.position.z > 30) _al.position.z -= (_al.userData.wrap || BWRAP); _al.visible = _al.position.z > FAR_CULL && !sceneryHidden; }
-  for (var _si=0; _si<skyline.length; _si++){ var _sk = skyline[_si]; _sk.position.z += dz; if (_sk.position.z > SKY_WRAP) _sk.position.z -= 2*SKY_WRAP; _sk.visible = !sceneryHidden; }
+  for (var _si=0; _si<skyTowers.length; _si++){ var _sk = skyTowers[_si]; _sk.position.z += dz; if (_sk.position.z > SKY_WRAP) _sk.position.z -= 2*SKY_WRAP; _sk.visible = !sceneryHidden && !_sk.userData.off; }
   roadModules.forEach(function(mod){
     mod.position.z += dz;
     if (mod.position.z > 30) mod.position.z -= MOD_WRAP;   // recycle position only (content built once — no per-frame rebuild stutter)
