@@ -1149,7 +1149,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '22-Sep-i';
+var BUILD_TAG = '23-Sep-a';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -5699,6 +5699,11 @@ function goLane(dir){
   if (state.hydro > 0) return;                            // hydroplaning — the wheels have nothing to bite
   if (!state.running) return;
   var nl = Math.max(0, Math.min(2, state.lane + dir));
+  if (nl !== state.lane && badshah && badshah.lane === nl && badshah.phase !== 'leave' && Math.abs(badshah.z) < BADSHAH_D/2 + PLAYER_HD + 0.6){   // he is right beside you — you bounce off his door instead of driving through him
+    state.shake = Math.max(state.shake, 0.25); burst((LANES[nl] + LANES[state.lane])/2, 1.0, badshah.z, 0xffd24a, 6, 2, 2); badshahHorn(false);
+    if (!badshah.doorTold){ badshah.doorTold = true; say('driver', pick(['Arre, gaadi hai idhar!', 'Side nahi milegi, bhai.']), 50, 46); }
+    return;
+  }
   if (nl !== state.lane){ state.lane = nl; state.swerveTimer = 0.5; }
 }
 function doJump(){
@@ -6160,7 +6165,7 @@ var CLOUD = (function(){
     var cause = deathCause(), zi = (typeof zoneIndex === 'function') ? zoneIndex() : 0;
     var flags = [ (monsoon && monsoon.active) ? 'monsoon' : '', (typeof QUALITY !== 'undefined' ? 'q' + QUALITY.level : ''), IS_TOUCH ? 'touch' : 'keys', 'v' + BUILD_TAG ].filter(Boolean).join(',');
     post({ t:'run', pid:ensurePid(), nick:profile.nick, score:state.score, dist:Math.floor(state.dist), zone:zi, vehicle:selectedVehicle, cause:cause, flags:flags, save:saveBlob() });
-    if (diagSent < 4 && state.dist > 120 && window.PERF){                                 // diagnostics: first 4 real runs of a session
+    if ((diagSent < 4 || state.score > 3000) && state.dist > 120 && window.PERF){          // diagnostics: first 4 runs of a session, plus every run that got far enough to meet a boss
       diagSent++;
       try {
         var rep = PERF.report();
@@ -6202,7 +6207,7 @@ function startGame(){
   bike = null; bikePaused = false; nextBikeScore = 2000; bossShow(false);   // reset bike boss
   if (cop) copRemove(cop); cop = null; copPaused = false; nextCopScore = 3500; bossGapScore = 0; copSiren(0);   // reset cop boss
   if (badshah){ scene.remove(badshah.root); badshah = null; } badshahMusic(false); nextBadshahScore = 4200;   // reset the SUV boss
-  if (flyover) flyoverEnd(); nextFlyoverScore = 15000;
+  if (flyover) flyoverEnd(); nextFlyoverScore = FLYOVER_FIRST;
   state.bonus = 0; state.mult = 1; state.comboTimer = 0; state.swerveTimer = 0;
   state.speed = BASE_SPEED; state.timeScale = 1;
   state.lane = 1; state.x = 0; state.y = 0; state.vy = 0;
@@ -6271,7 +6276,7 @@ function gameOver(){
    pylons with cable fans, open water below. Highway-only obstacles (truck convoys, debris, broken-down tempos, gantries
    to duck), crosswind gusts, a police jeep on your tail the whole way, a toll plaza at the exit with one open lane
    that switches once. +15 % speed, 1.5× score on the deck, a bonus at the toll. Bosses, rain and crossings wait. */
-var flyover = null, nextFlyoverScore = 15000, FLYOVER_EVERY = 15000, sceneryHidden = false;
+var FLYOVER_FIRST = 10000, flyover = null, nextFlyoverScore = FLYOVER_FIRST, FLYOVER_EVERY = 15000, sceneryHidden = false;   // first Sea Link at 10k (most runs never reached 15k), then every 15k
 var FLY = { ramp:210, deck:1150, toll:130, exit:200, drop:9.5 };
 var flyGroup = null, flyLamps = [], flyPylons = [], flySea = null, flyParapets = [];
 function buildFlyoverDressing(){
@@ -6552,6 +6557,7 @@ function updateBadshah(dt, dz){
   var sp = state.speed, lim;
   if (b.phase === 'arrive'){                                 // blows past you from behind, then pulls alongside for the intro
     b.z -= (sp*0.75 + 12)*dt; lim = bAheadLimit(b); if (lim != null && b.z < lim){ b.z = lim; b.stuck += dt; } else b.stuck = 0;
+    if (b.lane === state.lane && b.z > 0){ var keepZ = PLAYER_HD + BADSHAH_D/2 + 1.2; if (b.z < keepZ){ b.z = keepZ; b.stuck += dt; } }   // you moved into his path: he sits on your tail (never through you) until a lane opens
     if (b.stuck > 0.6){ var al = [b.lane-1, b.lane+1].filter(function(l){ return l>=0 && l<=2 && l !== state.lane && bLaneClear(l, b.z - 16, b.z + 9); }); if (al.length){ b.lane = pick(al); b.stuck = 0; } else if (b.stuck > 2.5){ b.intro = true; b.phase = 'roam'; b.roamT = 1; b.tz = rand(-52, -30); } }
     if (b.z < 0.4 && !b.intro){ b.intro = true; b.phase = 'alongside'; b.holdT = 1.7; b.z = Math.max(b.z, -0.6); say('badshah', pick(BADSHAH_LINES.start), 50 + b.x*6, 26); badshahHorn(true); }
   } else if (b.phase === 'alongside'){                       // window down, right next to you — "jaanta hai main kaun hoon?"
@@ -6606,7 +6612,7 @@ function updateBadshah(dt, dz){
   } else if (b.phase === 'leave'){
     b.z -= (sp*0.9 + 14)*dt; lim = bAheadLimit(b);
     if (lim != null && b.z < lim){ b.z = lim; b.stuck += dt; var lz = [b.lane-1, b.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, b.z - 30, b.z + 9); }); if (lz.length){ b.lane = pick(lz); b.stuck = 0; } } else b.stuck = 0;
-    if (b.z < -160 || b.stuck > 4){ scene.remove(b.root); badshah = null; return; }
+    b.leaveT = (b.leaveT||0) + dt; if (b.z < -160 || b.stuck > 2 || b.leaveT > 7){ scene.remove(b.root); badshah = null; return; }   // gone into the distance (or swallowed by the jam)
   }
   if (b.phase !== 'tell' && b.phase !== 'strike' && b.phase !== 'leave') bSmash(b);
   // lateral: ease to the lane
