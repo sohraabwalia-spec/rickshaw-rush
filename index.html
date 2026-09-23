@@ -1021,8 +1021,8 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 /* ---- staged asset loader: fetches every model script with a real progress bar, retries once, reports what failed,
         then runs the game script. Replaces 43 blocking <script src> tags (≈50 MB) that showed a blank page while downloading. ---- */
 (function(){
-  var FILES = ["ui-art.js", "rickshaw-model.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js"];
-  var SIZES = {"rickshaw-model.js": 704964, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 380193, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 204296, "bldg-old-model.js": 405228, "bldg-mixed-model.js": 383718, "bldg-modern-model.js": 555467, "bldg-market-model.js": 477455, "bldg-corner-model.js": 422895, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1058357, "bus-model.js": 234786, "bus-tex-variants.js": 398002, "wagon-model.js": 259128, "wagon-tex-variants.js": 395949, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 389744, "police-model.js": 341554, "bldg-paan-model.js": 368317, "bldg-hotel-model.js": 368902, "bldg-hospital-model.js": 357985, "bldg-lodge-model.js": 381158, "bldg-clinic-model.js": 295083, "bldg-office-model.js": 628891, "bldg-police-model.js": 349783, "props-model.js": 4487335, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688};
+  var FILES = ["ui-art.js", "rickshaw-model.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js"];
+  var SIZES = {"rickshaw-model.js": 704964, "car-model.js": 64739, "cow-model.js": 270262, "cow-tex-variants.js": 380193, "cart-model.js": 332591, "vendor-model.js": 208345, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 204296, "bldg-old-model.js": 751908, "bldg-mixed-model.js": 672974, "bldg-modern-model.js": 1004411, "bldg-market-model.js": 762167, "bldg-corner-model.js": 758587, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1058357, "bus-model.js": 234786, "bus-tex-variants.js": 398002, "wagon-model.js": 259128, "wagon-tex-variants.js": 395949, "truck2-model.js": 355753, "bike-model.js": 239295, "bike-tex-variants.js": 389744, "police-model.js": 341554, "bldg-paan-model.js": 625065, "bldg-hotel-model.js": 641630, "bldg-hospital-model.js": 610881, "bldg-lodge-model.js": 667982, "bldg-clinic-model.js": 536347, "bldg-office-model.js": 756975, "bldg-police-model.js": 573151, "props-model.js": 4487335, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 939815, "flyover-models.js": 3106688, "flyover2-models.js": 783639};
   var total = 0; Object.keys(SIZES).forEach(function(k){ total += SIZES[k]; });
   var done = {}, failed = [], loadedBytes = 0;
   function $(id){ return document.getElementById(id); }
@@ -1121,7 +1121,7 @@ var state = {
 var MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // phones/tablets: lighter tier from the first frame
 var FOG_FAR = MOBILE ? 105 : 150;                       // draw distance (scenery beyond the fog is culled) — shorter on phones
 var renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 1.25));  // cap for FPS on retina / phones
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 2.0));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1158,7 +1158,9 @@ var composer = null, bloomPass = null, useComposer = false;
 (function setupPostFX(){
   if (!THREE.EffectComposer || !THREE.RenderPass || !THREE.UnrealBloomPass || !THREE.ShaderPass || !THREE.GammaCorrectionShader) return;
   try {
-    composer = new THREE.EffectComposer(renderer);
+    var _pr = renderer.getPixelRatio(), _rt = null;                       // the composer used to render WITHOUT anti-aliasing (MSAA is lost in render targets) → jaggy, crawling facades
+    if (renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget){ _rt = new THREE.WebGLMultisampleRenderTarget(window.innerWidth*_pr, window.innerHeight*_pr, { format:THREE.RGBAFormat }); _rt.samples = 4; }
+    composer = _rt ? new THREE.EffectComposer(renderer, _rt) : new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
     bloomPass = new THREE.UnrealBloomPass(
       new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -1179,7 +1181,7 @@ if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(); }
 function qualityStepDown(){
   QUALITY.level++;
   if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
-  else if (QUALITY.level === 2){ renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); if (composer) composer.setSize(window.innerWidth, window.innerHeight); }
+  else if (QUALITY.level === 2){ renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); if (composer){ if (composer.setPixelRatio) composer.setPixelRatio(1); composer.setSize(window.innerWidth, window.innerHeight); } }
   else if (QUALITY.level === 3){ renderer.shadowMap.enabled = false; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }
   else if (QUALITY.level === 4){ scene.fog.far = FOG_FAR = Math.min(FOG_FAR, 85); if (typeof skyTowers !== 'undefined') skyTowers.forEach(function(k){ k.visible = false; k.userData.off = true; }); }   // last resort for weak phones: shorter draw distance, no back row
   window.QUALITY_LEVEL = QUALITY.level;
@@ -1213,7 +1215,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-c';
+var BUILD_TAG = '23-Sep-d';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1716,7 +1718,8 @@ var PROP_SPECS = {   // targetH = height in metres (targetW = width instead when
   cone:{ targetH:0.75, yaw:-Math.PI/2 },  waterbar:{ targetW:2.2, yaw:0 },  bollard:{ targetH:1.0, yaw:0 },  rubble:{ targetW:2.4, yaw:0 },  dirt:{ targetW:2.4, yaw:0 },
   stall:{ targetW:2.6, yaw:0 },  vendor:{ targetH:1.72, yaw:-Math.PI/2 },  desiauto:{ targetW:2.85, yaw:0 },
   cop:{ targetH:1.86, yaw:0 },  copf:{ targetH:1.78, yaw:0 },   // havaldars: front faces −Z in the model; makeHavaldar spins them toward the player
-  tollbooth:{ targetH:3.4, yaw:-Math.PI/2 },  gantrybig:{ targetW:14.5, yaw:-Math.PI/2 },  debris:{ targetW:1.7, yaw:-Math.PI/2 }   // Sea Link kit
+  tollbooth:{ targetH:3.4, yaw:-Math.PI/2 },  gantrybig:{ targetW:14.5, yaw:-Math.PI/2 },  debris:{ targetW:1.7, yaw:-Math.PI/2 },   // Sea Link kit
+  pylon:{ targetH:58, yaw:-Math.PI/2 },  parapet:{ targetW:8, yaw:0 },  flylamp:{ targetH:8.6, yaw:0 },  flycity:{ targetW:56, yaw:0 }   // Sea Link kit 2 (23-Sep)
 };
 function loadPropKit(src){
   if (!src || !THREE.GLTFLoader) return;
@@ -1731,18 +1734,20 @@ function loadPropKit(src){
       box = new THREE.Box3().setFromObject(model); var c = box.getCenter(new THREE.Vector3());
       model.position.set(-c.x, spec.centre ? -c.y : -box.min.y, -c.z);
       model.traverse(function(o){ if (o.isMesh){ o.castShadow = true; o.receiveShadow = !spec.centre; o.frustumCulled = !!o.isSkinnedMesh ? false : true;
-        if (o.material && o.material.map){ o.material.map.minFilter = THREE.LinearFilter; o.material.map.generateMipmaps = false; } } });
+        } });
       var holder = new THREE.Group(); holder.add(model); holder.rotation.y = spec.yaw || 0;
       holder.userData.size = box.getSize(new THREE.Vector3());
       propTemplates[name] = holder;
       var mk = { lamp:makeStreetLamp, signal:makeSignal, shrine:makeShrine, cone:makeConeProp, waterbar:makeWaterBarrier, bollard:makeBollard, rubble:makeRubble, dirt:makeDirtMound, stall:makeStallDecor }[name];
       if (name === 'desiauto' && selectedVehicle === 'classic') applyPlayerVehicle();
+      if (/^(pylon|parapet|flylamp|flycity)$/.test(name) && typeof flyUpgrade === 'function') flyUpgrade();
       if (mk && typeof refreshPropsFor === 'function' && typeof props !== 'undefined') refreshPropsFor(mk);
     }, function(e){ console.warn('Prop GLB failed: '+name, e); }); } catch(e){ console.warn('Prop GLB err: '+name, e); }
   });
 }
 whenModel('PROP_GLB', function(){ loadPropKit(window.PROP_GLB); });
-whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // Sea Link kit: toll booth, big gantry, debris
+whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });
+whenModel('FLY2_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY2_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // Sea Link kit 2: pylon, parapet, lamp, skyline cluster   // Sea Link kit: toll booth, big gantry, debris
 function propClone(name){ var t = propTemplates[name]; return t ? t.clone(true) : null; }
 
 function makeStreetLamp(){
@@ -2947,10 +2952,18 @@ function pickMeshoptDecoder(){
     return orig.call(self, url, onLoad, onProgress, onError);
   };
 })();
+var MAX_ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1);
+function tuneTextures(root){                                    // every GLB texture: anisotropic filtering (sharp at grazing angles — roadside facades) + trilinear mipmaps (no shimmer)
+  root.traverse(function(o){ if (!o.isMesh || !o.material) return; [].concat(o.material).forEach(function(m){
+    ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(k){ var t = m[k]; if (!t || t._tuned) return; t._tuned = true;
+      t.anisotropy = MAX_ANISO; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.needsUpdate = true; }); }); });
+}
 function makeGLTFLoader(){
   var l = new THREE.GLTFLoader();
   var dec = pickMeshoptDecoder();
   if (dec && l.setMeshoptDecoder) l.setMeshoptDecoder(dec);
+  var _parse = l.parse.bind(l);
+  l.parse = function(data, path, onLoad, onError){ return _parse(data, path, function(gltf){ try { tuneTextures(gltf.scene); } catch(e){} onLoad(gltf); }, onError); };
   return l;
 }
 // lowest world-Y of an object. For skinned models we use the lowest BONE (robust,
@@ -3406,7 +3419,7 @@ whenModel(['POLICE_GLB_B64'], function loadPoliceJeep(){
     var c = box.getCenter(new THREE.Vector3());
     model.position.set(-c.x, -box.min.y, -c.z);
     model.traverse(function(o){ if (o.isMesh){ o.castShadow = true; o.receiveShadow = true;
-      if (o.material && o.material.map){ o.material.map.minFilter = THREE.LinearFilter; o.material.map.generateMipmaps = false; } } });
+      } });
     var holder = new THREE.Group(); var yaw = new THREE.Group(); yaw.rotation.y = POLICE_FACE_YAW;
     yaw.add(model); holder.add(yaw);
     policeJeepTemplate = holder;
@@ -6455,6 +6468,44 @@ function buildFlyoverDressing(){
     var city = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color:0x7d8aa0 })); city.material.userData.noBend = true; city.frustumCulled = false; city.userData.far = true; flyGroup.add(city); flyCity.push(city); });
   flyGroup.visible = false;
   flyGantries = [];
+  flyUpgrade();
+}
+var flyParaInst = [], flyUp = {};
+function instFrom(tpl, mats){                                  // template holder → one InstancedMesh per mesh, placed by the given matrices
+  tpl.updateMatrixWorld(true); var g = new THREE.Group(), tmp = new THREE.Matrix4();
+  tpl.traverse(function(o){ if (!o.isMesh) return; var im = new THREE.InstancedMesh(o.geometry, o.material, mats.length);
+    mats.forEach(function(m, i){ tmp.multiplyMatrices(m, o.matrixWorld); im.setMatrixAt(i, tmp); }); im.instanceMatrix.needsUpdate = true;
+    im.frustumCulled = false; im.castShadow = false; im.receiveShadow = true; g.add(im); });
+  return g;
+}
+function flyUpgrade(){                                         // swap procedural Sea Link pieces for the modelled kit as each template arrives
+  if (!flyGroup) return; var T = propTemplates, M = THREE.Matrix4;
+  if (T.pylon && !flyUp.pylon){ flyUp.pylon = true;
+    var pb = new THREE.Box3().setFromObject(T.pylon), ps = pb.getSize(new THREE.Vector3()), sx = 21 / Math.max(ps.x, 0.1), top = ps.y - FLY.drop - 0.5;
+    var cab = mergedTubes((function(){ var L = []; for (var c=0;c<10;c++){ var y = top - 3 - c*1.9, zc = 8 + c*7; [-1,1].forEach(function(sd){ [-1,1].forEach(function(dir){ L.push([0, y, dir*0.6, sd*(ROAD_W/2 + 0.5), 1.3, dir*zc]); }); }); } return L; })(), 0.06);
+    var cabMat = new THREE.MeshStandardMaterial({ color:0xf2f4f6, roughness:0.4, metalness:0.5 });
+    flyPylons.forEach(function(py){ py.children.forEach(function(ch){ ch.visible = false; }); var pc = T.pylon.clone(true); pc.scale.set(sx, 1, 1); pc.position.y = -FLY.drop - 0.5; py.add(pc); py.add(new THREE.Mesh(cab, cabMat)); });
+  }
+  if (T.parapet && !flyUp.parapet){ flyUp.parapet = true;
+    var tb = new THREE.Box3().setFromObject(T.parapet), ts = tb.getSize(new THREE.Vector3()), along = ts.z >= ts.x, L = along ? ts.z : ts.x;
+    [-1,1].forEach(function(sd){ var mats = [], n = Math.ceil(215 / L) + 1;   // fog ends at 150 m — no need to draw further
+      for (var i=0;i<n;i++){ var m = new M().makeRotationY((along ? 0 : Math.PI/2) + (sd > 0 ? Math.PI : 0)); m.scale(new THREE.Vector3(1, 0.6, 0.85)); m.setPosition(sd*(ROAD_W/2 + 0.55), 0.06, 40 - i*L); mats.push(m); }
+      var g = instFrom(T.parapet, mats); g.userData.period = L; flyGroup.add(g); flyParaInst.push(g); });
+    flyParapets.forEach(function(pp){ if (pp.geometry && pp.geometry.parameters && pp.geometry.parameters.height === 0.95) pp.visible = false; });   // the plain concrete wall
+    flyGroup.children.forEach(function(ch){ if (ch.geometry && ch.geometry.parameters && ch.geometry.parameters.width === 0.08) ch.visible = false; });   // the old top rail
+    flyRails.forEach(function(r){ r.visible = false; });
+  }
+  if (T.flylamp && !flyUp.lamp){ flyUp.lamp = true;
+    var glow = new THREE.MeshStandardMaterial({ color:0xfff1c8, emissive:0xffcf80, emissiveIntensity:0.8 });
+    flyLamps.forEach(function(lp){ lp.children.forEach(function(ch){ ch.visible = false; }); var lc = T.flylamp.clone(true); lc.position.y = -0.8; lc.rotation.y = lp.position.x > 0 ? Math.PI : 0; lp.add(lc);
+      var b = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.08, 0.2), glow); b.position.set(0, 7.55, 0); lp.add(b); lp.userData.bulb = b; });
+  }
+  if (T.flycity && !flyUp.city){ flyUp.city = true;
+    flyCity.forEach(function(c){ c.visible = false; });
+    [-1,1].forEach(function(sd){ var mats = [], z = 60;
+      while (z > -560){ var sc = rand(0.55, 0.95), m = new M().makeRotationY(Math.floor(Math.random()*4) * Math.PI/2); m.scale(new THREE.Vector3(sc, sc*rand(1.0, 1.6), sc)); m.setPosition(sd*rand(115, 200), -FLY.drop + 0.2, z); mats.push(m); z -= rand(45, 70); }
+      var g = instFrom(T.flycity, mats); g.traverse(function(o){ if (o.material) o.material.userData.noBend = true; }); flyGroup.add(g); flyCity.push(g); });
+  }
 }
 var flyGantries = [];
 function flyAddGantries(){                                    // two big sign gantries recycled along the deck (decor, well above duck height)
@@ -6569,6 +6620,7 @@ function updateFlyover(dt, dz){
     flyLamps.forEach(function(lp){ lp.position.z += dz; if (lp.position.z > 20) lp.position.z -= 12*34; lp.userData.bulb.material.emissiveIntensity = 0.4 + 0.9*(typeof dayNight !== 'undefined' ? dayNight : 0.5); });
     flyPylons.forEach(function(py){ py.position.z += dz; if (py.position.z > 40) py.position.z -= 3*135; });
     flyRails.forEach(function(r){ r.position.z += dz; if (r.position.z > 4) r.position.z -= 4; });   // railing posts scroll (4 m period)
+    flyParaInst.forEach(function(g){ g.position.z += dz; if (g.position.z > g.userData.period) g.position.z -= g.userData.period; });
     flyAddGantries(); flyGantries.forEach(function(gt){ gt.position.z += dz; if (gt.position.z > 30) gt.position.z -= 600; });
     if (flySea){ flySea.position.x = player.position.x*0.2; var su = flySea.material.uniforms; su.t.value += dt; su.storm.value += (((monsoon && monsoon.active) ? 1 : 0) - su.storm.value) * Math.min(1, dt*2); su.sunDir.value.copy(sun.position).normalize(); }
     flyCity.forEach(function(c){ c.position.z += dz*0.3; if (c.position.z > 300) c.position.z -= 300; });
@@ -7092,8 +7144,26 @@ function playHorn(id){
     case 'tiny':    _tone('square', 1700, 1900, t, 0.08, 0.06); _tone('square', 1900, 2100, t+0.12, 0.08, 0.06); break;
     case 'royal':   [[523,0,0.16],[659,0.16,0.16],[784,0.32,0.16],[1047,0.48,0.55]].forEach(function(n){ _tone('sawtooth', n[0], n[0], t+n[1], n[2], 0.08, 1800); _tone('triangle', n[0]*1.005, n[0]*1.005, t+n[1], n[2], 0.06); });
                     _tone('sine', 2093, 2093, t+0.55, 0.45, 0.03); break;
-    default:        [392, 466].forEach(function(f){ _tone('square', f, f, t, 0.4, 0.12); });   // classic auto "paa-paa"
+    default:        autoHorn(t, 0.15); autoHorn(t + 0.21, 0.28);   // the real thing: a Bajaj 12 V disc horn — "peep-peeeep"
   }
+}
+var _hornCurve = null;
+function autoHorn(t, dur){                                  // electric disc horn: buzzy diaphragm (square + detuned saw), pitch sags on attack as the 12 V battery loads,
+  if (!AC) return;                                          // two horn-flare resonances (~1.1 kHz, ~2.9 kHz), a 70 Hz diaphragm rattle, soft saturation
+  if (!_hornCurve){ _hornCurve = new Float32Array(512); for (var i=0;i<512;i++){ var x = i/255.5 - 1; _hornCurve[i] = Math.tanh(x*2.2); } }
+  var f0 = 415, out = AC.createGain(); out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(0.16, t + 0.012); out.gain.setValueAtTime(0.16, t + dur - 0.03); out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  var sh = AC.createWaveShaper(); sh.curve = _hornCurve;
+  var b1 = AC.createBiquadFilter(); b1.type = 'bandpass'; b1.frequency.value = 1100; b1.Q.value = 3;
+  var b2 = AC.createBiquadFilter(); b2.type = 'bandpass'; b2.frequency.value = 2900; b2.Q.value = 5;
+  var body = AC.createBiquadFilter(); body.type = 'lowpass'; body.frequency.value = 4200;
+  var dry = AC.createGain(), w1 = AC.createGain(), w2 = AC.createGain(); dry.gain.value = 0.35; w1.gain.value = 0.9; w2.gain.value = 0.55;
+  var rattle = AC.createOscillator(), rg = AC.createGain(); rattle.frequency.value = 70; rg.gain.value = 0.25; rattle.connect(rg); rg.connect(out.gain);
+  [['square', 1, 0.6], ['sawtooth', 1.006, 0.45], ['square', 2.01, 0.12]].forEach(function(v){
+    var o = AC.createOscillator(), g = AC.createGain(); o.type = v[0]; g.gain.value = v[2];
+    o.frequency.setValueAtTime(f0*v[1]*0.93, t); o.frequency.exponentialRampToValueAtTime(f0*v[1], t + 0.04); o.frequency.setValueAtTime(f0*v[1], t + dur - 0.05); o.frequency.exponentialRampToValueAtTime(f0*v[1]*0.97, t + dur);
+    o.connect(g); g.connect(sh); o.start(t); o.stop(t + dur + 0.02); });
+  sh.connect(dry); sh.connect(b1); sh.connect(b2); b1.connect(w1); b2.connect(w2); dry.connect(body); w1.connect(body); w2.connect(body); body.connect(out); out.connect(masterGain);
+  rattle.start(t); rattle.stop(t + dur + 0.02);
 }
 var hornCooldownUntil = 0;
 function hornNow(){
