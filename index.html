@@ -11,6 +11,8 @@ window.addEventListener('error', function(e){
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Rickshaw Rush: Mumbai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Kalam:wght@700&family=Baloo+2:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { width:100%; height:100%; overflow:hidden; background:#1a0f2e; font-family:'Trebuchet MS','Arial Black',sans-serif; touch-action:none; }
@@ -329,7 +331,8 @@ window.addEventListener('error', function(e){
   #startScreen:not(.hidden) > *:nth-child(2) { animation-delay:.05s } #startScreen:not(.hidden) > *:nth-child(5) { animation-delay:.12s }
   #startScreen:not(.hidden) > *:nth-child(6) { animation-delay:.18s } #startScreen:not(.hidden) > *:nth-child(7) { animation-delay:.24s } #startScreen:not(.hidden) > *:nth-child(8) { animation-delay:.3s }
   #gameOverScreen:not(.hidden) > * { animation:uiIn .45s cubic-bezier(.2,.8,.2,1) both; }
-  #garageScreen:not(.hidden) { animation:uiIn .35s ease both; }
+  #garageScreen:not(.hidden) { animation:gSlide .42s cubic-bezier(.2,.9,.25,1) both; }
+  @keyframes gSlide { from { opacity:0; transform:translateX(40px); } to { opacity:1; transform:none; } }
   #startScreen .instructions { padding:8px 14px; line-height:1.55; font-size:clamp(11.5px,1.6vw,13.5px); max-width:min(92vw,540px); }
   .btnRow { display:flex; gap:12px; align-items:center; margin-top:14px; }
   .btnRow .btn { margin-top:0; } .btnRow .btnGarage { margin-top:0; font-size:clamp(15px,2.6vw,20px); padding:14px 26px; }
@@ -372,6 +375,104 @@ window.addEventListener('error', function(e){
   .gStage::after { content:""; position:absolute; inset:auto 0 0 0; height:22%; background:linear-gradient(180deg, rgba(15,11,8,0), rgba(15,11,8,.55)); pointer-events:none; }
   #gameOverScreen .keyHintGo { font-size:11px; color:rgba(255,233,191,.55); margin-top:8px; letter-spacing:1px; }
   .goShare { background:linear-gradient(180deg,#5aa9ff,#2f6fb5); color:#fff; box-shadow:0 5px 0 #1c4a80; }
+
+  /* ===================== MAIN MENU v2 (23-Sep): daytime, hand-painted, over the live street ===================== */
+  #startScreen.v2 { display:block; padding:0; background:linear-gradient(90deg, rgba(20,14,28,.62) 0%, rgba(20,14,28,.34) 30%, rgba(20,14,28,0) 52%); text-align:left; }
+  #startScreen.v2 > * { animation:none; }
+  #startScreen.v2 .mIn { opacity:0; transform:translateY(16px); }
+  #startScreen.v2.enter .mIn { animation:mIn .5s cubic-bezier(.2,.9,.25,1.15) var(--d,0s) both; }
+  @keyframes mIn { from { opacity:0; transform:translateY(16px) scale(.97); } to { opacity:1; transform:none; } }
+  #startScreen.v2.launch .mIn, #startScreen.v2.launch .mLeft, #startScreen.v2.launch .mBoard { transition:transform .45s cubic-bezier(.5,0,.8,.2), opacity .35s; opacity:0 !important; }
+  #startScreen.v2.launch .mLeft, #startScreen.v2.launch .mTitle, #startScreen.v2.launch .mGraffiti { transform:translateX(-60px) !important; }
+  #startScreen.v2.launch .mBoard, #startScreen.v2.launch .mChalk, #startScreen.v2.launch .mSticker { transform:translateX(60px) !important; }
+  #menuShade { position:absolute; inset:0; background:#0c0a12; opacity:0; pointer-events:none; transition:opacity .45s; }
+  #startScreen.v2.dim #menuShade { opacity:.72; }
+  /* title */
+  .mTitle { position:absolute; left:3.2vw; top:3.5vh; width:min(40vw,560px); height:min(30vh,250px); }
+  .mSwash { position:absolute; opacity:.95; }
+  .mSwash.sw1 { left:-1%; top:14%; width:92%; height:38%; transform:rotate(-7deg); }
+  .mSwash.sw2 { left:14%; top:52%; width:88%; height:36%; transform:rotate(-6deg); }
+  .mCrown { position:absolute; left:26%; top:-6%; width:13%; transform:rotate(-8deg); }
+  .mT1, .mT2 { position:absolute; font-family:'Permanent Marker','Trebuchet MS',sans-serif; line-height:.9; letter-spacing:1px; transform:rotate(-7deg); white-space:nowrap; }
+  .mT1 { left:4%; top:10%; font-size:min(8.2vw,112px); color:#fff6e4; text-shadow:0 4px 0 #1c1a24, 3px 7px 0 rgba(0,0,0,.35); -webkit-text-stroke:2px #1c1a24; }
+  .mT2 { left:22%; top:48%; font-size:min(8.6vw,118px); color:#ffc928; text-shadow:0 4px 0 #1c1a24, 3px 7px 0 rgba(0,0,0,.35); -webkit-text-stroke:2px #1c1a24; }
+  .mSpeed { position:absolute; left:-18%; top:30%; width:16%; } .mSpeed i { display:block; height:5px; margin:9px 0; border-radius:3px; background:#fff6e4; transform:rotate(-12deg); }
+  .mSpeed i:nth-child(2){ width:80%; margin-left:10%; } .mSpeed i:nth-child(3){ width:55%; margin-left:30%; }
+  .mTag { position:absolute; right:-4%; top:66%; font-family:'Permanent Marker',sans-serif; font-size:min(1.9vw,24px); line-height:1.05; color:#1c1a24; transform:rotate(-14deg); text-shadow:0 0 6px rgba(255,246,228,.9), 0 0 12px rgba(255,246,228,.6); }
+  .mTag::after { content:""; display:block; width:70%; height:4px; margin-top:4px; border-radius:2px; background:#ffc928; }
+  #startScreen.v2 #assetBar { position:absolute; left:3.4vw; top:calc(3.5vh + min(30vh,250px) + 4px); width:min(30vw,380px); height:5px; border-radius:3px; background:rgba(255,255,255,.18); overflow:hidden; }
+  #startScreen.v2 #assetFill { height:100%; width:0%; background:linear-gradient(90deg,#1aa3a8,#ffc928); transition:width .25s; }
+  #startScreen.v2 #assetStatus { opacity:.55; position:absolute; left:3.4vw; top:calc(3.5vh + min(30vh,250px) + 12px); font-size:10.5px; color:rgba(255,246,228,.7); letter-spacing:.4px; max-width:40vw; }
+  /* left column: cards + buttons */
+  .mLeft { position:absolute; left:3.2vw; bottom:9vh; width:min(44vw,640px); pointer-events:auto; transition:transform .45s, opacity .35s; }
+  #startScreen.v2 .chooseLabel { font-family:'Baloo 2','Trebuchet MS',sans-serif; font-weight:800; font-size:min(2vw,26px); letter-spacing:1.5px; color:#fff6e4; text-shadow:0 2px 0 #1c1a24, 0 3px 10px rgba(0,0,0,.5); margin:0 0 10px; }
+  #startScreen.v2 .chooseLabel i { font-style:normal; opacity:.6; margin:0 6px; } #startScreen.v2 .chooseLabel span { font-family:'Kalam','Baloo 2',sans-serif; color:#fff6e4; }
+  #startScreen.v2 #vehSelect { display:flex; gap:min(1.2vw,16px); justify-content:flex-start; margin:0; transition:transform .28s cubic-bezier(.3,1.4,.5,1); }
+  #startScreen.v2 .vehCard { width:min(13vw,190px); padding:10px 10px 12px; border-radius:16px; background:linear-gradient(180deg,#262b4b,#1a1e36); border:3px solid rgba(255,255,255,.08); box-shadow:0 8px 22px rgba(0,0,0,.35); text-align:center; cursor:pointer; transition:transform .2s, border-color .12s, box-shadow .2s, background .2s; }
+  #startScreen.v2 .vehCard:hover { transform:translateY(-4px); border-color:rgba(255,201,40,.45); }
+  #startScreen.v2 .vehCard.selected { border-color:#ffc928; background:linear-gradient(180deg,#5a4318,#2e2412); box-shadow:0 0 0 3px rgba(255,201,40,.25), 0 0 24px rgba(255,201,40,.45), 0 10px 26px rgba(0,0,0,.4); transform:translateY(-4px); animation:none; }
+  #startScreen.v2 .vehCard.locked .vehIcon::after { content:"🔒"; position:absolute; right:6px; top:4px; font-size:14px; }
+  #startScreen.v2 .vehIcon { position:relative; height:min(7.4vw,108px); display:flex; align-items:center; justify-content:center; font-size:min(4.6vw,58px); }
+  #startScreen.v2 .vehIcon img { max-width:100%; max-height:100%; filter:drop-shadow(0 6px 6px rgba(0,0,0,.4)); }
+  #startScreen.v2 .vehName { font-family:'Baloo 2',sans-serif; font-weight:800; color:#fff6e4; font-size:min(1.45vw,19px); margin-top:4px; }
+  #startScreen.v2 .vehTag { font-family:'Baloo 2',sans-serif; font-weight:600; font-style:italic; color:rgba(255,246,228,.7); font-size:min(1.1vw,14px); margin-top:0; }
+  .mBtnRow { display:flex; align-items:center; gap:min(1.4vw,18px); margin-top:min(2.4vh,22px); }
+  .mPlay { position:relative; width:min(30vw,440px); height:min(11vh,96px); border:0; background:none; cursor:pointer; padding:0; transform:rotate(-2deg); transition:transform .18s, filter .18s; pointer-events:auto; }
+  .mPlayBg { position:absolute; inset:0; width:100%; height:100%; filter:drop-shadow(0 6px 0 #b27a00) drop-shadow(0 12px 16px rgba(0,0,0,.35)); }
+  .mPlayIn { position:relative; display:flex; align-items:center; justify-content:center; gap:14px; height:100%; }
+  .mMega { width:min(3.4vw,46px); } .mPlayTxt { white-space:nowrap; font-family:'Permanent Marker',sans-serif; font-size:min(3vw,46px); color:#1c1a24; letter-spacing:1px; }
+  .mArrow { font-size:min(3.4vw,46px); color:#1c1a24; font-weight:900; transition:transform .18s; }
+  .mPlay:hover, .mPlay:focus-visible { filter:brightness(1.08) saturate(1.1); transform:rotate(-2deg) scale(1.02); outline:none; } .mPlay:hover .mArrow, .mPlay:focus-visible .mArrow { transform:translateX(7px); }
+  .mPlay:active { transform:rotate(-2deg) translateY(3px); }
+  .mGarage { display:flex; align-items:center; gap:10px; height:min(7.4vh,64px); padding:0 min(1.8vw,26px); border:0; border-radius:10px; cursor:pointer; background:linear-gradient(180deg,#2b3157,#1d2140); color:#e9eef7; font-family:'Baloo 2',sans-serif; font-weight:800; font-size:min(2vw,26px); letter-spacing:1.5px; transform:rotate(-3deg); box-shadow:0 5px 0 #0e1022, 0 10px 18px rgba(0,0,0,.35); transition:transform .18s, filter .18s; pointer-events:auto; }
+  .mGarage:hover, .mGarage:focus-visible { filter:brightness(1.18); transform:rotate(-3deg) translateY(-2px); outline:none; } .mWrench { width:min(2vw,26px); }
+  #startScreen.v2 #playerStrip { margin-top:14px; font-family:'Baloo 2',sans-serif; font-size:13px; color:rgba(255,246,228,.85); text-shadow:0 1px 3px rgba(0,0,0,.6); }
+  /* graffiti on the wall */
+  .mGraffiti { position:absolute; left:47vw; top:31vh; pointer-events:none; transform:rotate(-4deg); mix-blend-mode:multiply; }
+  #startScreen.v2.enter .mGraffiti { animation:mInG .6s ease var(--d,0s) both; } @keyframes mInG { from { opacity:0; } to { opacity:.9; } }
+  .gHi { font-family:'Kalam',sans-serif; font-weight:700; font-size:min(4.2vw,60px); color:#d62f6b; line-height:1; }
+  .gEn { font-family:'Permanent Marker',sans-serif; font-size:min(2.1vw,30px); color:#1b8a93; line-height:1.02; margin-left:24%; transform:rotate(-8deg); } .gEn span { color:#d62f6b; }
+  /* leaderboard sticker */
+  #startScreen.v2 .mBoard { position:absolute; right:2.4vw; top:3.5vh; left:auto; bottom:auto; width:min(24vw,330px); max-height:none; padding:20px 22px 18px; transform:rotate(1.5deg); opacity:1; overflow:visible; pointer-events:auto; }
+  .mBoardBg { position:absolute; inset:0; width:100%; height:100%; z-index:-1; filter:drop-shadow(0 12px 20px rgba(0,0,0,.4)); }
+  #startScreen.v2 .boardTitle { font-family:'Permanent Marker',sans-serif; color:#ffc928; font-size:min(2.1vw,30px); letter-spacing:1px; text-align:left; margin:0 0 8px; white-space:nowrap; }
+  #startScreen.v2 .boardTitle::before { content:""; display:inline-block; width:1.2em; height:.85em; margin-right:.3em; vertical-align:-2px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 44'%3E%3Cpath d='M4,40 L2,12 L18,26 L32,4 L46,26 L62,12 L60,40 Z' fill='%23ffc928'/%3E%3C/svg%3E") center/contain no-repeat; }
+  #startScreen.v2 .board { width:auto; }
+  #startScreen.v2 .hsRow { display:flex; gap:10px; padding:3px 8px; margin:1px 0; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:min(1.3vw,17px); color:#fff6e4; border-radius:6px; background:none; }
+  #startScreen.v2 .hsRow .rank { width:1.4em; color:#ffc928; text-align:right; } #startScreen.v2 .hsRow .nm { flex:1; color:#fff6e4; } #startScreen.v2 .hsRow .sc { color:#fff6e4; font-variant-numeric:tabular-nums; }
+  #startScreen.v2 .hsRow.you { background:#ffc928; transform:rotate(-1deg) scale(1.03); box-shadow:0 3px 0 #b27a00; } #startScreen.v2 .hsRow.you span { color:#1c1a24 !important; }
+  #startScreen.v2 .boardNote { display:inline-block; margin-top:12px; padding:4px 14px; font-family:'Permanent Marker',sans-serif; font-size:min(1.4vw,19px); color:#1c1a24; background:#1aa3a8; border-radius:4px; transform:rotate(-3deg); }
+  #startScreen.v2 .boardNote:empty { display:none; }
+  /* chalkboard + sticker */
+  .mChalk { position:absolute; right:3vw; bottom:6vh; width:min(13vw,190px); padding:10px; border-radius:6px; background:#7a5230; box-shadow:0 12px 24px rgba(0,0,0,.4); transform:rotate(4deg); pointer-events:none; }
+  .mChalkIn { background:radial-gradient(ellipse at 40% 30%, #3a3f3c, #232725); border-radius:3px; padding:12px 10px; font-family:'Kalam',sans-serif; font-weight:700; font-size:min(1.6vw,22px); line-height:1.15; color:rgba(255,190,200,.88); text-align:center; text-shadow:0 0 1px rgba(255,255,255,.4); }
+  .mSticker { position:absolute; right:17vw; bottom:4vh; font-family:'Permanent Marker',sans-serif; color:#fff6e4; font-size:min(1.3vw,18px); line-height:1.05; transform:rotate(-8deg); text-shadow:0 2px 0 #1c1a24, 0 0 8px rgba(0,0,0,.5); pointer-events:none; }
+  .mSticker svg { display:block; width:30px; margin-bottom:2px; }
+  /* hints + info */
+  #startScreen.v2 .keyHints { left:3.2vw; bottom:2.4vh; display:flex; gap:18px; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:13px; color:#fff6e4; text-shadow:0 1px 3px rgba(0,0,0,.7); }
+  #startScreen.v2 .keyHints kbd { display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; padding:0 6px; margin:0 7px 0 0; border-radius:6px; background:#ffc928; color:#1c1a24; font:800 12px 'Baloo 2',sans-serif; box-shadow:0 2px 0 #b27a00; }
+  #startScreen.v2 .iconNav { top:auto; bottom:2vh; right:auto; left:calc(3.2vw + 400px); }
+  #startScreen.v2 .iconBtn { width:30px; height:30px; font:800 15px 'Baloo 2',sans-serif; border-radius:50%; background:#1f2542; color:#ffc928; }
+  #startScreen.v2 .credit, #startScreen.v2 .instructions { display:none; }
+  @media (max-width:1100px){ .mChalk, .mSticker, .mGraffiti { display:none; } }
+  @media (max-width:760px){
+    #startScreen.v2 { background:linear-gradient(180deg, rgba(20,14,28,.5), rgba(20,14,28,0) 30%, rgba(20,14,28,0) 55%, rgba(20,14,28,.7)); }
+    .mTitle { left:4vw; top:2vh; width:92vw; height:22vh; } .mT1 { font-size:13vw; } .mT2 { font-size:14vw; } .mTag { font-size:3.2vw; right:0; }
+    .mLeft { left:4vw; right:4vw; width:auto; bottom:3vh; } #startScreen.v2 .chooseLabel { font-size:4vw; }
+    #startScreen.v2 .vehCard { width:29vw; } #startScreen.v2 .vehIcon { height:15vw; font-size:9vw; } #startScreen.v2 .vehName { font-size:3.4vw; } #startScreen.v2 .vehTag { font-size:2.8vw; }
+    .mBtnRow { flex-direction:row; } .mPlay { width:60vw; height:15vw; } .mPlayTxt { font-size:6.4vw; } .mArrow, .mMega { font-size:6vw; width:6vw; } .mGarage { height:12vw; font-size:3.8vw; }
+    #startScreen.v2 .mBoard, #startScreen.v2 .keyHints { display:none; } #startScreen.v2 .iconNav { left:auto; right:4vw; top:2vh; bottom:auto; }
+    #startScreen.v2 #assetBar, #startScreen.v2 #assetStatus { top:24vh; }
+  }
+  @media (min-width:761px) and (max-height:560px){                      /* landscape phones: everything sized off the short height */
+    .mTitle { top:2vh; width:44vh; height:28vh; } .mT1 { font-size:16vh; } .mT2 { font-size:17vh; } .mTag { font-size:3.6vh; }
+    .mLeft { bottom:3vh; } #startScreen.v2 .chooseLabel { font-size:4.2vh; margin-bottom:1.5vh; }
+    #startScreen.v2 .vehCard { width:22vh; padding:1.2vh 1.2vh 1.6vh; } #startScreen.v2 .vehIcon { height:12vh; font-size:8vh; } #startScreen.v2 .vehName { font-size:3.6vh; } #startScreen.v2 .vehTag { font-size:2.9vh; }
+    .mBtnRow { margin-top:2.4vh; } .mPlay { width:52vh; height:15vh; } .mPlayTxt { font-size:6.4vh; } .mArrow { font-size:6.4vh; } .mMega { width:6.4vh; } .mGarage { height:11vh; font-size:4.4vh; }
+    #startScreen.v2 .mBoard { width:36vh; padding:2.4vh 3vh; } #startScreen.v2 .boardTitle { font-size:4.6vh; } #startScreen.v2 .hsRow { font-size:3.4vh; padding:0 6px; }
+    #startScreen.v2 #assetBar, #startScreen.v2 #assetStatus, #startScreen.v2 .keyHints, #startScreen.v2 .vehTag, .mTag { display:none; }
+    #startScreen.v2 .mBoard { width:48vh; } #startScreen.v2 .vehName { white-space:nowrap; font-size:2.9vh; } #startScreen.v2 .iconNav { left:auto; right:3vw; bottom:3vh; }
+  }
 </style>
 </head>
 <body>
@@ -401,31 +502,47 @@ window.addEventListener('error', function(e){
   <div id="lightning"></div>
   <div id="popupLayer"></div>
 
-  <div id="startScreen" class="screen">
-    <div class="title">RICKSHAW RUSH</div>
-    <div class="subtitle">⬩ Mumbai ⬩ मुंबई ⬩</div>
-    <div id="assetBar" style="width:min(70vw,420px);height:6px;border-radius:3px;background:rgba(255,255,255,.12);margin:-4px auto 4px;overflow:hidden"><div id="assetFill" style="height:100%;width:0%;background:linear-gradient(90deg,#2f8f4d,#f2c200);transition:width .25s"></div></div>
-    <div id="assetStatus" style="font-size:11px;opacity:.75;margin:0 0 6px;letter-spacing:.5px;max-width:92vw;word-break:break-word"></div>
-    <div class="instructions">
-      <b>← →</b> lanes &nbsp;·&nbsp; <b>↑</b> jump &nbsp;·&nbsp; <b>↓</b> duck &nbsp;·&nbsp; <b>H</b> horn &nbsp;·&nbsp; swipe &amp; tap on phones<br>
-      🐄 cows have right of way &nbsp;·&nbsp; ☕ chai = slow-mo &nbsp;·&nbsp; 🛡 Ganesh = free crash &nbsp;·&nbsp; ⚡ turbo
+  <div id="startScreen" class="screen v2">
+    <svg width="0" height="0" style="position:absolute"><defs>
+      <filter id="mRough" x="-5%" y="-20%" width="110%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.22" numOctaves="3" seed="7"/><feDisplacementMap in="SourceGraphic" scale="14" xChannelSelector="R" yChannelSelector="G"/></filter>
+      <filter id="mRoughS" x="-5%" y="-10%" width="110%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="0.06 0.4" numOctaves="2" seed="3"/><feDisplacementMap in="SourceGraphic" scale="7" xChannelSelector="R" yChannelSelector="G"/></filter>
+    </defs></svg>
+    <div class="mTitle mIn" style="--d:.25s">
+      <svg class="mSwash sw1" viewBox="0 0 600 120" preserveAspectRatio="none"><path d="M10,58 C80,22 210,14 330,18 C430,20 520,14 592,30 L584,96 C470,110 330,104 220,108 C140,110 60,112 14,100 Z" fill="#1aa3a8" filter="url(#mRough)"/></svg>
+      <svg class="mSwash sw2" viewBox="0 0 600 120" preserveAspectRatio="none"><path d="M8,40 C120,20 260,26 380,14 C460,8 540,18 594,10 L588,92 C500,102 400,96 300,106 C190,114 80,104 12,108 Z" fill="#e0306f" filter="url(#mRough)"/></svg>
+      <svg class="mCrown" viewBox="0 0 64 44"><path d="M4,40 L2,12 L18,26 L32,4 L46,26 L62,12 L60,40 Z" fill="none" stroke="#ffc928" stroke-width="5" stroke-linejoin="round" filter="url(#mRoughS)"/></svg>
+      <div class="mT1">RICKSHAW</div>
+      <div class="mT2"><span class="mSpeed"><i></i><i></i><i></i></span>RUSH</div>
+      <div class="mTag">MUMBAI<br>DRIVES<br>DIFFERENT</div>
     </div>
-    <div class="chooseLabel">CHOOSE YOUR RIDE — अपनी सवारी चुनो</div>
-    <div id="vehSelect">
-      <div class="vehCard selected" data-veh="rickshaw"><div class="vehIcon">🛺</div><div class="vehName">Decorated Auto</div><div class="vehTag">the hero</div></div>
-      <div class="vehCard" data-veh="car"><div class="vehIcon">🚗</div><div class="vehName">City Car</div><div class="vehTag">sleek &amp; quick</div></div>
-      <div class="vehCard" data-veh="classic"><div class="vehIcon">🎨</div><div class="vehName">Desi Special</div><div class="vehTag">unlock in garage</div></div>
+    <div id="assetBar"><div id="assetFill"></div></div>
+    <div id="assetStatus"></div>
+    <div class="mGraffiti mIn" style="--d:.5s"><div class="gHi">मुंबई</div><div class="gEn">ALWAYS<br>A GOOD<br>RIDE <span>♥</span></div></div>
+    <div class="mLeft">
+      <div class="chooseLabel mIn" style="--d:.4s">CHOOSE YOUR RIDE <i>|</i> <span>अपनी सवारी चुनो</span></div>
+      <div id="vehSelect" class="mIn" style="--d:.45s">
+        <div class="vehCard selected" data-veh="rickshaw" tabindex="0"><div class="vehIcon"><span>🛺</span></div><div class="vehName">Decorated Auto</div><div class="vehTag">the hero</div></div>
+        <div class="vehCard" data-veh="car" tabindex="0"><div class="vehIcon"><span>🚗</span></div><div class="vehName">City Car</div><div class="vehTag">sleek &amp; quick</div></div>
+        <div class="vehCard" data-veh="classic" tabindex="0"><div class="vehIcon"><span>🎨</span></div><div class="vehName">Desi Special</div><div class="vehTag">unlock in garage</div></div>
+      </div>
+      <div class="mBtnRow mIn" style="--d:.6s">
+        <button id="startBtn" class="mPlay"><svg class="mPlayBg" viewBox="0 0 500 110" preserveAspectRatio="none"><path d="M6,20 C120,6 300,12 494,4 L488,100 C330,108 160,102 10,106 Z" fill="#ffc928" filter="url(#mRough)"/></svg>
+          <span class="mPlayIn"><svg class="mMega" viewBox="0 0 48 40"><path d="M4,15 L14,15 L34,4 L34,36 L14,25 L4,25 Z M14,25 L18,36 L24,36 L21,26" fill="#1c1a24"/><path d="M39,12 Q44,20 39,28" stroke="#1c1a24" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg><span class="mPlayTxt">LET'S RIDE</span><span class="mArrow">&rarr;</span></span></button>
+        <button id="garageBtn" class="mGarage"><svg viewBox="0 0 24 24" class="mWrench"><path d="M21 6.5a5 5 0 0 1-6.6 4.7L6 19.6a2 2 0 0 1-2.8-2.8l8.4-8.4A5 5 0 0 1 17.5 3l-3 3 .9 2.6 2.6.9z" fill="#e9eef7"/></svg>GARAGE</button>
+      </div>
+      <div id="playerStrip" class="hidden"></div>
     </div>
-    <div class="btnRow"><button class="btn" id="startBtn">🔉 HORN OK — PLEASE START</button><button class="btn btnGarage" id="garageBtn">🛠️ GARAGE</button></div>
-    <div class="iconNav"><div class="iconBtn" id="creditsBtn" title="Credits &amp; licences">ℹ</div></div>
-    <div class="keyHints"><kbd>← →</kbd> ride <kbd>Enter</kbd> start <kbd>G</kbd> garage <kbd>H</kbd> horn <kbd>I</kbd> credits</div>
-    <div id="playerStrip" class="hidden"></div>
-    <div class="credit">HORN OK PLEASE</div>
-    <div class="boardPanel">
-      <div class="boardTitle" id="startBoardTitle">🏆 TOP SCORES</div>
+    <div class="boardPanel mBoard mIn" style="--d:.7s">
+      <svg class="mBoardBg" viewBox="0 0 300 400" preserveAspectRatio="none"><path d="M8,10 L292,4 L296,392 L4,396 Z" fill="#1f2542" filter="url(#mRoughS)"/></svg>
+      <div class="boardTitle" id="startBoardTitle">WORLD TOP 10</div>
       <div class="board" id="startBoard"></div>
       <div class="boardNote" id="startBoardNote"></div>
     </div>
+    <div class="mChalk mIn" style="--d:.8s"><div class="mChalkIn">CHAI<br>RIDES<br>PEOPLE<br>STORIES<br>MUMBAI<br><span>♡</span></div></div>
+    <div class="mSticker mIn" style="--d:.85s"><svg viewBox="0 0 64 44"><path d="M4,40 L2,12 L18,26 L32,4 L46,26 L62,12 L60,40 Z" fill="none" stroke="#ffc928" stroke-width="5" stroke-linejoin="round"/></svg>SMALL<br>STREETS<br>BIG STORIES</div>
+    <div class="iconNav"><div class="iconBtn" id="creditsBtn" title="How to play · credits">i</div></div>
+    <div class="keyHints mIn" style="--d:.9s"><span><kbd>&crarr;</kbd>ride</span><span><kbd>&larr; &rarr;</kbd>choose</span><span><kbd>G</kbd>garage</span><span><kbd>I</kbd>how to play</span></div>
+    <div id="menuShade"></div>
   </div>
 
   <div id="garageScreen" class="hidden">
@@ -1061,7 +1178,7 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
   var t0 = Date.now();
   // 1) boot the game right away (procedural stand-ins), so the menu is up in well under a second
   function boot(){ var src = $('gameSrc').text, sc = document.createElement('script'); sc.text = src; document.body.appendChild(sc);
-    var shown = Date.now(); (function hide(){ var ls = $('loadScreen'); if (!ls) return; var ok = (window.UI_ART || Date.now()-shown > 1500) && Date.now()-shown > 1100; if (ok) ls.classList.add('gone'); else setTimeout(hide, 80); })();   // a beat on the splash art
+    var shown = Date.now(); (function hide(){ var ls = $('loadScreen'); if (!ls) return; var ok = (window.UI_ART || Date.now()-shown > 1500) && Date.now()-shown > 1100; if (ok){ ls.classList.add('gone'); if (window.menuEnter) window.menuEnter(); } else setTimeout(hide, 80); })();   // a beat on the splash art
     if (window.__modelArrived) window.__modelArrived(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();   // the game script sits below this loader in the page
   // 2) stream the models in priority order (your ride, then traffic, then the street), swapping each in as it lands
@@ -1230,7 +1347,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-g';
+var BUILD_TAG = '23-Sep-h';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -5861,15 +5978,16 @@ var QUIPS = [
   'Bandra se Borivali jaana tha, hospital pahunch gaye.'
 ];
 $('startBtn').addEventListener('click', function(){
-  if (typeof CLOUD !== 'undefined' && !profile.nick){ CLOUD.askNick(beginStart); return; }   // first launch: pick a nickname
-  beginStart();
+  if (typeof CLOUD !== 'undefined' && !profile.nick){ CLOUD.askNick(function(){ menuLaunch(beginStart); }); return; }   // first launch: pick a nickname
+  menuLaunch(beginStart);
 });
 function beginStart(){
   var btn = $('startBtn'), t0 = Date.now();
   (function waitReady(){
     var ready = vehicleDefs.length >= 3 || Date.now() - t0 > 8000;      // taxi/bus/hatchback in, or give up after 8 s
-    if (ready){ btn.textContent = '🔉 HORN OK — PLEASE START'; startGame(); return; }
-    btn.textContent = '⏳ LOADING TRAFFIC… ' + vehicleDefs.length + '/3';
+    var lbl = btn.querySelector('.mPlayTxt') || btn;
+    if (ready){ lbl.textContent = "LET'S RIDE"; startGame(); return; }
+    lbl.textContent = 'LOADING… ' + vehicleDefs.length + '/3';
     setTimeout(waitReady, 150);
   })();
 }
@@ -5904,7 +6022,7 @@ $('shareBtn').addEventListener('click', function(){
   else if (navigator.clipboard){ navigator.clipboard.writeText(text).then(function(){ done('📋 COPIED — paste it anywhere'); }, function(){ done('Copy failed'); }); }
   else { try { window.prompt('Copy your score:', text); } catch(e){} }
 });
-$('menuBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); $('startScreen').classList.remove('hidden'); if(typeof renderBoard==='function') renderBoard($('startBoard'), -1); });
+$('menuBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); $('startScreen').classList.remove('hidden'); menuEnter(); if(typeof renderBoard==='function') renderBoard($('startBoard'), -1); });
 $('goGarageBtn').addEventListener('click', function(){ $('gameOverScreen').classList.add('hidden'); GARAGE.open(); });
 $('dbgLogBtn').addEventListener('click', function(){ try{ PERF.export(); var b=$('dbgLogBtn'); var o=b.textContent; b.textContent='✅ SAVED + COPIED'; setTimeout(function(){ b.textContent=o; },1600); }catch(e){ console.warn('debug export failed', e); } });
 // vehicle picker
@@ -5916,9 +6034,10 @@ $('dbgLogBtn').addEventListener('click', function(){ try{ PERF.export(); var b=$
       if (veh === 'classic' && !ownsItem('rickshaw','classic')){ popup('🔒 DESI SPECIAL — unlock it in the GARAGE', 'popNear', 50, 40); return; }
       cards.forEach(function(c){ c.classList.remove('selected'); });
       card.classList.add('selected');
+      var prevIdx = [].indexOf.call(cards, [].filter.call(cards, function(c){ return c.getAttribute('data-veh') === selectedVehicle; })[0]), newIdx = [].indexOf.call(cards, card);
       selectedVehicle = veh;
       if (veh === 'rickshaw' || veh === 'classic'){ profile.equipped.rickshaw = veh; saveProfile(); }   // menu pick = garage equip
-      applyPlayerVehicle();
+      if (typeof menuRideSwap === 'function' && attract.on) menuRideSwap(newIdx - prevIdx); else applyPlayerVehicle();
       if (typeof honk === 'function' && AC) honk();
     });
   });
@@ -6135,10 +6254,10 @@ function renderBoard(el, hlIndex){
             + '<span class="nm">'+escHtml(e.nick)+'</span>'
             + '<span class="sc">'+e.score+'</span></div>';
     });
-    if (titleEl) titleEl.textContent = '🌐 WORLD TOP 10';
+    if (titleEl) titleEl.textContent = el.id === 'startBoard' ? 'WORLD TOP 10' : '🌐 WORLD TOP 10';
     if (noteEl){
       var rank = -1; for (var k=0;k<world.length;k++) if (world[k].pid === profile.pid){ rank = k+1; break; }
-      noteEl.textContent = mine >= 0 ? 'that\'s you at #' + (mine+1) : rank > 0 ? 'you: #' + rank + ' of ' + world.length + ' · best ' + (profile.best||0) : profile.best ? 'your best ' + profile.best + ' · ' + world.length + ' drivers' : world.length + ' drivers worldwide';
+      noteEl.textContent = mine >= 0 ? 'that\'s you at #' + (mine+1) + '!' : rank > 0 ? 'you: #' + rank + ' of ' + world.length + ' · best ' + (profile.best||0) : profile.best ? 'your best ' + profile.best + ' · ' + world.length + ' drivers' : world.length + ' drivers worldwide';
     }
   } else {
     scores.forEach(function(e,i){
@@ -6147,7 +6266,7 @@ function renderBoard(el, hlIndex){
             + '<span class="nm">'+escHtml(e.name)+'</span>'
             + '<span class="sc">'+e.score+'</span></div>';
     });
-    if (titleEl) titleEl.textContent = '🏆 TOP SCORES';
+    if (titleEl) titleEl.textContent = el.id === 'startBoard' ? 'TOP SCORES' : '🏆 TOP SCORES';
     if (noteEl) noteEl.textContent = (typeof CLOUD !== 'undefined' && CLOUD.on()) ? 'this device · fetching world board…' : '';
   }
   el.innerHTML = html;
@@ -6335,7 +6454,7 @@ function clearWorld(){
 function startGame(){
   initAudio();
   if (AC && AC.state==='suspended') AC.resume();
-  honk();
+  if (!startGame._noHonk) honk(); startGame._noHonk = false;
   clearWorld();
   if (typeof applyPlayerVehicle === 'function' && vehicleHolder.children.length && vehicleHolder.children[0].userData.vehicleId !== selectedVehicle) applyPlayerVehicle();   // e.g. after a test ride
   state.running = true; state.over = false;
@@ -7536,11 +7655,12 @@ var GARAGE = (function(){
     $g('garageScreen').classList.add('hidden');
     $g('startScreen').classList.remove('hidden');
     if (typeof renderBoard==='function' && $g('startBoard')) renderBoard($g('startBoard'), -1);
+    if (typeof menuFromGarage === 'function') menuFromGarage();
   }
 
   /* ---------- wire DOM ---------- */
   function wire(){
-    var gb=$g('garageBtn'); if(gb) gb.addEventListener('click', open);
+    var gb=$g('garageBtn'); if(gb) gb.addEventListener('click', function(){ if (typeof menuToGarage === 'function') menuToGarage(open); else open(); });
     var bk=$g('garageBack'); if(bk) bk.addEventListener('click', close);
     var act=$g('gActionBtn'); if(act) act.addEventListener('click', doAction);
     var tst=$g('gTestBtn'); if(tst) tst.addEventListener('click', function(){ close(); startTestRide(sel); if (typeof startGame === 'function') startGame(); });
@@ -7722,10 +7842,11 @@ function menuPrewarm(){                                        // on the menu / 
   if (flyGroup){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; }
 }
 function attractTick(dt){
+  var _n = performance.now(); if (attractTick._last && !window.__simming) dt = Math.min(0.2, Math.max(dt, (_n - attractTick._last)/1000)); attractTick._last = _n;   // menu transitions run on real time (a slow first frame mustn't stretch the 1 s launch)
   if ((attractTick._pw = (attractTick._pw || 0) + dt) > 1.5){ attractTick._pw = 0; menuPrewarm(); }
   var kb = Math.min(1, dt*0.5); BEND.curve.value += (0.0006 - BEND.curve.value)*kb; BEND.hill.value += (0.00012 - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
   var A = attract, now = Date.now()*0.001;
-  if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; }
+  if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; if (A.roll == null && !A.launch) A.roll = 0; }
   A.t += dt;
   // wind: gusts every few seconds — kites yaw, laundry flaps, tassels swing
   A.nextGust -= dt; if (A.nextGust <= 0){ A.gust = 1; A.nextGust = 3 + Math.random()*5; windSound(); }
@@ -7744,19 +7865,89 @@ function attractTick(dt){
   for (var i=A.cars.length-1; i>=0; i--){ var c = A.cars[i]; c.mesh.position.z += c.v*dt;
     if (!c.honked && c.mesh.position.z > -12 && Math.random() < 0.5){ c.honked = true; trafficHonk('car'); }
     if (c.mesh.position.z > 30){ scene.remove(c.mesh); A.cars.splice(i,1); } }
-  // idle auto: engine tremble + a driver who looks around
-  player.position.y = Math.sin(now*18)*0.006; player.rotation.z = Math.sin(now*18.5)*0.003;
+  // ---- the hero shot: auto parked facing you, right of the menu column; roll-in, idle rock, ride swap, launch, garage turn ----
+  var MY = MENU_YAW, ease = function(x){ x = Math.max(0, Math.min(1, x)); return x < .5 ? 4*x*x*x : 1 - Math.pow(-2*x + 2, 3)/2; }, eOut = function(x){ x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); };
+  var px = 0, pz = 0, yaw = MY, camP = MENU_CAM.pos, camT = MENU_CAM.look;
+  if (A.roll != null){ A.roll += dt; var rp = eOut(A.roll / 0.8); pz = -9 * (1 - rp); if (A.roll > 0.8) A.roll = null; }      // rolls in toward you and stops
+  if (A.spin){ A.spin.t += dt; var sp = ease(A.spin.t / 0.6); yaw = MY + A.spin.dir * Math.PI * 2 * sp;
+    if (!A.spin.swapped && sp > 0.5){ A.spin.swapped = true; applyPlayerVehicle(); }                                   // swap while it faces away
+    if (A.spin.t >= 0.6) A.spin = null; }
+  if (A.turn){ A.turn.t += dt; var tp = ease(A.turn.t / 0.45); A.turnYaw = A.turn.from + (A.turn.to - A.turn.from) * tp; if (A.turn.t >= 0.45){ var cb = A.turn.cb; A.turn = null; if (cb) cb(); } }
+  if (A.turnYaw != null) yaw = A.turnYaw;
+  A.depth = (A.depth || 0) + (((selectedVehicle === 'car') ? -1.7 : 0) - (A.depth || 0)) * Math.min(1, dt*6);   // the car is longer: park it a little further back so it sits in frame
+  if (!A.launch) pz += A.depth;
+  if (A.launch){                                                                                                          // PLAY: horn, pull toward you, U-turn onto the road while the camera rises into the chase view
+    A.launch.t += dt; var L = A.launch.t / 1.05, lp = ease(L);
+    pz = (1.6 * Math.sin(Math.min(1, L*1.4) * Math.PI * 0.5) + A.depth) * (1 - lp);
+    px = Math.sin(lp * Math.PI) * -1.3;
+    yaw = MY + (Math.PI*2 - MY) * ease((L - 0.12) / 0.8);
+    var gp = new THREE.Vector3(0, 4.4, 7.5), gt = new THREE.Vector3(0, 1.6, -8), cl = ease((L - 0.2) / 0.8);
+    camP = camP.clone().lerp(gp, cl); camT = camT.clone().lerp(gt, cl);
+    if (typeof roadTex !== 'undefined' && L > 0.45){ var rs = (L - 0.45) * 14; roadTex.offset.y += rs * dt / 28.57 * 2; roadBump.offset.y = roadTex.offset.y; }
+    if (L >= 1){ var done = A.launch.cb; A.launch = null; player.rotation.set(0,0,0); player.position.set(0,0,0); camera.position.copy(gp); camera.lookAt(gt); startGame._noHonk = true; if (done) done(); return; }
+  }
+  // idle: engine tremble + a slow rock on the springs; the driver looks around
+  player.position.set(px, Math.sin(now*18)*0.006 + Math.sin(now*1.4)*0.01, pz);
+  player.rotation.set(0, yaw, Math.sin(now*18.5)*0.003 + (A.launch ? 0 : Math.sin(now*1.3)*0.014));
   if (player.userData.driver) player.userData.driver.rotation.y = Math.sin(now*0.6)*0.35;
   emitRideFx(dt*0.35);
-  // slow orbiting camera around the auto, low and cinematic
-  A.camAng += dt*0.09;
-  var r = 5.6, cy = 1.7 + Math.sin(A.camAng*0.7)*0.4;
-  camera.position.set(Math.sin(A.camAng)*r, cy, Math.cos(A.camAng)*r + 0.5);
-  camera.lookAt(0.2, 1.05, -0.4); camera.rotateY(window.innerWidth > 760 ? 0.26 : 0);   // the auto sits right of centre, clear of the menu column
+  // camera: a fixed hero framing that breathes a little (no orbit — the menu reads like a poster)
+  var br = Math.sin(now*0.35);
+  camera.position.set(camP.x + br*0.12, camP.y + Math.sin(now*0.27)*0.05, camP.z);
+  camera.lookAt(camT);
   if (Math.random() < dt*0.12) streetSound();
-  // the day cycle & lamps still breathe at the menu
-  var ph = (A.t*8 % 5000)/5000, dayT = ph < 0.4 ? ph/0.4 : ph < 0.62 ? 1 : ph < 0.84 ? 1 - (ph-0.62)/0.22 : 0;
-  updateSky(dayT*0.55);
+  if ((A.thumbT = (A.thumbT || 0) + dt) > 1.2){ A.thumbT = 0; rideThumbs(); }
+  updateSky(0.06);                                                                                                        // sunny late afternoon, always (the reference look)
+}
+var MENU_YAW = Math.PI - 0.62;                                         // parked facing you, three-quarter front
+var MENU_CAM = (function(){ var narrow = window.innerWidth < 760;
+  return narrow ? { pos:new THREE.Vector3(1.2, 1.5, 6.2), look:new THREE.Vector3(0.1, 1.05, 0) } : { pos:new THREE.Vector3(1.3, 1.2, 4.5), look:new THREE.Vector3(-1.75, 1.2, -0.6) }; })();
+window.addEventListener('resize', function(){ var n = window.innerWidth < 760; MENU_CAM.pos.set(n ? 1.2 : 1.3, n ? 1.5 : 1.2, n ? 6.2 : 4.5); MENU_CAM.look.set(n ? 0.1 : -1.75, n ? 1.05 : 1.2, n ? 0 : -0.6); });
+function menuEnter(){                                                  // entrance: street fades up, auto rolls in, then title → cards → play (≈1.2 s)
+  var ss = $('startScreen'); if (!ss) return;
+  ss.classList.remove('enter', 'launch', 'dim'); void ss.offsetWidth; ss.classList.add('enter');
+  attract.roll = 0; attract.launch = null; attract.turn = null; attract.turnYaw = null; attract.spin = null;
+  var lk = document.querySelector('.vehCard[data-veh="classic"]'); if (lk) lk.classList.toggle('locked', !ownsItem('rickshaw','classic'));
+  rideThumbs();
+}
+window.menuEnter = menuEnter;
+function menuRideSwap(dir){                                            // card row nudges toward the pick; the auto spins and swaps model mid-turn
+  var row = $('vehSelect'); if (row){ row.style.transform = 'translateX(' + (dir > 0 ? -10 : 10) + 'px)'; setTimeout(function(){ row.style.transform = ''; }, 170); }
+  attract.spin = { t:0, dir:dir >= 0 ? 1 : -1, swapped:false };
+}
+function menuLaunch(cb){
+  if (attract.launch) return;                                           // already rolling out — ignore a second Enter/tap
+  if (!attract.on){ cb(); return; }
+  initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof playHorn === 'function') playHorn(equippedOrTrial('horn'));
+  $('startScreen').classList.add('launch'); attract.launch = { t:0, cb:cb };
+}
+function menuToGarage(open){
+  if (!attract.on){ open(); return; }
+  $('startScreen').classList.add('dim'); attract.turn = { t:0, from:MENU_YAW, to:MENU_YAW - Math.PI/2, cb:function(){ open(); } };   // swing to a side view as the street dims
+}
+function menuFromGarage(){
+  var ss = $('startScreen'); ss.classList.remove('enter', 'launch'); ss.classList.add('dim'); void ss.offsetWidth; ss.classList.add('enter');
+  attract.launch = null; attract.roll = null;
+  attract.turnYaw = MENU_YAW - Math.PI/2; attract.turn = { t:0, from:MENU_YAW - Math.PI/2, to:MENU_YAW, cb:function(){ attract.turnYaw = null; } };
+  setTimeout(function(){ ss.classList.remove('dim'); }, 30);
+}
+var _thumbR = null, _thumbDone = {};
+function rideThumbs(){                                                 // real renders of each ride for the cards (once each, then the renderer is released)
+  var want = { rickshaw:function(){ return vehicleModelFor('rickshaw'); }, car:function(){ return carTemplate ? carTemplate.clone(true) : null; }, classic:function(){ return propTemplates.desiauto ? vehicleModelFor('classic') : null; } };
+  var todo = Object.keys(want).filter(function(k){ return !_thumbDone[k]; }); if (!todo.length) return;
+  try {
+    if (!_thumbR){ _thumbR = new THREE.WebGLRenderer({ alpha:true, antialias:true, preserveDrawingBuffer:true }); _thumbR.setSize(320, 200); _thumbR.outputEncoding = THREE.sRGBEncoding; _thumbR.toneMapping = THREE.ACESFilmicToneMapping; _thumbR.toneMappingExposure = 1.05; }
+    todo.forEach(function(k){ var m = want[k](); if (!m) return;
+      var sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xfff3dd, 0x5a4a3a, 1.1)); var dl = new THREE.DirectionalLight(0xffe6c0, 1.6); dl.position.set(3, 5, 4); sc.add(dl);
+      var hold = new THREE.Group(); hold.add(m); hold.rotation.y = Math.PI - 0.75; sc.add(hold); hold.updateMatrixWorld(true);
+      var bb = new THREE.Box3().setFromObject(hold), sz = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3());
+      var cam = new THREE.PerspectiveCamera(28, 1.6, 0.1, 100), R = Math.max(sz.x, sz.y*1.3, sz.z) * 1.55;
+      cam.position.set(c.x + R*0.35, c.y + R*0.28, c.z + R); cam.lookAt(c);
+      _thumbR.render(sc, cam);
+      var url = _thumbR.domElement.toDataURL('image/png'), icon = document.querySelector('.vehCard[data-veh="' + k + '"] .vehIcon');
+      if (icon){ icon.innerHTML = '<img alt="" src="' + url + '">'; } _thumbDone[k] = true; });
+    if (Object.keys(_thumbDone).length >= 3){ _thumbR.dispose(); if (_thumbR.forceContextLoss) _thumbR.forceContextLoss(); _thumbR = null; }
+  } catch(e){ console.warn('ride thumbs', e); }
 }
 function attractStop(){ var A = attract; if (!A.on) return; A.on = false; A.cars.forEach(function(c){ scene.remove(c.mesh); }); A.cars.length = 0; camera.fov = 62; camera.updateProjectionMatrix(); }
 function windSound(){ if (!AC || state.muted || !noiseBuf) return; var t = AC.currentTime, n = AC.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
