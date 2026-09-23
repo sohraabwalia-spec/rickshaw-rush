@@ -340,9 +340,10 @@ window.addEventListener('error', function(e){
   .iconBtn { cursor:pointer; width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px;
     background:rgba(24,10,34,.55); border:2px solid rgba(255,255,255,.18); color:#ffe9bf; backdrop-filter:blur(4px); transition:transform .15s, border-color .15s; }
   .iconBtn:hover { transform:translateY(-2px); border-color:rgba(255,206,58,.7); }
-  .keyHints { position:absolute; left:4vw; bottom:10px; font-size:11px; letter-spacing:1px; color:rgba(255,233,191,.55); }
+  .keyHints { pointer-events:none; position:absolute; left:4vw; bottom:10px; font-size:11px; letter-spacing:1px; color:rgba(255,233,191,.55); }
   .keyHints kbd { display:inline-block; font:900 10px/1 'Courier New',monospace; color:#3a1650; background:rgba(255,206,58,.85); border-radius:4px; padding:2px 5px; margin:0 2px 0 6px; }
-  @media (max-width:760px){ .keyHints { display:none; } .btnRow { flex-direction:column; } }
+  @media (max-width:760px), (max-height:620px){ .keyHints { display:none; } }
+  @media (max-width:760px){ .btnRow { flex-direction:column; } }
   #creditsModal { position:fixed; inset:0; z-index:61; display:flex; align-items:center; justify-content:center; background:rgba(8,4,14,.8); backdrop-filter:blur(4px); pointer-events:auto; }
   #creditsModal.hidden { display:none; }
   #creditsModal .nmCard { width:min(92vw,560px); max-height:88vh; overflow:auto; text-align:left; animation:uiIn .3s ease both; }
@@ -1215,7 +1216,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-d';
+var BUILD_TAG = '23-Sep-e';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1719,7 +1720,7 @@ var PROP_SPECS = {   // targetH = height in metres (targetW = width instead when
   stall:{ targetW:2.6, yaw:0 },  vendor:{ targetH:1.72, yaw:-Math.PI/2 },  desiauto:{ targetW:2.85, yaw:0 },
   cop:{ targetH:1.86, yaw:0 },  copf:{ targetH:1.78, yaw:0 },   // havaldars: front faces −Z in the model; makeHavaldar spins them toward the player
   tollbooth:{ targetH:3.4, yaw:-Math.PI/2 },  gantrybig:{ targetW:14.5, yaw:-Math.PI/2 },  debris:{ targetW:1.7, yaw:-Math.PI/2 },   // Sea Link kit
-  pylon:{ targetH:58, yaw:-Math.PI/2 },  parapet:{ targetW:8, yaw:0 },  flylamp:{ targetH:8.6, yaw:0 },  flycity:{ targetW:56, yaw:0 }   // Sea Link kit 2 (23-Sep)
+  pylon:{ targetH:50, yaw:-Math.PI/2 },  parapet:{ targetW:8, yaw:0 },  flylamp:{ targetH:8.6, yaw:0 },  flycity:{ targetW:56, yaw:0 }   // Sea Link kit 2 (23-Sep)
 };
 function loadPropKit(src){
   if (!src || !THREE.GLTFLoader) return;
@@ -1746,8 +1747,8 @@ function loadPropKit(src){
   });
 }
 whenModel('PROP_GLB', function(){ loadPropKit(window.PROP_GLB); });
-whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });
-whenModel('FLY2_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY2_GLB); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // Sea Link kit 2: pylon, parapet, lamp, skyline cluster   // Sea Link kit: toll booth, big gantry, debris
+whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 7000; }); });
+whenModel('FLY2_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY2_GLB); }, function(){ return state.score > nextFlyoverScore - 7000; }); });   // Sea Link kit 2: pylon, parapet, lamp, skyline cluster   // Sea Link kit: toll booth, big gantry, debris
 function propClone(name){ var t = propTemplates[name]; return t ? t.clone(true) : null; }
 
 function makeStreetLamp(){
@@ -3123,7 +3124,7 @@ whenModel(['BUS_GLB_B64','BUS_TEX_GREEN'], function(){ loadObstacleVehicle(windo
 whenModel(['WAGON_GLB_B64','WAGON_TEX_YELLOW'], function(){ loadObstacleVehicle(window.WAGON_GLB_B64,  { targetLen:3.8, faceYaw:0,       hwScale:0.42, dScale:0.9, kind:'hatch',
   variantTex:[window.WAGON_TEX_YELLOW, window.WAGON_TEX_WHITE, window.WAGON_TEX_BLUE] }); });  // compact hatchback + yellow/white/blue
 whenModel('TRUCK2_GLB_B64', function(){ loadObstacleVehicle(window.TRUCK2_GLB_B64, { targetLen:4.6, faceYaw:0,       hwScale:0.4,  dScale:0.9, kind:'tempo' }); });
-whenModel('TANKER_GLB_B64', function(){ deferHeavy(function(){ loadObstacleVehicle(window.TANKER_GLB_B64, { targetLen:7.4, faceYaw:0,       hwScale:0.4,  dScale:0.85, kind:'tanker' }); }, function(){ return state.score > nextFlyoverScore - 4000; }); });   // PANI water tanker (Sea Link convoys)  // decorated CNG mini-truck
+whenModel('TANKER_GLB_B64', function(){ deferHeavy(function(){ loadObstacleVehicle(window.TANKER_GLB_B64, { targetLen:7.4, faceYaw:0,       hwScale:0.4,  dScale:0.85, kind:'tanker' }); }, function(){ return state.score > nextFlyoverScore - 7000; }); });   // PANI water tanker (Sea Link convoys)  // decorated CNG mini-truck
 
 /* ===================== DELIVERY-RIDER BIKE MINIBOSS =====================
    Appears every 1000 pts from 2000. Settles just ahead of the player and weaves
@@ -6329,7 +6330,7 @@ function startGame(){
   bike = null; bikePaused = false; nextBikeScore = 2000; bossShow(false);   // reset bike boss
   if (cop) copRemove(cop); cop = null; copPaused = false; nextCopScore = 3500; bossGapScore = 0; copSiren(0);   // reset cop boss
   if (badshah){ scene.remove(badshah.root); badshah = null; } badshahMusic(false); nextBadshahScore = 4200;   // reset the SUV boss
-  if (flyover) flyoverEnd(); nextFlyoverScore = FLYOVER_FIRST;
+  if (flyover) flyoverEnd(); nextFlyoverScore = FLYOVER_FIRST; animate._flyWarm = false;
   state.bonus = 0; state.mult = 1; state.comboTimer = 0; state.swerveTimer = 0;
   state.speed = BASE_SPEED; state.timeScale = 1;
   state.lane = 1; state.x = 0; state.y = 0; state.vy = 0;
@@ -6399,8 +6400,8 @@ function gameOver(){
    to duck), crosswind gusts, a police jeep on your tail the whole way, a toll plaza at the exit with one open lane
    that switches once. +15 % speed, 1.5× score on the deck, a bonus at the toll. Bosses, rain and crossings wait. */
 var FLYOVER_FIRST = 10000, flyover = null, nextFlyoverScore = FLYOVER_FIRST, FLYOVER_EVERY = 15000, sceneryHidden = false;   // first Sea Link at 10k (most runs never reached 15k), then every 15k
-var FLY = { ramp:210, deck:1150, toll:130, exit:200, drop:9.5 };
-var flyGroup = null, flyLamps = [], flyPylons = [], flySea = null, flyParapets = [], flyCity = [], flyDeck = null, flyRails = [];
+var FLY = { ramp:320, deck:1150, toll:130, exit:280, drop:9.5 };   // longer ramp/exit: the city falls away gradually
+var flySeawall = null, flyGroup = null, flyLamps = [], flyPylons = [], flySea = null, flyParapets = [], flyCity = [], flyDeck = null, flyRails = [];
 function mergedTubes(segs, r){                               // [[x1,y1,z1,x2,y2,z2],...] → one BufferGeometry of thin cylinders (1 draw call)
   var pos = [], nor = [], idx = [], base = 0, up = new THREE.Vector3(0,1,0), a = new THREE.Vector3(), b = new THREE.Vector3(), dir = new THREE.Vector3(), q = new THREE.Quaternion(), m = new THREE.Matrix4();
   segs.forEach(function(sg){ a.set(sg[0],sg[1],sg[2]); b.set(sg[3],sg[4],sg[5]); dir.subVectors(b, a); var len = dir.length(); dir.normalize(); q.setFromUnitVectors(up, dir);
@@ -6479,12 +6480,12 @@ function instFrom(tpl, mats){                                  // template holde
   return g;
 }
 function flyUpgrade(){                                         // swap procedural Sea Link pieces for the modelled kit as each template arrives
-  if (!flyGroup) return; var T = propTemplates, M = THREE.Matrix4;
+  if (!flyGroup) return; setTimeout(function(){ if (flyGroup && !flyGroup.visible){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; } }, 0); var T = propTemplates, M = THREE.Matrix4;
   if (T.pylon && !flyUp.pylon){ flyUp.pylon = true;
-    var pb = new THREE.Box3().setFromObject(T.pylon), ps = pb.getSize(new THREE.Vector3()), sx = 21 / Math.max(ps.x, 0.1), top = ps.y - FLY.drop - 0.5;
+    var pb = new THREE.Box3().setFromObject(T.pylon), ps = pb.getSize(new THREE.Vector3()), sx = 40 / Math.max(ps.x, 0.1), baseY = -FLY.drop - 11, top = ps.y + baseY;   // footing deep in the sea so the crossbeam sits under the deck and the legs rise through it
     var cab = mergedTubes((function(){ var L = []; for (var c=0;c<10;c++){ var y = top - 3 - c*1.9, zc = 8 + c*7; [-1,1].forEach(function(sd){ [-1,1].forEach(function(dir){ L.push([0, y, dir*0.6, sd*(ROAD_W/2 + 0.5), 1.3, dir*zc]); }); }); } return L; })(), 0.06);
     var cabMat = new THREE.MeshStandardMaterial({ color:0xf2f4f6, roughness:0.4, metalness:0.5 });
-    flyPylons.forEach(function(py){ py.children.forEach(function(ch){ ch.visible = false; }); var pc = T.pylon.clone(true); pc.scale.set(sx, 1, 1); pc.position.y = -FLY.drop - 0.5; py.add(pc); py.add(new THREE.Mesh(cab, cabMat)); });
+    flyPylons.forEach(function(py){ py.children.forEach(function(ch){ ch.visible = false; }); var pc = T.pylon.clone(true); pc.scale.set(1, 1, sx); /* holder is yawed −90°: local z = world x (scaling x stretched the legs ALONG the road) */ pc.position.y = baseY; py.add(pc); py.add(new THREE.Mesh(cab, cabMat)); });
   }
   if (T.parapet && !flyUp.parapet){ flyUp.parapet = true;
     var tb = new THREE.Box3().setFromObject(T.parapet), ts = tb.getSize(new THREE.Vector3()), along = ts.z >= ts.x, L = along ? ts.z : ts.x;
@@ -6503,7 +6504,7 @@ function flyUpgrade(){                                         // swap procedura
   if (T.flycity && !flyUp.city){ flyUp.city = true;
     flyCity.forEach(function(c){ c.visible = false; });
     [-1,1].forEach(function(sd){ var mats = [], z = 60;
-      while (z > -560){ var sc = rand(0.55, 0.95), m = new M().makeRotationY(Math.floor(Math.random()*4) * Math.PI/2); m.scale(new THREE.Vector3(sc, sc*rand(1.0, 1.6), sc)); m.setPosition(sd*rand(115, 200), -FLY.drop + 0.2, z); mats.push(m); z -= rand(45, 70); }
+      while (z > -560){ var sc = rand(0.55, 0.95), m = new M().makeRotationY(Math.floor(Math.random()*4) * Math.PI/2); m.scale(new THREE.Vector3(sc, sc*rand(1.0, 1.6), sc)); m.setPosition(sd*rand(85, 170), -FLY.drop + 0.2, z); mats.push(m); z -= rand(40, 65); }
       var g = instFrom(T.flycity, mats); g.traverse(function(o){ if (o.material) o.material.userData.noBend = true; }); flyGroup.add(g); flyCity.push(g); });
   }
 }
@@ -6573,14 +6574,15 @@ function flyMakeBooth(){                                    // Higgsfield toll b
 }
 function flyoverEnd(){
   var F = flyover; if (!F) return;
+  streetParts.forEach(function(k){ k.position.z = -160; k.visible = true; }); if (flySeawall) flySeawall.visible = false; pedestrians.forEach(function(pd){ pd.visible = true; });
   if (F.jeep){ scene.remove(F.jeep); F.jeep = null; } copSiren(0);
   if (F.tollBooths) F.tollBooths.forEach(function(tb){ scene.remove(tb.booth); scene.remove(tb.ob.root); var i2 = obstacles.indexOf(tb.ob); if (i2 >= 0) obstacles.splice(i2, 1); });
   if (F.tollCanopy){ scene.remove(F.tollCanopy); F.tollCanopy = null; }
-  flyover = null; sceneryHidden = false; nextFlyoverScore = Math.max(nextFlyoverScore, state.score + 5000); bossShow(false);
+  flyover = null; sceneryHidden = false; nextFlyoverScore = Math.max(nextFlyoverScore, state.score + 5000); bossShow(false); animate._flyWarm = false;
   if (pendingZoneCard){ var _pz = pendingZoneCard; pendingZoneCard = 0; setTimeout(function(){ if (state.running) zoneCard(_pz); }, 2600); }   // every 15k from the START of the last one (set in startFlyover), never sooner than 5k after it ends
   bendPlan.lock = false; bendPlan.hold = 0;
   buildings.forEach(function(b){ b.group.visible = true; b.group.position.y = 0; b.group.position.x = b.baseX; });
-  alleys.forEach(function(a){ a.position.y = 0; }); skyTowers.forEach(function(k){ k.position.y = 0; k.visible = true; }); streetParts.forEach(function(k){ k.position.y = k.userData.baseY || 0; k.visible = true; });
+  alleys.forEach(function(a){ a.position.y = 5.5; a.visible = true; }); wires.forEach(function(w){ w.visible = true; }); [skyline, skyline2].forEach(function(k){ if (k) k.visible = true; }); skyTowers.forEach(function(k){ k.position.y = 0; k.visible = true; }); streetParts.forEach(function(k){ k.position.y = k.userData.baseY || 0; k.visible = true; });
   props.forEach(function(p){ p.position.y = 0; }); pedestrians.forEach(function(pd){ pd.position.y = 0; pd.visible = true; }); roadModules.forEach(function(mod){ mod.visible = true; });
   if (flyGroup) flyGroup.visible = false;
 }
@@ -6604,19 +6606,41 @@ function updateFlyover(dt, dz){
       var bonus = 1500*state.mult; state.bonus += bonus; addCombo(); addCombo(); addCombo(); popup('🌉 SEA LINK CLEARED +' + bonus, 'popEvent', 50, 24); tihai(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn();
       for (var L=0;L<3;L++) spawnCoinRow(L, -14, 7, true); say('cop', pick(['Chhod, jaane de… agli baar dekh lenge.', 'Bach gaya, saale!']), 60, 30); }
   }
-  if (F.phase === 'exit' && d > F.exitD + FLY.exit){ flyoverEnd(); say('driver', pick(['Wapas zameen pe. Meter chalu.', 'Flyover done — kya view tha!']), 50); return; }
+  if (F.phase === 'exit' && F.shore && F.shore.mode === 'arrive' && F.shore.z > 45){ flyoverEnd(); say('driver', pick(['Wapas zameen pe. Meter chalu.', 'Flyover done — kya view tha!']), 50); return; }
   // ramp / drop: the street sinks under you (ramp) and rises back (exit)
-  var target = F.phase === 'signs' ? 0 : F.phase === 'ramp' ? Math.min(1, (d - 40)/(rampEnd - 40)) : F.phase === 'exit' ? Math.max(0, 1 - (d - F.exitD)/FLY.exit) : 1;
-  F.drop += (target - F.drop) * Math.min(1, dt*3);
-  var dy = -FLY.drop * F.drop, hide = F.drop > 0.985; sceneryHidden = hide;
-  buildings.forEach(function(b){ b.group.position.y = dy; b.group.position.x = b.baseX * (1 + 0.8*F.drop); if (hide) b.group.visible = false; });
-  alleys.forEach(function(a){ a.position.y = dy; if (hide) a.visible = false; });
-  skyTowers.forEach(function(k){ k.position.y = dy*2.2; if (hide) k.visible = false; });                 // the back row drops out of sight first
-  streetParts.forEach(function(k){ if (k.userData.baseY == null) k.userData.baseY = k.position.y; k.position.y = k.userData.baseY + dy; k.visible = !hide; });
-  props.forEach(function(p){ p.position.y = dy; if (hide) p.visible = false; });
-  pedestrians.forEach(function(pd){ pd.position.y = dy; if (hide) pd.visible = false; });
-  roadModules.forEach(function(mod){ var deco = mod.userData.variant !== 'STRAIGHT'; mod.visible = !(hide && deco); });   // a bridge deck has no potholes, patches or stalls   // market stalls / flyover pillars / crossings belong to the street
-  if (flyGroup){ flyGroup.visible = F.drop > 0.15; flyGroup.position.y = -(1 - F.drop) * 2.2;
+  // SHORELINE: the city doesn't sink — it ENDS. On the ramp a sea wall appears at the end of the draw distance and comes toward
+  // you (land between you and it, open water beyond); buildings that recycle past it stay hidden. On the exit the far shore
+  // arrives the same way in reverse. The road itself carries straight on as the deck.
+  var fogFar = scene.fog.far;
+  if (!F.shore && F.phase === 'ramp' && d > 40){ F.shore = { mode:'leave', z:-(fogFar + 10) }; }
+  if (F.phase === 'exit' && (!F.shore || F.shore.mode !== 'arrive')){ F.shore = { mode:'arrive', z:-(fogFar + 10) }; }
+  if (F.shore) F.shore.z += dz;
+  var S = F.shore, over = !S ? 0 : S.mode === 'leave' ? (S.z > 45 ? 1 : 0.5) : (S.z > 45 ? 0 : 0.5);   // 0 land, 0.5 shoreline in view, 1 open water
+  if (F.phase === 'deck' || F.phase === 'toll') over = 1;
+  var hide = (S && S.mode === 'leave' && S.z > 45) || F.phase === 'deck' || F.phase === 'toll' || (S && S.mode === 'arrive' && S.z < -40 && F.phase === 'exit' && false); sceneryHidden = hide;
+  function onLand(z){ if (!S) return true; return S.mode === 'leave' ? z > S.z : z < S.z; }
+  buildings.forEach(function(b){ b.group.position.y = 0; b.group.position.x = b.baseX; if (!onLand(b.group.position.z + (S && S.mode === 'leave' ? -((b.len||10)/2) : (b.len||10)/2)) || (hide && !(S && S.mode === 'arrive'))) b.group.visible = false; });
+  alleys.forEach(function(a){ if (!onLand(a.position.z)) a.visible = false; });
+  props.forEach(function(p){ p.position.y = 0; if (!onLand(p.position.z)) p.visible = false; });
+  pedestrians.forEach(function(pd){ pd.position.y = 0; pd.visible = onLand(pd.position.z); });
+  skyTowers.forEach(function(k){ if (S && over > 0) k.visible = false; });
+  wires.forEach(function(w){ w.visible = onLand(w.position.z); });
+  [skyline, skyline2].forEach(function(k){ if (k) k.visible = !S || over === 0; });
+  // the land strips (verges, kerbs, drains) end at the sea wall
+  streetParts.forEach(function(k){ if (k.userData.baseY == null) k.userData.baseY = k.position.y; k.position.y = k.userData.baseY;
+    if (!S){ k.position.z = -160; k.visible = true; } else if (S.mode === 'leave'){ k.position.z = S.z + 200; k.visible = S.z < 240; } else { k.position.z = S.z - 200; k.visible = true; } });
+  F.groundFrozen = !!S;                                          // the verge texture must move WITH its strip while the strip itself travels
+  if (!flySeawall && flyGroup){ flySeawall = new THREE.Group();
+    var wallMat = new THREE.MeshStandardMaterial({ color:0x8d8578, roughness:0.95 }), rockMat = new THREE.MeshStandardMaterial({ color:0x6f6b66, roughness:1 });
+    [-1,1].forEach(function(sd){ var w = new THREE.Mesh(new THREE.BoxGeometry(60, FLY.drop + 0.6, 1.2), wallMat); w.position.set(sd*(ROAD_W/2 + 31), -FLY.drop/2 + 0.2, 0); flySeawall.add(w);
+      var cap = new THREE.Mesh(new THREE.BoxGeometry(60, 0.3, 1.6), new THREE.MeshStandardMaterial({ color:0xc9c2b4, roughness:0.9 })); cap.position.set(sd*(ROAD_W/2 + 31), 0.2, 0); flySeawall.add(cap);
+      for (var q=0;q<26;q++){ var r = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(0.9, 1.6), 0), rockMat); r.position.set(sd*(ROAD_W/2 + 2 + q*2.3 + rand(-0.4,0.4)), -FLY.drop + rand(0.2, 1.4), rand(-1.8, -0.4)); r.rotation.set(rand(0,3), rand(0,3), rand(0,3)); flySeawall.add(r); } });   // tetrapod-ish rocks at the foot
+    var pier = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 1.2, FLY.drop, 3), wallMat); pier.position.set(0, -FLY.drop/2 - 0.1, -1.5); flySeawall.add(pier);   // the bridge abutment
+    scene.add(flySeawall); }
+  if (flySeawall){ flySeawall.visible = !!S && S.z < 60 && S.z > -(fogFar + 20); if (S){ flySeawall.position.z = S.z; flySeawall.rotation.y = S.mode === 'leave' ? 0 : Math.PI; } }
+  F.drop += ((over === 1 ? 1 : S ? 0.6 : 0) - F.drop) * Math.min(1, dt*1.5);   // "how much sea" — drives fog opening and the far shore
+  roadModules.forEach(function(mod){ var deco = mod.userData.variant !== 'STRAIGHT', z = mod.position.z; mod.visible = !(deco && (hide || (S && (S.mode === 'leave' ? z - 24 < S.z : z + 24 > S.z)))); });   // stalls, crossings, potholes belong to the land side of the sea wall   // a bridge deck has no potholes, patches or stalls   // market stalls / flyover pillars / crossings belong to the street
+  if (flyGroup){ flyGroup.visible = F.phase !== 'signs'; flyGroup.position.y = 0;
     flyLamps.forEach(function(lp){ lp.position.z += dz; if (lp.position.z > 20) lp.position.z -= 12*34; lp.userData.bulb.material.emissiveIntensity = 0.4 + 0.9*(typeof dayNight !== 'undefined' ? dayNight : 0.5); });
     flyPylons.forEach(function(py){ py.position.z += dz; if (py.position.z > 40) py.position.z -= 3*135; });
     flyRails.forEach(function(r){ r.position.z += dz; if (r.position.z > 4) r.position.z -= 4; });   // railing posts scroll (4 m period)
@@ -6624,7 +6648,9 @@ function updateFlyover(dt, dz){
     flyAddGantries(); flyGantries.forEach(function(gt){ gt.position.z += dz; if (gt.position.z > 30) gt.position.z -= 600; });
     if (flySea){ flySea.position.x = player.position.x*0.2; var su = flySea.material.uniforms; su.t.value += dt; su.storm.value += (((monsoon && monsoon.active) ? 1 : 0) - su.storm.value) * Math.min(1, dt*2); su.sunDir.value.copy(sun.position).normalize(); }
     flyCity.forEach(function(c){ c.position.z += dz*0.3; if (c.position.z > 300) c.position.z -= 300; });
-    if (flyDeck){ flyDeck.material.map.offset.y += dz/8; flyDeck.visible = F.drop > 0.6; }
+    if (flyDeck){ flyDeck.material.map.offset.y += dz/8; flyDeck.visible = true; }
+    if (flySea){ flySea.visible = !!F.shore || F.phase === 'deck' || F.phase === 'toll'; flySea.position.y = -FLY.drop + 0.4; }
+    flyPylons.forEach(function(py){ py.visible = py.position.z < (F.shore && F.shore.mode === 'leave' ? F.shore.z - 20 : 999) && !(F.shore && F.shore.mode === 'arrive' && py.position.z < F.shore.z + 20); }); flyLamps.forEach(function(lp){ lp.visible = F.drop > 0.3; }); flyCity.forEach(function(c){ if (c.isGroup && c.children.length && c.children[0].isInstancedMesh) c.visible = F.drop > 0.3; });   // pylons stand in the water only   // the bridge proper (pylons) only once you're over water
   }
   // crosswind gusts on the deck
   if (F.phase === 'deck' || F.phase === 'toll'){
@@ -7593,6 +7619,7 @@ function updateMonsoon(dt){
     var hl = 0.55 + wet*0.5;
     player.userData.headlight.material.emissive.setRGB(hl, hl*0.9, 0.4+wet*0.5);
   } else { scene.fog.far = FOG_FAR; }
+  if (typeof flyover !== 'undefined' && flyover && !MOBILE) scene.fog.far *= 1 + 0.75*flyover.drop;   // open water: you can see the far shore
   if (AC){ ensureRainAudio(); if(_rainGain) _rainGain.gain.value = state.muted ? 0 : wet*0.14; }
 }
 function updateCrows(dt){
@@ -7800,7 +7827,7 @@ function animate(){
   // road scroll — features must flow TOWARD the player (+Z), so offset increases
   roadTex.offset.y += dz/28.57;
   roadBump.offset.y = roadTex.offset.y;
-  for (var _gi=0; _gi<groundTexes.length; _gi++) groundTexes[_gi].offset.y += dz/5;  // verges scroll with road
+  if (!(flyover && flyover.groundFrozen)) for (var _gi=0; _gi<groundTexes.length; _gi++) groundTexes[_gi].offset.y += dz/5;  // verges scroll with road (frozen while the shoreline strip itself travels)
 
   // scenery recycle
   var FAR_CULL = -(scene.fog.far + 12);                 // beyond the fog nothing is visible — don't draw it
@@ -7840,6 +7867,8 @@ function animate(){
   animate._wasBusy = _bossBusy;
   var _stormy = !!(monsoon && monsoon.active);                                    // never open a boss fight in the rain — the two together were the top killer in live data
   var _street = setpieces.length > 0 || junctions.length > 0;   // a crossing is on — the boss waits for it to pass (the director stops spawning new ones while a boss is waiting: bossWaiting())
+  if (state.running && !flyover && !animate._flyWarm && state.score > nextFlyoverScore - 2500){   // build + compile the bridge ahead of time so it never pops in (or hitches) on the ramp
+    animate._flyWarm = true; buildFlyoverDressing(); flyUpgrade(); if (flyGroup){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; } }
   if (state.running && !_bossBusy && !_stormy && !_street && state.score >= nextFlyoverScore) startFlyover();
   if (state.running && !_bossBusy && !_stormy && !_street && state.score >= bossGapScore && state.score < nextFlyoverScore){   // a due Sea Link gets the next quiet window before any boss; then whichever boss has waited longest goes first (a fixed order never let the nakabandi in)
     var _due = [];
