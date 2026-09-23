@@ -1122,7 +1122,7 @@ var state = {
 var MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // phones/tablets: lighter tier from the first frame
 var FOG_FAR = MOBILE ? 105 : 150;                       // draw distance (scenery beyond the fog is culled) — shorter on phones
 var renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 2.0));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 1.5));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -1182,22 +1182,36 @@ if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(); }
 function qualityStepDown(){
   QUALITY.level++;
   if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
-  else if (QUALITY.level === 2){ renderer.setPixelRatio(1); renderer.setSize(window.innerWidth, window.innerHeight); if (composer){ if (composer.setPixelRatio) composer.setPixelRatio(1); composer.setSize(window.innerWidth, window.innerHeight); } }
+  else if (QUALITY.level === 2){ if (typeof setRes === 'function') setRes(1); }
   else if (QUALITY.level === 3){ renderer.shadowMap.enabled = false; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }
   else if (QUALITY.level === 4){ scene.fog.far = FOG_FAR = Math.min(FOG_FAR, 85); if (typeof skyTowers !== 'undefined') skyTowers.forEach(function(k){ k.visible = false; k.userData.off = true; }); }   // last resort for weak phones: shorter draw distance, no back row
   window.QUALITY_LEVEL = QUALITY.level;
   console.warn('Quality stepped down to level ' + QUALITY.level);
 }
+/* Dynamic resolution (23-Sep-f): the render scale moves in 0.125 steps between 1.0 and min(dpr, 1.75), measured over 1 s windows
+   (hitch frames > 150 ms — shader compiles, asset parses — are ignored so one hitch can't cost you quality for the whole run).
+   Only when the scale is already at 1.0 and it's still slow does the old ladder kick in (bloom off → shadows off → draw distance). */
+var RES = { pr:renderer.getPixelRatio(), min:1.0, max:MOBILE ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.75), acc:0, n:0, t:0, good:0, lowWin:0 };
+function setRes(pr){
+  RES.pr = pr; renderer.setPixelRatio(pr); renderer.setSize(window.innerWidth, window.innerHeight);
+  if (composer){ if (composer.setPixelRatio) composer.setPixelRatio(pr); composer.setSize(window.innerWidth, window.innerHeight); }
+  window.RENDER_SCALE = pr;
+}
 function qualityTick(dtMs){
-  if (QUALITY.level >= 4 || !state.running) return;
-  if (dtMs > 18.5) QUALITY.slow += dtMs; else QUALITY.slow = Math.max(0, QUALITY.slow - dtMs*0.5);
-  if (QUALITY.slow > 1500) { QUALITY.slow = 0; qualityStepDown(); }          // ~1.5 s of sub-54fps frames
+  if (!state.running) return;
+  RES.t += dtMs; if (dtMs > 150) RES.hitch = (RES.hitch || 0) + 1; else { RES.acc += dtMs; RES.n++; }   // a lone hitch isn't load; a string of them is
+  if (RES.t < 1000) return;
+  var avg = RES.n ? RES.acc / RES.n : 999, slow = avg > 18.2 || (RES.hitch || 0) >= 3; RES.acc = 0; RES.n = 0; RES.t = 0; RES.hitch = 0;
+  if (slow){ RES.good = 0;
+    if (RES.pr > RES.min + 0.01) setRes(Math.max(RES.min, RES.pr - 0.125));
+    else if (QUALITY.level < 4 && ++RES.lowWin >= 2){ RES.lowWin = 0; qualityStepDown(); if (QUALITY.level === 2) qualityStepDown(); } }   // level 2 (pixel ratio) is handled above
+  else { RES.lowWin = 0; if (avg < 15.2 && ++RES.good >= 3 && RES.pr < RES.max - 0.01 && QUALITY.level === 0){ RES.good = 0; setRes(Math.min(RES.max, RES.pr + 0.125)); } }
 }
 function renderFrame(){
   if (useComposer && composer) composer.render();
   else renderer.render(scene, camera);
   if (window.PERF) PERF.sample(renderer);
-  var _qn = performance.now(); qualityTick(renderFrame._t ? Math.min(100, _qn - renderFrame._t) : 16); renderFrame._t = _qn;
+  var _qn = performance.now(); qualityTick(renderFrame._t ? Math.min(1000, _qn - renderFrame._t) : 16); renderFrame._t = _qn;
 }
 
 /* ===================== PERF HUD + SESSION DEBUG LOGGER =====================
@@ -1216,7 +1230,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-e';
+var BUILD_TAG = '23-Sep-g';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -7170,8 +7184,19 @@ function playHorn(id){
     case 'tiny':    _tone('square', 1700, 1900, t, 0.08, 0.06); _tone('square', 1900, 2100, t+0.12, 0.08, 0.06); break;
     case 'royal':   [[523,0,0.16],[659,0.16,0.16],[784,0.32,0.16],[1047,0.48,0.55]].forEach(function(n){ _tone('sawtooth', n[0], n[0], t+n[1], n[2], 0.08, 1800); _tone('triangle', n[0]*1.005, n[0]*1.005, t+n[1], n[2], 0.06); });
                     _tone('sine', 2093, 2093, t+0.55, 0.45, 0.03); break;
-    default:        autoHorn(t, 0.15); autoHorn(t + 0.21, 0.28);   // the real thing: a Bajaj 12 V disc horn — "peep-peeeep"
+    default:        beepHorn(t, 0.13); beepHorn(t + 0.19, 0.16);   // clean cartoon "beep-beep" (S: the buzzy disc-horn synth sounded like a broken speaker)
   }
+}
+function beepHorn(t, dur){                                  // pure, rounded tones only — no saturation, no square waves, nothing that can crackle
+  if (!AC) return;
+  var out = AC.createGain(), f = 1046;                       // C6: bright and friendly
+  out.gain.setValueAtTime(0.0001, t); out.gain.exponentialRampToValueAtTime(0.09, t + 0.012); out.gain.setValueAtTime(0.09, t + dur - 0.04); out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  var lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 3200; lp.Q.value = 0.5;
+  [['triangle', 1, 0.8], ['sine', 1.5, 0.25], ['sine', 2, 0.18]].forEach(function(v){       // fifth + octave partials give the toy-horn "honk" colour
+    var o = AC.createOscillator(), g = AC.createGain(); o.type = v[0]; g.gain.value = v[2];
+    o.frequency.setValueAtTime(f*v[1]*0.97, t); o.frequency.exponentialRampToValueAtTime(f*v[1], t + 0.03);   // tiny upward chirp on attack
+    o.connect(g); g.connect(lp); o.start(t); o.stop(t + dur + 0.02); });
+  lp.connect(out); out.connect(masterGain);
 }
 var _hornCurve = null;
 function autoHorn(t, dur){                                  // electric disc horn: buzzy diaphragm (square + detuned saw), pitch sags on attack as the 12 V battery loads,
@@ -7690,7 +7715,14 @@ function attractCarSpawn(){
   var lane = pick([0,2]); def.mesh.position.set(LANES[lane], 0, -150); scene.add(def.mesh);
   attract.cars.push({ mesh:def.mesh, lane:lane, v: 9 + Math.random()*6, honked:false });
 }
+function menuPrewarm(){                                        // on the menu / game-over screen: build the Sea Link and compile its shaders now, so the run never pays for it
+  if (menuPrewarm.done || typeof buildFlyoverDressing !== 'function') return;
+  var T = propTemplates; if (!(T.pylon && T.parapet && T.flylamp && T.flycity && T.tollbooth)) return;
+  menuPrewarm.done = true; buildFlyoverDressing(); flyUpgrade();
+  if (flyGroup){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; }
+}
 function attractTick(dt){
+  if ((attractTick._pw = (attractTick._pw || 0) + dt) > 1.5){ attractTick._pw = 0; menuPrewarm(); }
   var kb = Math.min(1, dt*0.5); BEND.curve.value += (0.0006 - BEND.curve.value)*kb; BEND.hill.value += (0.00012 - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
   var A = attract, now = Date.now()*0.001;
   if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; }
@@ -7751,7 +7783,7 @@ function animate(){
     renderFrame();
     return;
   }
-  if (!state.running){ if (attractActive()) attractTick(rawDt); else if (attract.on) attractStop(); renderFrame(); return; }
+  if (!state.running){ if (attractActive()) attractTick(rawDt); else { if (attract.on) attractStop(); if ((animate._pw = (animate._pw || 0) + rawDt) > 1.5){ animate._pw = 0; menuPrewarm(); } } renderFrame(); return; }
 
   var dt = rawDt * state.timeScale;
   if (state.ducking){ state.duckT = (state.duckT || 0) - dt; if (state.duckT <= 0){ state.ducking = false; state.duckT = 0; } }
