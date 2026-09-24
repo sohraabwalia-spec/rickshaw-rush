@@ -1522,6 +1522,13 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 (function(){
   var FILES = ["ui-art.js", "rickshaw-model.js", "garage-art.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js"];
   var SIZES = {"rickshaw-model.js": 639848, "garage-art.js": 430300, "car-model.js": 64739, "cow-model.js": 236738, "cow-tex-variants.js": 391629, "cart-model.js": 276483, "vendor-model.js": 175673, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 213492, "bldg-old-model.js": 777928, "bldg-mixed-model.js": 701574, "bldg-modern-model.js": 1020711, "bldg-market-model.js": 772811, "bldg-corner-model.js": 796231, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1021977, "bus-model.js": 197710, "bus-tex-variants.js": 396874, "wagon-model.js": 218152, "wagon-tex-variants.js": 398421, "truck2-model.js": 306757, "bike-model.js": 205091, "bike-tex-variants.js": 380592, "police-model.js": 350990, "bldg-paan-model.js": 632445, "bldg-hotel-model.js": 648446, "bldg-hospital-model.js": 636573, "bldg-lodge-model.js": 698590, "bldg-clinic-model.js": 554863, "bldg-office-model.js": 764075, "bldg-police-model.js": 575295, "props-model.js": 4581063, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 919923, "flyover-models.js": 3083148, "flyover2-models.js": 798835};
+  /* phones (24-Sep-i): buildings + walkers come from lo/ — 40 percent of the triangles, 1024px textures instead of 2048px (a quarter of the
+     GPU memory), roughly half the download. Same window.* names, so nothing downstream changes. */
+  var LO_FILES = ["auntie-model.js", "badshah-model.js", "bldg-clinic-model.js", "bldg-corner-model.js", "bldg-hospital-model.js", "bldg-hotel-model.js", "bldg-lodge-model.js", "bldg-market-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-office-model.js", "bldg-old-model.js", "bldg-paan-model.js", "bldg-police-model.js", "cart-model.js", "cow-model.js", "flyover-models.js", "flyover2-models.js", "props-model.js", "truck-model.js", "truck2-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js"], LO_SIZES = {"auntie-model.js": 323066, "badshah-model.js": 494887, "bldg-clinic-model.js": 268711, "bldg-corner-model.js": 447879, "bldg-hospital-model.js": 309565, "bldg-hotel-model.js": 318326, "bldg-lodge-model.js": 344510, "bldg-market-model.js": 417991, "bldg-mixed-model.js": 344778, "bldg-modern-model.js": 516175, "bldg-office-model.js": 421823, "bldg-old-model.js": 385332, "bldg-paan-model.js": 307305, "bldg-police-model.js": 284919, "cart-model.js": 177647, "cow-model.js": 147982, "flyover-models.js": 1595560, "flyover2-models.js": 476675, "props-model.js": 2419147, "truck-model.js": 597393, "truck2-model.js": 180389, "vendor-model.js": 94977, "walker-model.js": 326582, "walker2-model.js": 603960};
+  if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))){
+    FILES = FILES.map(function(f){ return LO_FILES.indexOf(f) >= 0 ? 'lo/' + f : f; });
+    LO_FILES.forEach(function(f){ if (SIZES[f] != null){ SIZES['lo/' + f] = LO_SIZES[f]; delete SIZES[f]; } });
+  }
   var total = 0; Object.keys(SIZES).forEach(function(k){ total += SIZES[k]; });
   var done = {}, failed = [], loadedBytes = 0;
   function $(id){ return document.getElementById(id); }
@@ -1618,12 +1625,38 @@ var state = {
 
 /* ============================== RENDERER / SCENE ============================== */
 var MOBILE = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));   // phones/tablets: lighter tier from the first frame
-var FOG_FAR = MOBILE ? 105 : 150;                       // draw distance (scenery beyond the fog is culled) — shorter on phones
-var renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+/* Device tier (24-Sep-i): decided BEFORE the renderer exists, so a weak phone never starts on settings it has to claw back
+   mid-run (every mid-run step-down was a visible pop + a hitch). low / mid / high from the GPU name, RAM and cores;
+   a phone that still struggles is remembered one tier lower next time (TIER_LEARN, at the end of each run). */
+var TIER = (function(){
+  if (!MOBILE) return 'desktop';
+  var gpu = '', t = null;
+  try { var c = document.createElement('canvas'), gl = c.getContext('webgl'), ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+    gpu = gl ? String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : ''; var lc = gl && gl.getExtension('WEBGL_lose_context'); if (lc) lc.loseContext(); } catch(e){}
+  window.GPU_NAME = gpu;
+  var m, mem = navigator.deviceMemory || 4, cores = navigator.hardwareConcurrency || 4;
+  if ((m = gpu.match(/Adreno[^0-9]*(\d{3})/))) t = +m[1] >= 730 ? 'high' : +m[1] >= 640 ? 'mid' : 'low';
+  else if ((m = gpu.match(/Mali-G(\d+)/))){ var g = +m[1]; t = g >= 710 ? 'high' : (g >= 600 || (g >= 76 && g < 100) || g === 68) ? 'mid' : 'low'; }
+  else if (/Immortalis|Xclipse/.test(gpu)) t = 'high';
+  else if (/Mali-[T4]|PowerVR|Adreno[^0-9]*[1-5]\d\d\b/.test(gpu)) t = 'low';
+  else if (/Apple/.test(gpu) || /iPhone|iPad|Macintosh/.test(navigator.userAgent)) t = 'mid';
+  if (!t) t = (mem <= 3 || cores <= 4) ? 'low' : 'mid';
+  if (mem <= 2) t = 'low';
+  var qt = location.search.match(/[?&]tier=(low|mid|high)/); if (qt) return qt[1];                // ?tier=low|mid|high: testing / support override
+  try { var saved = localStorage.getItem('rrTier_v1'); if (saved && ['low','mid','high'].indexOf(saved) >= 0 && ['low','mid','high'].indexOf(saved) < ['low','mid','high'].indexOf(t)) t = saved; } catch(e){}
+  return t;
+})();
+window.TIER = TIER;
+var TIERCFG = { desktop:{ aa:true, shadows:true, fog:150, peds:9, nb:34, shadowEvery:1, prMax:null, prMin:1.0 },
+                high:   { aa:true, shadows:true, fog:115, peds:6, nb:28, shadowEvery:1, prMax:1.25, prMin:1.0 },
+                mid:    { aa:true, shadows:true, fog:105, peds:5, nb:28, shadowEvery:2, prMax:1.0, prMin:0.9 },
+                low:    { aa:false, shadows:false, fog:90, peds:4, nb:24, shadowEvery:1, prMax:1.0, prMin:0.75 } }[TIER];
+var FOG_FAR = TIERCFG.fog;                              // draw distance (scenery beyond the fog is culled) — shorter on phones
+var renderer = new THREE.WebGLRenderer({ antialias:TIERCFG.aa, powerPreference:'high-performance' });
 renderer.info.autoReset = false;   // reset once per frame in renderFrame, so diagnostics count every composer pass (they reported calls=1 since the composer landed)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 1.5));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? (TIERCFG.prMax || 1.0) : 1.5));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = TIERCFG.shadows;                // low-tier phones: no shadow pass at all (every object already has a soft blob under it)
 renderer.shadowMap.type = MOBILE ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;   // soft PCF is 4× the taps: phones get plain PCF
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1698,7 +1731,7 @@ if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(true
 /* 24-Sep: mid-run steps must NEVER force a shader recompile (the old level 1 and 3 did scene-wide needsUpdate → a
    400–900 ms freeze → which looked like more slowness → the next step: the Adreno runs fell q1→q4 in 5 s with 5 fps lows).
    Now: level 1 = bloom pass off (composer stays, same shaders), level 3 = shadow map drawn every 3rd frame at half size. */
-var SHADOW_EVERY = 1, _shadowN = 0;
+var SHADOW_EVERY = TIERCFG.shadowEvery, _shadowN = 0; if (SHADOW_EVERY > 1) renderer.shadowMap.autoUpdate = false;   // mid-tier phones: shadow map redrawn every other frame
 function qualityStepDown(initial){
   QUALITY.level++;
   if (QUALITY.level === 1 && !initial && useComposer && bloomPass){ bloomPass.enabled = false; }
@@ -1712,7 +1745,7 @@ function qualityStepDown(initial){
 /* Dynamic resolution (23-Sep-f): the render scale moves in 0.125 steps between 1.0 and min(dpr, 1.75), measured over 1 s windows
    (hitch frames > 150 ms — shader compiles, asset parses — are ignored so one hitch can't cost you quality for the whole run).
    Only when the scale is already at 1.0 and it's still slow does the old ladder kick in (bloom off → shadows off → draw distance). */
-var RES = { pr:renderer.getPixelRatio(), min:1.0, max:MOBILE ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.75), acc:0, n:0, t:0, good:0, lowWin:0 };
+var RES = { pr:renderer.getPixelRatio(), min:TIERCFG.prMin, max:MOBILE ? Math.min(window.devicePixelRatio || 1, TIERCFG.prMax || 1.0) : Math.min(window.devicePixelRatio || 1, 1.75), acc:0, n:0, t:0, good:0, lowWin:0 };
 function setRes(pr){
   RES.pr = pr; renderer.setPixelRatio(pr); renderer.setSize(window.innerWidth, window.innerHeight);
   if (composer){ if (composer.setPixelRatio) composer.setPixelRatio(pr); composer.setSize(window.innerWidth, window.innerHeight); }
@@ -1759,7 +1792,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '24-Sep-h';
+var BUILD_TAG = '24-Sep-i';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -2667,7 +2700,7 @@ function makePersonProc(){
 
 /* build the recycling rows of buildings */
 var buildings = [];
-var NB = MOBILE ? 28 : 34, BSPACING = 15, BWRAP = NB*BSPACING;   // 14–17 per side, laid edge to edge by layoutStreet()
+var NB = TIERCFG.nb, BSPACING = 15, BWRAP = NB*BSPACING;   // 14–17 per side, laid edge to edge by layoutStreet()
 var SIDE_WRAP = { '-1':BWRAP, '1':BWRAP }, _bbL = new THREE.Box3();
 (function makeBuildings(){
   for (var i=0;i<NB;i++){
@@ -2684,7 +2717,7 @@ var SIDE_WRAP = { '-1':BWRAP, '1':BWRAP }, _bbL = new THREE.Box3();
    an alley/plot gap every few buildings, all sharing one kerb line. Each side recycles on its own ring length so the
    pattern never opens a hole. Called after the procedural fill and again whenever the GLB pool is (re)assigned. */
 function layoutStreet(){
-  var MIN_SPAN = (MOBILE ? 105 : 150) + 45;                // ring must outrun the fog + the 30 m behind the camera
+  var MIN_SPAN = FOG_FAR + 45;                // ring must outrun the fog + the 30 m behind the camera
   [-1, 1].forEach(function(side){
     var list = buildings.filter(function(b){ return (b.group.position.x < 0 ? -1 : 1) === side; });
     list.sort(function(a, b){ return b.group.position.z - a.group.position.z; });      // front (largest z) first
@@ -2815,7 +2848,7 @@ function fillModule(mod,variant){ while(mod.children.length) mod.remove(mod.chil
 
 /* recycling pedestrians strolling the sidewalks */
 var pedestrians = [];
-var PED_N = MOBILE ? 6 : 9, PED_SP = 20, PED_WRAP = PED_N * PED_SP;   // walkers decimated 22-Sep (~9–14k tris) → nearly twice the crowd for the same cost
+var PED_N = TIERCFG.peds, PED_SP = 20, PED_WRAP = PED_N * PED_SP;   // walkers decimated 22-Sep (~9–14k tris) → nearly twice the crowd for the same cost
 function buildPedestrians(){
   pedestrians.forEach(function(p){ scene.remove(p); });
   pedestrians.length = 0;
@@ -2825,6 +2858,7 @@ function buildPedestrians(){
     ped.position.set(side*(ROAD_W/2 + rand(1.0,2.2)), 0, -i*PED_SP + rand(-3,3));   // footpath strip, short of the frontage
     ped.userData.side = side;
     addBlob(ped, 1.0, 1.0, 0.55);
+    if (MOBILE) ped.traverse(function(o){ o.castShadow = false; });   // phones: walkers are skinned + ~10k tris each; their blob grounds them, the shadow pass skips them
     scene.add(ped);
     pedestrians.push(ped);
   }
@@ -3647,17 +3681,22 @@ function pickMeshoptDecoder(){
   };
 })();
 var MAX_ANISO = Math.min(8, renderer.capabilities.getMaxAnisotropy ? renderer.capabilities.getMaxAnisotropy() : 1);
-function tuneTextures(root){                                    // every GLB texture: anisotropic filtering (sharp at grazing angles — roadside facades) + trilinear mipmaps (no shimmer)
+var LITE_MATS = MOBILE && TIER !== 'high';                        // phones (low/mid): no normal/roughness/metalness maps on scenery + vehicles — per-pixel normal mapping and
+var ANISO = MOBILE ? (TIER === 'high' ? 4 : TIER === 'mid' ? 2 : 1) : MAX_ANISO;   // 3 extra texture fetches were the fragment cost, and each map was its own GPU upload (buildings: 3 × 1024² each)
+function tuneTextures(root, keep){                              // every GLB texture: anisotropic filtering (sharp at grazing angles — roadside facades) + trilinear mipmaps (no shimmer)
+  if (LITE_MATS && !keep) root.traverse(function(o){ if (!o.isMesh || !o.material) return; [].concat(o.material).forEach(function(m){
+    if (!m.isMeshStandardMaterial) return; ['normalMap','roughnessMap','metalnessMap'].forEach(function(k){ if (m[k]){ try { m[k].dispose(); } catch(e){} m[k] = null; } });
+    if (m.roughnessMap === null) m.roughness = Math.max(m.roughness, 0.82); m.metalness = Math.min(m.metalness, 0.1); m.needsUpdate = true; }); });
   root.traverse(function(o){ if (!o.isMesh || !o.material) return; [].concat(o.material).forEach(function(m){
     ['map','normalMap','roughnessMap','metalnessMap','emissiveMap','aoMap'].forEach(function(k){ var t = m[k]; if (!t || t._tuned) return; t._tuned = true;
-      t.anisotropy = MAX_ANISO; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.needsUpdate = true; }); }); });
+      t.anisotropy = ANISO; t.generateMipmaps = true; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter; t.needsUpdate = true; }); }); });
 }
-function makeGLTFLoader(){
+function makeGLTFLoader(keepDetail){                           // keepDetail: the player's ride keeps its full material set on every tier
   var l = new THREE.GLTFLoader();
   var dec = pickMeshoptDecoder();
   if (dec && l.setMeshoptDecoder) l.setMeshoptDecoder(dec);
   var _parse = l.parse.bind(l);
-  l.parse = function(data, path, onLoad, onError){ return _parse(data, path, function(gltf){ try { tuneTextures(gltf.scene); } catch(e){} onLoad(gltf); }, onError); };
+  l.parse = function(data, path, onLoad, onError){ return _parse(data, path, function(gltf){ try { tuneTextures(gltf.scene, keepDetail); } catch(e){} onLoad(gltf); }, onError); };
   return l;
 }
 // lowest world-Y of an object. For skinned models we use the lowest BONE (robust,
@@ -3698,7 +3737,7 @@ function groundModel(holder, model){
 whenModel(['RICKSHAW_GLB_B64'], function loadRickshawModel(){
   if (!window.RICKSHAW_GLB_B64 || !THREE.GLTFLoader) return;
   try {
-    makeGLTFLoader().parse(b64ToArrayBuffer(window.RICKSHAW_GLB_B64), '', function(gltf){
+    makeGLTFLoader(true).parse(b64ToArrayBuffer(window.RICKSHAW_GLB_B64), '', function(gltf){
       var model = gltf.scene;
       // normalize: align the vehicle's LENGTH (longest horizontal axis) to Z, scale, centre, ground
       var box = new THREE.Box3().setFromObject(model);
@@ -7224,6 +7263,7 @@ var CLOUD = (function(){
         rep.marks = rep.marks.slice(-40); rep.warnings = rep.warnings.slice(-30);
         rep.quality = (typeof QUALITY !== 'undefined') ? QUALITY.level : 0;
         try { if (window.RRA) rep.audio = RRA.stats(); } catch(e){}
+        rep.tier = { tier:TIER, gpu:window.GPU_NAME || '', mem:navigator.deviceMemory || null, cores:navigator.hardwareConcurrency || null, pr:RES.pr };
         rep.assets = window.ASSET_LOAD ? { seconds:ASSET_LOAD.seconds, loaded:ASSET_LOAD.loaded, total:ASSET_LOAD.total, failed:ASSET_LOAD.failed, missing:(ASSET_LOAD.files||[]).filter(function(f){ return !(ASSET_LOAD.doneFiles||{})[f]; }).slice(0,8), base:ASSET_LOAD.base, decoder:window.__decoderMode, mobile:MOBILE } : null;
         rep.run = { score:state.score, dist:Math.floor(state.dist), zone:zi, cause:cause, flags:flags, vehicle:selectedVehicle, coins:state.coins, best:profile.best, runsTotal:profile.runs };
         post({ t:'diag', pid:ensurePid(), nick:profile.nick, report:rep });
@@ -7505,6 +7545,11 @@ function gameOver(){
   state.score = Math.floor(state.dist) + state.bonus;
   if (state.practice){ practiceFinish('crash'); return; }                            // garage test ride: no coins banked, no board, no cloud row — straight back to the garage
   if (state.coins > 0){ profile.coins += state.coins; saveProfile(); }   // bank this run's coins into the wallet
+  if (MOBILE) try {                                                                   // tier learning: a phone that had to step down is remembered one tier lower; 3 smooth runs → back to auto-detect
+    var _ord = ['low','mid','high'], _ti = _ord.indexOf(TIER), _ql = QUALITY.level;
+    if ((_ql >= 3 || (_ql >= 2 && RES.pr <= RES.min + 0.01)) && _ti > 0){ localStorage.setItem('rrTier_v1', _ord[_ti - 1]); localStorage.setItem('rrTierGood_v1', '0'); }
+    else if (_ql <= 1 && state.dist > 400){ var _n = +(localStorage.getItem('rrTierGood_v1') || 0) + 1; localStorage.setItem('rrTierGood_v1', String(_n)); if (_n >= 3 && localStorage.getItem('rrTier_v1')){ localStorage.removeItem('rrTier_v1'); localStorage.setItem('rrTierGood_v1', '0'); } }
+  } catch(e){}
   var _runSum = PROG.end();
   var qualifies = scoreQualifies(state.score);
   var newBest = state.score > (profile.best||0);
