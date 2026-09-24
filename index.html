@@ -681,6 +681,45 @@ window.addEventListener('error', function(e){
   #speedLines { position:fixed; inset:-6%; z-index:1; pointer-events:none; opacity:0; background:center/cover no-repeat; }
   .coinFly { position:fixed; left:0; top:0; z-index:30; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; pointer-events:none; opacity:0; display:flex; align-items:center; justify-content:center;
     font:800 18px/1 'Baloo 2',sans-serif; color:#8a5400; background:radial-gradient(circle at 35% 30%, #fff1a0, #ffc928 50%, #d98c0a 90%); box-shadow:inset 0 0 0 2px #e8a414, 0 0 12px rgba(255,200,60,.8); will-change:transform; }
+
+  /* ===================== PROGRESSION (24-Sep): daily missions, driver levels, results count-up ===================== */
+  .mMissions { position:relative; flex:none; display:flex; align-items:center; justify-content:center; width:min(7.4vh,64px); height:min(7.4vh,64px); border:0; border-radius:10px; cursor:pointer; color:#ffc928;
+    background:linear-gradient(180deg,#2b3157,#1d2140); transform:rotate(2deg); box-shadow:0 5px 0 #0e1022, 0 10px 18px rgba(0,0,0,.35); transition:transform .18s, filter .18s; pointer-events:auto; }
+  .mMissions svg { width:58%; height:58%; } .mMissions:hover, .mMissions:focus-visible { filter:brightness(1.18); transform:rotate(2deg) translateY(-2px); outline:none; }
+  .mMissions b { position:absolute; top:-7px; right:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:11px; background:#ff4d3a; color:#fff; font:800 13px/22px 'Baloo 2',sans-serif; box-shadow:0 2px 6px rgba(0,0,0,.4); }
+  .mMissions b.hidden { display:none; }
+  .lvlChip { display:flex; align-items:center; gap:10px; margin-top:12px; font-family:'Baloo 2',sans-serif; color:#fff6e4; text-shadow:0 1px 3px rgba(0,0,0,.6); pointer-events:auto; }
+  .lvlChip span { font-weight:700; font-size:15px; } .lvlChip b { color:#ffc928; font-size:19px; }
+  .lvlChip i, .misLvl i { display:block; width:150px; height:9px; border-radius:6px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.25); overflow:hidden; }
+  .lvlChip em, .misLvl em { display:block; height:100%; width:0; background:linear-gradient(90deg,#1aa3a8,#ffc928); transition:width .6s ease; }
+  .lvlChip small { font-size:12px; opacity:.8; }
+  #misModal { position:fixed; inset:0; z-index:62; display:flex; align-items:center; justify-content:center; background:rgba(8,4,14,.72); backdrop-filter:blur(4px); pointer-events:auto; }
+  #misModal.hidden { display:none; }
+  .misCard { width:min(92vw,480px); max-height:88vh; overflow:auto; padding:20px 20px 16px; border-radius:16px; background:#1f2542; border:2px solid rgba(255,201,40,.35); box-shadow:0 24px 60px rgba(0,0,0,.55); color:#fff6e4; font-family:'Baloo 2',sans-serif; animation:uiIn .25s ease both; }
+  .misHead { display:flex; align-items:baseline; justify-content:space-between; } .misTitle { font:400 28px/1 'Permanent Marker',sans-serif; color:#ffc928; } .misReset { font-size:12px; opacity:.65; }
+  .misLvl { display:flex; align-items:center; gap:10px; margin:10px 0 14px; font-weight:700; } .misLvl b { color:#ffc928; } .misLvl i { flex:1; width:auto; } .misLvl small { font-size:12px; opacity:.75; }
+  .misRow { display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center; padding:10px 12px; margin-bottom:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); }
+  .misRow.done { border-color:rgba(255,201,40,.6); background:rgba(255,201,40,.1); } .misRow.claimed { opacity:.55; }
+  .misTxt { font-weight:700; font-size:16px; } .misRew { font-weight:800; color:#ffc928; font-size:14px; text-align:right; }
+  .misBar { grid-column:1 / 2; height:8px; border-radius:5px; background:rgba(0,0,0,.35); overflow:hidden; } .misBar em { display:block; height:100%; background:linear-gradient(90deg,#1aa3a8,#7dff9b); }
+  .misClaim { grid-row:1 / 3; grid-column:2; border:0; border-radius:10px; padding:8px 14px; cursor:pointer; font:800 15px/1 'Baloo 2',sans-serif; background:linear-gradient(180deg,#ffe066,#f2b21c); color:#2a1c05; box-shadow:0 3px 0 #9a6a08; }
+  .misProg { font-size:12px; opacity:.75; text-align:right; }
+  .misClose { display:block; width:100%; margin-top:8px; height:44px; border-radius:10px; border:2px solid rgba(255,255,255,.2); background:transparent; color:#fff6e4; font:700 16px/1 'Baloo 2',sans-serif; cursor:pointer; }
+  .goStats { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:10px; }
+  .goStats span { padding:5px 12px; border-radius:999px; background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.15); font-weight:800; font-size:clamp(12px,1.7vw,15px); color:#fff3d6; }
+  .goXp { display:flex; align-items:center; gap:10px; justify-content:center; margin-top:12px; font-weight:900; color:#fff3d6; }
+  .goLvl b { color:#ffce3a; font-size:1.2em; } .goXpBar { width:min(46vw,260px); height:12px; border-radius:7px; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.2); overflow:hidden; }
+  .goXpBar i { display:block; height:100%; width:0; background:linear-gradient(90deg,#1aa3a8,#ffce3a); transition:width .9s cubic-bezier(.2,.8,.2,1); } .goXpTxt { font-size:13px; color:#7dff9b; min-width:70px; text-align:left; }
+  .goXp.lvlUp .goLvl { animation:chipBump .5s ease 2; }
+  .goMis { display:flex; flex-direction:column; gap:6px; align-items:center; margin-top:10px; }
+  .goMis .gm { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#fff3d6; } .goMis .gm i { display:block; width:90px; height:7px; border-radius:4px; background:rgba(0,0,0,.4); overflow:hidden; } .goMis .gm em { display:block; height:100%; background:#7dff9b; }
+  .goMis .gm.done { color:#ffce3a; } .goMis button { border:0; border-radius:8px; padding:4px 10px; font:800 12px/1 'Baloo 2',sans-serif; background:#ffce3a; color:#2a1c05; cursor:pointer; pointer-events:auto; }
+  /* results screen: two columns on wide screens (run summary | board); compact + scrollable on short ones */
+  @media (min-width:900px){ #gameOverScreen { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:repeat(14, auto); column-gap:48px; align-content:center; justify-items:center; }
+    #gameOverScreen > * { grid-column:1; } #gameOverScreen > .goRight { grid-column:2; grid-row:1 / 15; align-self:center; } #gameOverScreen .goRight .boardTitle { margin-top:0 !important; } }
+  #gameOverScreen .quip { margin-top:8px; } #gameOverScreen .finalScore { margin-top:12px; } #gameOverScreen #restartBtn { margin-top:16px; }
+  @media (max-height:720px){ #gameOverScreen { justify-content:flex-start; overflow-y:auto; } #gameOverScreen .goTitle { font-size:clamp(34px,7vw,56px); } #gameOverScreen .goRight .board .hsRow:nth-child(n+6) { display:none; } }
+  @media (max-width:899px){ #gameOverScreen { justify-content:flex-start; overflow-y:auto; padding-top:14px; } }
   body.inGarage #perfHud { display:none !important; }
   canvas.chakkar { animation:chakkarHue 2.4s ease-in-out infinite alternate; } @keyframes chakkarHue { from { filter:saturate(1.5) hue-rotate(-18deg) contrast(1.05); } to { filter:saturate(1.7) hue-rotate(28deg) contrast(1.08); } }
   #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
@@ -751,9 +790,11 @@ window.addEventListener('error', function(e){
       <div class="mBtnRow mIn" style="--d:.6s">
         <button id="startBtn" class="mPlay"><svg class="mPlayBg" viewBox="0 0 500 110" preserveAspectRatio="none"><path d="M6,20 C120,6 300,12 494,4 L488,100 C330,108 160,102 10,106 Z" fill="#ffc928" filter="url(#mRough)"/></svg>
           <span class="mPlayIn"><svg class="mMega" viewBox="0 0 48 40"><path d="M4,15 L14,15 L34,4 L34,36 L14,25 L4,25 Z M14,25 L18,36 L24,36 L21,26" fill="#1c1a24"/><path d="M39,12 Q44,20 39,28" stroke="#1c1a24" stroke-width="3.5" fill="none" stroke-linecap="round"/></svg><span class="mPlayTxt">LET'S RIDE</span><span class="mArrow">&rarr;</span></span></button>
+        <button id="missionsBtn" class="mMissions" title="Daily missions (M)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/></svg><b id="misBadge" class="hidden">0</b></button>
         <button id="garageBtn" class="mGarage"><svg viewBox="0 0 24 24" class="mWrench"><path d="M21 6.5a5 5 0 0 1-6.6 4.7L6 19.6a2 2 0 0 1-2.8-2.8l8.4-8.4A5 5 0 0 1 17.5 3l-3 3 .9 2.6 2.6.9z" fill="#e9eef7"/></svg>GARAGE</button>
       </div>
       <div id="playerStrip" class="hidden"></div>
+      <div id="lvlChip" class="lvlChip mIn" style="--d:.65s"><span>Lv <b id="lvlNum">1</b></span><i><em id="lvlFill"></em></i><small id="lvlXp">0 / 250 XP</small></div>
     </div>
     <div class="boardPanel mBoard mIn" style="--d:.7s">
       <svg class="mBoardBg" viewBox="0 0 300 400" preserveAspectRatio="none"><path d="M8,10 L292,4 L296,392 L4,396 Z" fill="#1f2542" filter="url(#mRoughS)"/></svg>
@@ -823,19 +864,28 @@ window.addEventListener('error', function(e){
     <div class="gToast hidden" id="gToast"></div>
   </div>
 
+  <div id="misModal" class="hidden" role="dialog" aria-modal="true" aria-label="Daily missions"><div class="misCard">
+    <div class="misHead"><div class="misTitle">DAILY MISSIONS</div><div class="misReset" id="misReset"></div></div>
+    <div class="misLvl"><span>Lv <b id="misLvlNum">1</b></span><i><em id="misLvlFill"></em></i><small id="misLvlXp"></small></div>
+    <div id="misList"></div>
+    <button class="misClose" id="misClose">Close</button>
+  </div></div>
   <div id="gameOverScreen" class="screen hidden">
     <div class="goTitle">ARRE YAAR!</div>
     <div class="quip" id="quip"></div>
     <div class="finalScore" id="finalScore"></div>
     <div class="bestScore" id="bestScoreLine"></div>
+    <div class="goStats" id="goStats"></div>
+    <div class="goXp" id="goXp"><div class="goLvl">Lv <b id="goLvlNum">1</b></div><div class="goXpBar"><i id="goXpFill"></i></div><div class="goXpTxt" id="goXpTxt"></div></div>
+    <div class="goMis" id="goMis"></div>
     <div id="nameEntry" class="hidden">
       <div class="entryLabel">ENTER YOUR INITIALS</div>
       <input id="initials" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="AAA">
       <button class="saveBtn" id="saveScoreBtn">SAVE</button>
     </div>
-    <div class="boardTitle" style="margin-top:18px" id="goBoardTitle">🏆 TOP SCORES</div>
+    <div class="goRight"><div class="boardTitle" style="margin-top:18px" id="goBoardTitle">🏆 TOP SCORES</div>
     <div class="board" id="goBoard"></div>
-    <div class="boardNote" id="goBoardNote"></div>
+    <div class="boardNote" id="goBoardNote"></div></div>
     <button class="btn" id="restartBtn">EK AUR ROUND 🛺</button>
     <div class="keyHintGo">Enter — again · Esc — menu · G — garage</div>
     <div class="goBtnRow">
@@ -1610,7 +1660,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '24-Sep-d';
+var BUILD_TAG = '24-Sep-e';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -2227,11 +2277,19 @@ whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_G
 whenModel('FLY2_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY2_GLB); }, function(){ return state.score > nextFlyoverScore - 7000; }); });   // Sea Link kit 2: pylon, parapet, lamp, skyline cluster   // Sea Link kit: toll booth, big gantry, debris
 function propClone(name){ var t = propTemplates[name]; return t ? t.clone(true) : null; }
 
+var LAMP_POOL_GEO = new THREE.PlaneGeometry(6.4, 6.4), LAMP_CONE_GEO = (function(){ var g = new THREE.CylinderGeometry(0.2, 2.6, 1, 18, 1, true); return g; })();
+var LAMP_POOL_MAT = new THREE.MeshBasicMaterial({ map:canvasTex(128, 128, function(g, w, h){ var gr = g.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); gr.addColorStop(0, 'rgba(255,196,110,0.95)'); gr.addColorStop(0.45, 'rgba(255,170,80,0.35)'); gr.addColorStop(1, 'rgba(255,150,60,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }),
+  transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending });
+var LAMP_CONE_MAT = new THREE.MeshBasicMaterial({ color:0xffc27a, transparent:true, opacity:0, depthWrite:false, blending:THREE.AdditiveBlending, side:THREE.DoubleSide,
+  alphaMap:canvasTex(4, 128, function(g, w, h){ var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#fff'); gr.addColorStop(1, '#000'); g.fillStyle = gr; g.fillRect(0, 0, w, h); }) });
 function makeStreetLamp(){
   var lampGLB = propClone('lamp');
   if (lampGLB){                                            // a small emissive bulb at the head so the dusk glow still works
     var sz = lampGLB.userData.size, bulb = new THREE.Mesh(new THREE.SphereGeometry(0.14,8,6), new THREE.MeshLambertMaterial({color:0xfff2c0,emissive:0xffb040,emissiveIntensity:0.2}));
-    bulb.position.set(0, sz.y*0.93, sz.z*0.42); lampGLB.add(bulb); lampGLB.userData.bulb = bulb; return lampGLB;   // holder-local: arm runs along +Z before the holder's yaw
+    bulb.position.set(0, sz.y*0.93, sz.z*0.42); lampGLB.add(bulb); lampGLB.userData.bulb = bulb;
+    var pool = new THREE.Mesh(LAMP_POOL_GEO, LAMP_POOL_MAT); pool.rotation.x = -Math.PI/2; pool.position.set(0, 0.035, sz.z*0.42); pool.renderOrder = 3; lampGLB.add(pool);   // night: a warm pool of light on the ground
+    var cone = new THREE.Mesh(LAMP_CONE_GEO, LAMP_CONE_MAT); cone.position.set(0, sz.y*0.93*0.5, sz.z*0.42); cone.scale.y = sz.y*0.93; cone.renderOrder = 4; lampGLB.add(cone);   // …and a faint beam through the haze
+    return lampGLB;   // holder-local: arm runs along +Z before the holder's yaw
   }
   var g=new THREE.Group();
   var matPole=new THREE.MeshLambertMaterial({color:0x3a4048});
@@ -2852,7 +2910,7 @@ scene.add(skyDome);
 var sunSprite = new THREE.Mesh(new THREE.CircleGeometry(16, 32),
   new THREE.MeshBasicMaterial({ color:0xfff2c0, transparent:true, opacity:0.9, fog:false,
     blending:THREE.AdditiveBlending, depthWrite:false }));
-sunSprite.position.set(17, 40, -250); scene.add(sunSprite);   // 24-Sep: sun sits at the end of the street, just right of the landmark (concept frame)
+sunSprite.position.set(-58, 40, -250); scene.add(sunSprite);   // 24-Sep: sun sits at the end of the street, just right of the landmark (concept frame)
 var sunHalo = new THREE.Mesh(new THREE.CircleGeometry(30, 32), sunSprite.material.clone());
 sunHalo.material.opacity = 0.35; sunHalo.position.copy(sunSprite.position); sunHalo.position.z += 1; scene.add(sunHalo);
 sunSprite.material.userData.noBend = true; sunHalo.material.userData.noBend = true;   // sun stays on the horizon
@@ -2860,11 +2918,11 @@ sunSprite.material.userData.noBend = true; sunHalo.material.userData.noBend = tr
 (function softSun(){
   function glow(stops){ return canvasTex(256, 256, function(g, w, h){ var gr = g.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); stops.forEach(function(st){ gr.addColorStop(st[0], st[1]); }); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); }
   sunSprite.geometry = new THREE.PlaneGeometry(44, 44); sunSprite.material.map = glow([[0,'rgba(255,255,255,1)'],[0.18,'rgba(255,250,225,1)'],[0.28,'rgba(255,230,160,0.55)'],[0.55,'rgba(255,190,90,0.12)'],[1,'rgba(255,160,60,0)']]); sunSprite.material.needsUpdate = true;
-  sunHalo.geometry = new THREE.PlaneGeometry(210, 210); sunHalo.material.map = glow([[0,'rgba(255,220,150,0.9)'],[0.25,'rgba(255,190,110,0.35)'],[0.6,'rgba(255,160,80,0.08)'],[1,'rgba(255,140,60,0)']]); sunHalo.material.needsUpdate = true;
+  sunHalo.geometry = new THREE.PlaneGeometry(130, 130); sunHalo.material.map = glow([[0,'rgba(255,220,150,0.7)'],[0.25,'rgba(255,190,110,0.22)'],[0.6,'rgba(255,160,80,0.04)'],[1,'rgba(255,140,60,0)']]); sunHalo.material.needsUpdate = true;
   var rayTex = canvasTex(512, 512, function(g, w, h){ g.translate(w/2, h/2); for (var i=0;i<26;i++){ var a = i/26*Math.PI*2 + Math.random()*0.12, len = w*(0.3 + Math.random()*0.2), wd = 0.03 + Math.random()*0.05;
       var gr = g.createLinearGradient(0, 0, Math.cos(a)*len, Math.sin(a)*len); gr.addColorStop(0, 'rgba(255,236,190,0.55)'); gr.addColorStop(1, 'rgba(255,200,120,0)');
       g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a-wd)*len, Math.sin(a-wd)*len); g.lineTo(Math.cos(a+wd)*len, Math.sin(a+wd)*len); g.closePath(); g.fill(); } });
-  window.sunRays = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ map:rayTex, color:0xffd9a0, transparent:true, opacity:0.32, blending:THREE.AdditiveBlending, depthWrite:false, fog:false }));
+  window.sunRays = new THREE.Mesh(new THREE.PlaneGeometry(170, 170), new THREE.MeshBasicMaterial({ map:rayTex, color:0xffd9a0, transparent:true, opacity:0.12, blending:THREE.AdditiveBlending, depthWrite:false, fog:false }));
   sunRays.material.userData.noBend = true; sunRays.position.copy(sunSprite.position); sunRays.position.z += 2; scene.add(sunRays);
 })();
 
@@ -2980,10 +3038,14 @@ var farSkyline = new THREE.Group(), farLayerNear = new THREE.Group(), farLayerFa
   staticBatch(farLayerNear); staticBatch(farLayerFar);                        // 60 silhouettes × 1–6 parts → 2 draw calls
   // 24-Sep: a domed Indo-Saracenic landmark closing the vista at the end of the street (generic — central dome on a drum,
   // corner turrets, pointed spires, arcaded base), sun-lit sandstone fading into the haze. One draw call after batching.
-  var lm = new THREE.Group(), stone = new THREE.MeshLambertMaterial({ color:0xe2b48c, fog:false }); window.landmarkMat = stone;
+  var archTex = canvasTex(512, 256, function(g, w, h){ g.fillStyle = '#ffffff'; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(70,42,30,0.55)'; for (var r=0;r<2;r++){ for (var k=0;k<12;k++){ var x = 14 + k*41.5, y = 40 + r*110, aw = 26, ah = 70; g.beginPath(); g.moveTo(x, y+ah); g.lineTo(x, y+aw/2); g.arc(x+aw/2, y+aw/2, aw/2, Math.PI, 0); g.lineTo(x+aw, y+ah); g.closePath(); g.fill(); } }
+    g.fillStyle = 'rgba(90,60,40,0.35)'; g.fillRect(0, 22, w, 5); g.fillRect(0, 136, w, 5); });
+  if (THREE.sRGBEncoding) archTex.encoding = THREE.sRGBEncoding;
+  var lm = new THREE.Group(), stone = new THREE.MeshLambertMaterial({ color:0xb99a82, fog:false }), arcade = new THREE.MeshLambertMaterial({ color:0xb99a82, map:archTex, fog:false }); window.landmarkMat = stone; window.landmarkMat2 = arcade;
   function add(geo, x, y, z){ var m = new THREE.Mesh(geo, stone); m.position.set(x, y, z); lm.add(m); return m; }
-  add(new THREE.BoxGeometry(84, 20, 14), 0, 10, 0);                                                      // arcaded base block
-  add(new THREE.BoxGeometry(40, 12, 12), 0, 26, 0);                                                      // upper storey
+  var base = add(new THREE.BoxGeometry(84, 20, 14), 0, 10, 0); base.material = arcade;                    // arcaded base block
+  var up2 = add(new THREE.BoxGeometry(40, 12, 12), 0, 26, 0); up2.material = arcade;                      // upper storey
   add(new THREE.CylinderGeometry(10, 11, 10, 16), 0, 37, 0);                                              // drum
   var dome = add(new THREE.SphereGeometry(11, 20, 12, 0, Math.PI*2, 0, Math.PI*0.62), 0, 42, 0); dome.scale.y = 1.25;
   add(new THREE.ConeGeometry(1.4, 9, 8), 0, 58, 0);                                                        // finial
@@ -3011,7 +3073,7 @@ var SKY_TOP_DAY  = new THREE.Color(0x4f86c6), SKY_TOP_DUSK  = new THREE.Color(0x
 var SKY_BOT_DAY  = new THREE.Color(0xffcf96), SKY_BOT_DUSK  = new THREE.Color(0xff6a30), SKY_BOT_NIGHT  = new THREE.Color(0x1a1436);
 var SKYLINE_DAY  = new THREE.Color(0xb3968a), SKYLINE_DUSK  = new THREE.Color(0x4a2f55), SKYLINE_NIGHT  = new THREE.Color(0x12132a);
 var SKYLINE2_DAY = new THREE.Color(0xc9a792), SKYLINE2_DUSK = new THREE.Color(0x35203f), SKYLINE2_NIGHT = new THREE.Color(0x0c0c1e);
-var LANDMARK_DAY = new THREE.Color(0xe8bb90), LANDMARK_DUSK = new THREE.Color(0x8a5268), LANDMARK_NIGHT = new THREE.Color(0x1c1b34);
+var LANDMARK_DAY = new THREE.Color(0xa88c78), LANDMARK_DUSK = new THREE.Color(0x8a5268), LANDMARK_NIGHT = new THREE.Color(0x1c1b34);
 var SUN_DAY      = new THREE.Color(0xffe3a0), SUN_DUSK      = new THREE.Color(0xff5a2a), SUN_NIGHT      = new THREE.Color(0x2a3a66);
 // lerp across the three stops: 0..0.5 day->dusk, 0.5..1 dusk->night
 function lerp3(out, a, b, c, t){
@@ -3030,8 +3092,8 @@ function updateSky(t){
   sunHalo.material.opacity = 0.35 * (1 - Math.max(0,(t-0.55)/0.45));
   sunSprite.position.y = 40 - t*38;    // hangs just right of the landmark's dome (golden hour), sinks below the horizon by night
   sunHalo.position.y = sunSprite.position.y;
-  if (window.landmarkMat) lerp3(landmarkMat.color, LANDMARK_DAY, LANDMARK_DUSK, LANDMARK_NIGHT, t);
-  if (window.sunRays){ sunRays.position.y = sunSprite.position.y; sunRays.material.opacity = 0.32 * (1 - Math.min(1, t/0.45)); sunRays.rotation.z += 0.0006; }
+  if (window.landmarkMat){ lerp3(landmarkMat.color, LANDMARK_DAY, LANDMARK_DUSK, LANDMARK_NIGHT, t); if (window.landmarkMat2) landmarkMat2.color.copy(landmarkMat.color); }
+  if (window.sunRays){ sunRays.position.y = sunSprite.position.y; sunRays.material.opacity = 0.12 * (1 - Math.min(1, t/0.45)); sunRays.rotation.z += 0.0006; }
   if (typeof farSkyMat !== 'undefined'){   // tint the distant 3D skyline with the day cycle
     lerp3(farSkyMat.color,  SKYLINE_DAY,  SKYLINE_DUSK,  SKYLINE_NIGHT,  t);
     lerp3(farSkyMat2.color, SKYLINE2_DAY, SKYLINE2_DUSK, SKYLINE2_NIGHT, t);
@@ -4596,7 +4658,7 @@ var BUILDING_TARGET = 18;        // largest horizontal dimension in metres
 var BUILDING_SETBACK = 9;        // how far from road centre to place it
 // building POOL — procedural slots get replaced with random GLB buildings from here.
 // Drop in more building models by calling loadBuildingGLB(window.BUILDINGx_GLB_B64, {...}).
-var buildingDefs = [], buildingDefId = 0;
+var buildingDefs = [], buildingDefId = 0, BLDG_WIN_MATS = window.BLDG_WIN_MATS = [];
 function loadBuildingGLB(b64, opt){
   opt = opt || {};
   if (!b64 || !THREE.GLTFLoader) return;
@@ -4608,7 +4670,7 @@ function loadBuildingGLB(b64, opt){
       box = new THREE.Box3().setFromObject(model); size = box.getSize(new THREE.Vector3());
       var c = box.getCenter(new THREE.Vector3());
       model.position.set(-c.x, -box.min.y, -c.z);
-      model.traverse(function(o){ if (o.isMesh){ o.castShadow = false; o.receiveShadow = true; o.frustumCulled = true; [].concat(o.material).forEach(function(m){ if (m){ m.userData.rigidBend = true; m.needsUpdate = true; } }); } });   // perf: buildings don't cast; rigid bend
+      model.traverse(function(o){ if (o.isMesh){ o.castShadow = false; o.receiveShadow = true; o.frustumCulled = true; [].concat(o.material).forEach(function(m){ if (m){ m.userData.rigidBend = true; m.needsUpdate = true; if (m.emissiveMap){ m.emissive.setRGB(1,1,1); m.emissiveIntensity = 0; BLDG_WIN_MATS.push(m); } } }); } });   // perf: buildings don't cast; rigid bend; baked window-light map (night)
       var holder = new THREE.Group(); holder.add(model);
       box = new THREE.Box3().setFromObject(holder); size = box.getSize(new THREE.Vector3());
       buildingDefs.push({
@@ -4680,10 +4742,10 @@ function dressBuilding(g, def, side){
     g.add(sign); neonSigns.push(sign);
   }
   // rooftop Sintex tank (+stand) and a dish — small, shared geometry, no shadows
-  if (Math.random() < 0.6){                                 // one Sintex tank (single draw call; stands/dishes were costing ~50 calls)
+  if (false && Math.random() < 0.6){                        // 24-Sep: off — placed at the bbox top, they floated above lower roofs (the GLBs carry their own tanks)
     var tank = new THREE.Mesh(_tankGeo, Math.random()<0.65 ? _tankMat : _tankMat2);
     tank.position.set(rand(-w*0.3, w*0.3), h + 0.45 + 0.58, rand(-d*0.3, d*0.3)); g.add(tank);
-  } else if (Math.random() < 0.5){
+  } else if (false){
     var dish = new THREE.Mesh(_dishGeo, _dishMat); dish.position.set(rand(-w*0.35, w*0.35), h + 0.35, rand(-d*0.35, d*0.35));
     dish.rotation.x = -1.15; dish.rotation.y = rand(0,6); g.add(dish);
   }
@@ -6399,12 +6461,12 @@ function goLane(dir){
 }
 function doJump(){
   if (!state.running || state.jumping || state.ducking) return;
-  state.jumping = true; state.vy = 9.2;
+  state.jumping = true; state.vy = 9.2; PROG.bump('jumps');
   burst(player.position.x, 0.2, 1, 0xb09060, 6, 1.5, 2);
 }
 function doDuck(){
   if (!state.running || state.jumping || state.ducking) return;
-  state.ducking = true; state.duckT = 0.7;                   // game-time (see animate): a wall-clock timer un-ducked you early inside crossing slow-mo → toran deaths
+  state.ducking = true; state.duckT = 0.7; PROG.bump('ducks');                   // game-time (see animate): a wall-clock timer un-ducked you early inside crossing slow-mo → toran deaths
 }
 window.addEventListener('keydown', function(e){
   if (e.repeat) return;
@@ -6464,7 +6526,7 @@ function screenUp(id){ var el = $(id); return !!el && !el.classList.contains('hi
 window.addEventListener('keydown', function(e){
   if (e.target && (e.target.tagName === 'INPUT' || e.target.isContentEditable)) return;
   if (screenUp('creditsModal')){ if (e.code === 'Escape' || e.code === 'Enter' || e.code === 'KeyI'){ $('creditsModal').classList.add('hidden'); e.preventDefault(); } return; }
-  if (screenUp('nickModal')) return;
+  if (screenUp('nickModal') || screenUp('misModal')) return;
   if (screenUp('startScreen') && !state.running){
     var cards = [].slice.call(document.querySelectorAll('#vehSelect .vehCard')), ci = cards.findIndex(function(c){ return c.classList.contains('selected'); });
     if (e.code === 'ArrowRight' || e.code === 'ArrowLeft'){ var nx = cards[(ci + (e.code === 'ArrowRight' ? 1 : cards.length - 1)) % cards.length]; if (nx) nx.click(); e.preventDefault(); }
@@ -6808,7 +6870,7 @@ var CLOUD = (function(){
   function ensurePid(){ if (!profile.pid){ profile.pid = genPid(); saveProfile(); } return profile.pid; }
   function saveBlob(){
     return { pid:ensurePid(), nick:profile.nick || 'Anon', best:profile.best||0, coins:profile.coins, runs:profile.runs||0,
-             profile:{ owned:profile.owned, equipped:profile.equipped, v:profile.v } };
+             profile:{ owned:profile.owned, equipped:profile.equipped, v:profile.v, xp:profile.xp||0, level:profile.level||1, missions:profile.missions||null } };
   }
   function sync(){ if (!on() || !profile.nick) return; var b = saveBlob(); b.t = 'save'; post(b); }
   function syncSoon(){ clearTimeout(syncT); syncT = setTimeout(sync, 2500); }          // garage purchases: coalesce into one save
@@ -6831,7 +6893,7 @@ var CLOUD = (function(){
     get({ action:'load', code:code }).then(function(r){
       if (!r || !r.ok){ cb(false, r && r.err === 'not found' ? 'No driver with that code.' : 'Could not load that code.'); return; }
       profile.pid = r.pid; profile.nick = r.nick; profile.best = Math.max(profile.best||0, r.best||0); profile.coins = r.coins; profile.runs = r.runs||0;
-      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; }
+      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; if (r.profile.level){ profile.level = r.profile.level; profile.xp = r.profile.xp||0; } if (r.profile.missions) profile.missions = r.profile.missions; }
       saveProfile(); profile = loadProfile();                                             // re-run the normaliser/migrations on the restored data
       selectedVehicle = profile.equipped.rickshaw || 'rickshaw';
       document.querySelectorAll('.vehCard').forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); });
@@ -7019,7 +7081,23 @@ var FEEL = (function(){
         if (!under && typeof GANTRY !== 'undefined' && Math.abs(GANTRY.group.position.z) < 1.2 && GANTRY.group.visible) under = true;
         send.gain.setTargetAtTime(on*(under ? 0.55 : 0), t, under ? 0.05 : 0.25); } }
   }
+  // a flock of pigeons wheeling across the sky every half-minute or so (one instanced draw call), and sunlit dust in the air by day
+  var flock = null, flockT = 8, fM = new THREE.Matrix4(), fQ = new THREE.Quaternion(), fS = new THREE.Vector3(), fP = new THREE.Vector3(), fE = new THREE.Euler();
+  function flockTick(dt){
+    if (!flock && typeof crowGeo !== 'undefined'){ flock = new THREE.InstancedMesh(crowGeo, crowMat, 11); flock.frustumCulled = false; flock.visible = false; flock.userData = { t:0 }; scene.add(flock); }
+    if (!flock) return; flockT -= dt;
+    if (flockT <= 0 && !flock.visible){ flock.visible = true; flock.userData = { t:0, dir:Math.random() < 0.5 ? 1 : -1, y:rand(24, 36), z:rand(-110, -60), sp:rand(9, 13) }; }
+    if (!flock.visible) return; var U = flock.userData; U.t += dt; var x0 = -U.dir*70 + U.dir*U.sp*U.t;
+    for (var i=0;i<11;i++){ var row = Math.ceil(i/2), side = i % 2 ? 1 : -1; fP.set(x0 - U.dir*row*1.6, U.y + Math.sin(U.t*1.3 + i)*0.4 - row*0.25, U.z + side*row*1.4);
+      fE.set(0, U.dir > 0 ? -Math.PI/2 : Math.PI/2, 0); fQ.setFromEuler(fE); var fl = 1 + Math.sin(U.t*14 + i*0.9)*0.55; fS.set(2.2, 2.2*fl, 2.2); fM.compose(fP, fQ, fS); flock.setMatrixAt(i, fM); }
+    flock.instanceMatrix.needsUpdate = true; if (Math.abs(x0) > 80 && U.t > 3){ flock.visible = false; flockT = rand(20, 40); }
+  }
+  function dustTick(dt){
+    if (!state.running || typeof dark === 'undefined') return;
+  }
   return {
+    flockTick:flockTick,
+    dust:function(dt, dayDark){ if (!state.running || dayDark > 0.5 || (monsoon && monsoon.active)) return; var n = dt*7; while (n > 0){ if (Math.random() < n) PFX.spawn('softAdd', rand(-6, 6) + state.x*0.5, rand(0.6, 4.5), rand(-14, -2), rand(-0.2, 0.2), rand(-0.05, 0.12), state.speed*0.98, rand(0.035, 0.07), 0xffe2b0, 0.55, -0.05, 0); n -= 1; } },
     update:update, skid:skid, coinFly:coinFly, haptic:haptic, whoosh:whoosh, lead:lead,
     nearMiss:function(o){ state.shake = Math.max(state.shake, 0.16); fovKick = Math.min(6, fovKick + 3.5); whoosh((o.root.position.x - player.position.x)/3, o.kind === 'truck' || o.kind === 'bus' || o.kind === 'tanker'); haptic(18); },
     land:function(){ squash = 1; haptic(12); },
@@ -7028,7 +7106,96 @@ var FEEL = (function(){
     pass:function(o){ var big = o.kind === 'truck' || o.kind === 'bus' || o.kind === 'tanker' || o.kind === 'tempo'; whoosh((o.root.position.x - player.position.x)/3.5, big); }
   };
 })();
+
+/* ===================== PROG: daily missions + driver levels (24-Sep) =====================
+   Three missions a day (seeded by the local date, scaled by level), progress counted live during real runs (test rides
+   don't count), claimed for coins + XP. XP per run = score/40 + near misses×2 + coins. Everything lives in `profile`
+   (saved locally + synced in the cloud save blob). */
+var PROG = (function(){
+  var POOL = [
+    { k:'coins',   t:'Collect {n} coins',            b:120,  r:120 }, { k:'near',  t:'Pull off {n} near misses', b:8,   r:150 },
+    { k:'jumps',   t:'Jump {n} times',                b:20,   r:100 }, { k:'ducks', t:'Duck {n} times',           b:12,  r:100 },
+    { k:'honks',   t:'Honk {n} times',                b:30,   r:80  }, { k:'pickups', t:'Grab {n} power-ups',     b:4,   r:120 },
+    { k:'cows',    t:'Overtake {n} cows',             b:8,    r:120 }, { k:'dist',  t:'Drive {n} m in total',     b:3000, r:150 },
+    { k:'runs',    t:'Finish {n} runs',               b:3,    r:100 }, { k:'score', t:'Score {n} in one run',     b:3000, r:200, max:true },
+    { k:'combo',   t:'Hit a ×{n} combo',              b:4,    r:150, max:true, cap:8 }, { k:'shoo', t:'Shoo away the Badshah {n}×', b:1, r:250, minLvl:3 }
+  ];
+  var run = null;
+  function today(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
+  function need(L){ return 250 + 150*(L-1); }
+  function lvl(){ if (!profile.level) profile.level = 1; if (profile.xp == null) profile.xp = 0; return profile.level; }
+  function seedRng(str){ var h = 2166136261; for (var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return function(){ h ^= h << 13; h ^= h >>> 17; h ^= h << 5; return ((h >>> 0) % 100000) / 100000; }; }
+  function ensure(){
+    var day = today(); lvl();
+    if (profile.missions && profile.missions.day === day && profile.missions.list && profile.missions.list.length) return profile.missions;
+    var rnd = seedRng(day + ':' + (profile.nick || 'x')), pool = POOL.filter(function(m){ return !m.minLvl || profile.level >= m.minLvl; }), list = [];
+    while (list.length < 3 && pool.length){ var i = Math.floor(rnd()*pool.length), m = pool.splice(i, 1)[0], sc = 1 + 0.15*Math.min(profile.level - 1, 10);
+      var n = m.cap ? Math.min(m.cap, Math.round(m.b + (profile.level > 4 ? 1 : 0))) : Math.round(m.b * sc / (m.b >= 1000 ? 500 : m.b >= 50 ? 10 : 1)) * (m.b >= 1000 ? 500 : m.b >= 50 ? 10 : 1);
+      list.push({ k:m.k, n:n, p:0, r:Math.round(m.r * (1 + 0.1*Math.min(profile.level-1, 10)) / 10) * 10, done:false, claimed:false }); }
+    profile.missions = { day:day, list:list }; saveProfile(); return profile.missions;
+  }
+  function text(m){ var d = POOL.find(function(x){ return x.k === m.k; }); return d ? d.t.replace('{n}', m.n.toLocaleString('en-IN')) : m.k; }
+  function isMax(k){ var d = POOL.find(function(x){ return x.k === k; }); return !!(d && d.max); }
+  function start(){ run = { coins:0, near:0, jumps:0, ducks:0, honks:0, pickups:0, cows:0, dist:0, combo:1, shoo:0 }; ensure(); }
+  function progress(k, v, isMaxVal){
+    var M = ensure(); M.list.forEach(function(m){ if (m.k !== k || m.done) return;
+      m.p = isMaxVal ? Math.max(m.p, v) : m.p + v; if (m.p >= m.n){ m.p = m.n; m.done = true; if (state.running) { popup('🎯 MISSION DONE — ' + text(m), 'popEvent', 50, 18); if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.bell(); } catch(e){} } } });
+  }
+  function bump(k, v){ if (!run || !state.running || state.practice) return; v = v == null ? 1 : v; run[k] = (run[k]||0) + v; progress(k, v, false); }
+  function maxv(k, v){ if (!run || !state.running || state.practice) return; if (v > (run[k]||0)) run[k] = v; progress(k, v, true); }
+  function end(){                                             // real run finished (not a test ride): fold totals, award XP, return the summary
+    if (!run) return null; var r = run; run = null;
+    r.dist = Math.floor(state.dist); r.score = state.score; progress('dist', r.dist, false); progress('runs', 1, false); progress('score', r.score, true);
+    var xp = Math.floor(r.score/40) + r.near*2 + r.coins, before = { lvl:lvl(), xp:profile.xp }, ups = 0, reward = 0;
+    profile.xp += xp; while (profile.xp >= need(profile.level)){ profile.xp -= need(profile.level); profile.level++; ups++; var c = 100 + 25*profile.level; reward += c; profile.coins += c; }
+    saveProfile(); if (typeof CLOUD !== 'undefined') try { CLOUD.syncSoon(); } catch(e){}
+    r.xp = xp; r.before = before; r.ups = ups; r.reward = reward; return r;
+  }
+  function claim(i){ var M = ensure(), m = M.list[i]; if (!m || !m.done || m.claimed) return 0; m.claimed = true; profile.coins += m.r; profile.xp += 60;
+    while (profile.xp >= need(profile.level)){ profile.xp -= need(profile.level); profile.level++; profile.coins += 100 + 25*profile.level; }
+    saveProfile(); if (typeof CLOUD !== 'undefined') try { CLOUD.syncSoon(); } catch(e){} renderAll(); return m.r; }
+  function claimable(){ return ensure().list.filter(function(m){ return m.done && !m.claimed; }).length; }
+  function renderAll(){
+    var M = ensure(), L = lvl(), frac = Math.min(1, profile.xp / need(L));
+    var set = function(id, v, prop){ var e = document.getElementById(id); if (e) e[prop || 'textContent'] = v; };
+    set('lvlNum', L); set('misLvlNum', L); set('lvlXp', profile.xp + ' / ' + need(L) + ' XP'); set('misLvlXp', profile.xp + ' / ' + need(L) + ' XP');
+    ['lvlFill','misLvlFill'].forEach(function(id){ var e = document.getElementById(id); if (e) e.style.width = (frac*100).toFixed(1) + '%'; });
+    var c = claimable(), bd = document.getElementById('misBadge'); if (bd){ bd.textContent = c; bd.classList.toggle('hidden', !c); }
+    var list = document.getElementById('misList'); if (list){ list.innerHTML = M.list.map(function(m, i){ var pc = Math.min(100, m.p/m.n*100);
+      return '<div class="misRow' + (m.claimed ? ' claimed' : m.done ? ' done' : '') + '"><div class="misTxt">' + text(m) + '</div>' +
+        (m.done && !m.claimed ? '<button class="misClaim" data-claim="' + i + '">CLAIM ₹' + m.r + '</button>' : '<div class="misRew">' + (m.claimed ? '✓ claimed' : '₹' + m.r) + '</div>') +
+        '<div class="misBar"><em style="width:' + pc.toFixed(0) + '%"></em></div>' + (m.done && !m.claimed ? '' : '<div class="misProg">' + Math.floor(m.p).toLocaleString('en-IN') + ' / ' + m.n.toLocaleString('en-IN') + '</div>') + '</div>'; }).join(''); }
+    var d = new Date(), mid = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1), h = Math.max(0, Math.floor((mid - d)/3600000)); set('misReset', 'new missions in ' + h + 'h');
+  }
+  function open(){ renderAll(); document.getElementById('misModal').classList.remove('hidden'); setTimeout(function(){ var b = document.querySelector('#misList .misClaim') || document.getElementById('misClose'); if (b) b.focus(); }, 30); }
+  function close(){ document.getElementById('misModal').classList.add('hidden'); var b = document.getElementById('missionsBtn'); if (b) b.focus(); }
+  document.addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-claim]'); if (!c) return; var got = claim(+c.getAttribute('data-claim')); if (got){ popup('+₹' + got + ' · +60 XP', 'popEvent', 50, 30); var go = document.getElementById('goMis'); if (go && !document.getElementById('gameOverScreen').classList.contains('hidden')) results.renderMis(); } });
+  var results = {
+    show:function(r){
+      var st = document.getElementById('goStats'), xpBox = document.getElementById('goXp');
+      if (!r){ st.innerHTML = ''; xpBox.style.display = 'none'; document.getElementById('goMis').innerHTML = ''; return; }
+      xpBox.style.display = '';
+      st.innerHTML = '<span>🛣️ ' + r.dist.toLocaleString('en-IN') + ' m</span><span>₹ ' + r.coins + '</span><span>💨 ' + r.near + ' near misses</span><span>×' + r.combo + ' best combo</span>';
+      var fill = document.getElementById('goXpFill'), L0 = r.before.lvl; document.getElementById('goLvlNum').textContent = L0; fill.style.transition = 'none'; fill.style.width = (Math.min(1, r.before.xp/need(L0))*100) + '%'; void fill.offsetWidth; fill.style.transition = '';
+      document.getElementById('goXpTxt').textContent = '+' + r.xp + ' XP'; xpBox.classList.remove('lvlUp');
+      setTimeout(function(){ if (r.ups){ fill.style.width = '100%'; setTimeout(function(){ document.getElementById('goLvlNum').textContent = profile.level; xpBox.classList.add('lvlUp'); fill.style.transition = 'none'; fill.style.width = '0%'; void fill.offsetWidth; fill.style.transition = '';
+            fill.style.width = (profile.xp/need(profile.level)*100) + '%'; document.getElementById('goXpTxt').textContent = 'LEVEL UP! +₹' + r.reward; if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.bell(); } catch(e){} }, 950); }
+        else fill.style.width = (profile.xp/need(profile.level)*100) + '%'; }, 500);
+      results.renderMis();
+    },
+    renderMis:function(){ var M = ensure(); document.getElementById('goMis').innerHTML = M.list.map(function(m, i){ var pc = Math.min(100, m.p/m.n*100);
+      return '<div class="gm' + (m.done ? ' done' : '') + '">🎯 ' + text(m) + ' <i><em style="width:' + pc.toFixed(0) + '%"></em></i>' + (m.done && !m.claimed ? '<button data-claim="' + i + '">CLAIM ₹' + m.r + '</button>' : m.claimed ? '✓' : '') + '</div>'; }).join(''); renderAll(); }
+  };
+  return { start:start, bump:bump, max:maxv, end:end, open:open, close:close, renderAll:renderAll, results:results, claimable:claimable, ensure:ensure };
+})();
+$('missionsBtn').addEventListener('click', function(){ PROG.open(); });
+$('misClose').addEventListener('click', function(){ PROG.close(); });
+$('misModal').addEventListener('click', function(e){ if (e.target === this) PROG.close(); });
+window.addEventListener('keydown', function(e){ if (screenUp('misModal')){ if (e.code === 'Escape'){ PROG.close(); e.preventDefault(); e.stopImmediatePropagation(); } return; }
+  if (e.code === 'KeyM' && screenUp('startScreen') && !state.running){ PROG.open(); } }, true);
+setTimeout(function(){ try { PROG.renderAll(); } catch(e){} }, 0);
 function startGame(){
+  PROG.start();
   state.paused = false; var _pm = document.getElementById('pauseMenu'); if (_pm) _pm.classList.add('hidden');
   state.practice = null; var _pc = document.getElementById('practiceChip'); if (_pc) _pc.classList.add('hidden');
   if (typeof attractStop === 'function') attractStop();   // menu traffic (trucks!) must leave with the menu — it used to stay parked on the road as a solid obstacle
@@ -7079,12 +7246,14 @@ function gameOver(){
   state.score = Math.floor(state.dist) + state.bonus;
   if (state.practice){ practiceFinish('crash'); return; }                            // garage test ride: no coins banked, no board, no cloud row — straight back to the garage
   if (state.coins > 0){ profile.coins += state.coins; saveProfile(); }   // bank this run's coins into the wallet
+  var _runSum = PROG.end();
   var qualifies = scoreQualifies(state.score);
   var newBest = state.score > (profile.best||0);
   if (typeof CLOUD !== 'undefined') try { CLOUD.runEnd(); } catch(e){}                 // score row + save + diagnostics (no-op offline)
   setTimeout(function(){
     $('quip').textContent = '"' + pick(QUIPS) + '"';
-    $('finalScore').textContent = 'SCORE: ' + state.score;
+    (function(el, to){ var t0 = performance.now(), dur = Math.min(1400, 500 + to/40); (function step(){ var k = Math.min(1, (performance.now()-t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = 'SCORE: ' + fmt(Math.round(to*e)); if (k < 1) requestAnimationFrame(step); })(); })($('finalScore'), state.score);
+    PROG.results.show(_runSum);
     if (profile.nick){                                                                 // named driver: no initials prompt, board saves itself
       var idxN = qualifies ? addScore(profile.nick, state.score) : -1;
       $('bestScoreLine').innerHTML = newBest ? '<span class="newBest">★ NEW PERSONAL BEST! ★</span>' : 'BEST: ' + (profile.best||0);
@@ -7595,7 +7764,7 @@ function badshahHonkBack(){                                 // your horn during 
   var b = badshah; if (!b) return;
   if (window.PERF && b.phase !== 'roam') PERF.mark('honk @' + b.phase + (b.hornWindow ? ' window' : '') + ' z=' + b.z.toFixed(1));
   if (b.phase === 'tell' && !b.hornWindow){ b.earlyHonk = b.t; if (!b.earlyTold){ b.earlyTold = true; popup('…wait till he is on your bumper', 'popSub', 50, 44); } return; }   // remembered: a honk just before the window still counts
-  if (b.phase === 'swipe' && !b.shooed && b.swipeT > 0.3){ b.shooed = true; b.xOff = 0; state.bonus += 40*state.mult; popup('🎺 SHOO! +' + (40*state.mult), 'popNear', 50, 40); say('badshah', pick(['Theek hai, theek hai!', 'Chill, bro!']), 50 + b.x*6, 26); return; }   // honking at the show-off sends him back to his lane
+  if (b.phase === 'swipe' && !b.shooed && b.swipeT > 0.3){ b.shooed = true; b.xOff = 0; state.bonus += 40*state.mult; PROG.bump('shoo'); popup('🎺 SHOO! +' + (40*state.mult), 'popNear', 50, 40); say('badshah', pick(['Theek hai, theek hai!', 'Chill, bro!']), 50 + b.x*6, 26); return; }   // honking at the show-off sends him back to his lane
   if (b.phase !== 'tell' || !b.hornWindow) return;
   b.hornWindow = false; b.phase = 'recover'; b.tz = rand(-50, -34); b.lane = b.lane === 1 ? pick([0,2]) : 1;
   b.lunges++; bossFill(b.lunges / b.need); var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE ' + b.lunges + ' / ' + b.need;
@@ -7664,7 +7833,7 @@ function bumpEl(id){ var e=$(id); if(!e) return; e.classList.remove('bump'); voi
 function flashScreen(){ var f=$('flash'); if(!f) return; f.classList.remove('on'); void f.offsetWidth; f.classList.add('on'); }
 var lastNearPop = 0;
 function addCombo(){
-  state.mult = Math.min(8, state.mult + 1);
+  state.mult = Math.min(8, state.mult + 1); PROG.max('combo', state.mult);
   state.comboTimer = 4.0;            // seconds before the multiplier decays
   bumpEl('multChip');
 }
@@ -7687,7 +7856,7 @@ function checkNearMiss(o){
         trafficHonk(o.kind);
       }
       reactBystanders(o.root.position.x);
-      FEEL.nearMiss(o);
+      FEEL.nearMiss(o); PROG.bump('near');
       addCombo();
       state.bonus += 25 * state.mult;
       var now = Date.now();
@@ -7932,7 +8101,7 @@ var hornCooldownUntil = 0;
 function hornNow(){
   if (!state.running) return;
   if (badshah) badshahHonkBack();                           // every press reaches the boss — the 650 ms sound cooldown below used to eat presses mid-tell
-  var now = Date.now(); if (now < hornCooldownUntil) return; hornCooldownUntil = now + 650;
+  var now = Date.now(); if (now < hornCooldownUntil) return; hornCooldownUntil = now + 650; PROG.bump('honks');
   playHorn(equippedOrTrial('horn'));
   if (cop) cop.stations.forEach(function(st){                                   // polite honk while a single-lane havaldar signals → he waves you through
     if (st.phase === 'signal' && st.hornWindow && !st.spikes && st.lanes.length === 1 && st.variant !== 'radar' && !st.waved){
@@ -8708,7 +8877,7 @@ function menuEnter(){                                                  // entran
   ss.classList.remove('enter', 'launch', 'dim'); void ss.offsetWidth; ss.classList.add('enter');
   attract.roll = 0; attract.launch = null; attract.turn = null; attract.turnYaw = null; attract.spin = null;
   var lk = document.querySelector('.vehCard[data-veh="classic"]'); if (lk) lk.classList.toggle('locked', !ownsItem('rickshaw','classic'));
-  rideThumbs();
+  rideThumbs(); if (typeof PROG !== 'undefined') try { PROG.renderAll(); } catch(e){}
 }
 window.menuEnter = menuEnter;
 function menuRideSwap(dir){                                            // card row nudges toward the pick; the auto spins and swaps model mid-turn
@@ -9159,6 +9328,7 @@ function animate(){
       o.passed = true;
       if ((o.drift || o.isBike) && Math.abs(o.root.position.x - player.position.x) < 4.5 && !o.nearMissed) FEEL.pass(o);
       if (o.kind === 'bus') shout('bus', 0.35, o.root.position.x);
+      if (o.kind === 'cow' || o.cow) PROG.bump('cows');
     }
     if (o.root.position.z > KILL_BEHIND){
       scene.remove(o.root); obstacles.splice(i,1); continue;
@@ -9217,7 +9387,7 @@ function animate(){
       state.bonus += 10 * state.mult;
       if (state.comboTimer > 0) state.comboTimer = Math.max(state.comboTimer, 2.5);  // coins sustain combo
       chime(state.coins);
-      coinPop(c.mesh.position.x, c.mesh.position.y, 0); FEEL.coinFly(c.mesh.position); if (state.coins % 5 === 0) FEEL.haptic(8);
+      coinPop(c.mesh.position.x, c.mesh.position.y, 0); FEEL.coinFly(c.mesh.position); PROG.bump('coins'); if (state.coins % 5 === 0) FEEL.haptic(8);
       bumpEl('coinPill');
       scene.remove(c.mesh); coins.splice(i,1);
     }
@@ -9235,6 +9405,7 @@ function animate(){
         Math.abs(pu.mesh.position.x - player.position.x) < 1.1){
       powerSound(true);
       burst(pu.mesh.position.x, 1.4, 0, pu.kind==='turbo'?0x30e0ff:pu.kind==='chai'?0xc08040:pu.kind==='mirchi'?0x7dff4a:0xff8c2a, 10, 2.5, 3.5);
+      PROG.bump('pickups');
       if (pu.kind==='mirchi'){ startChakkar(); }
       else if (pu.kind==='chai'){ state.slowmo = 5; }
       else if (pu.kind==='ganesh'){ state.shield = true; }
@@ -9271,6 +9442,13 @@ function animate(){
     scene.traverse(function(o){ var m = o.material; if (!m || !m.isMeshStandardMaterial) return;
       if (m.userData.envBase == null) m.userData.envBase = m.envMapIntensity; m.envMapIntensity = m.userData.envBase*envK; });
   }
+  var nightK = Math.max(0, (dark - 0.3) / 0.7);
+  FEEL.flockTick(dt); FEEL.dust(dt, dark);
+  LAMP_POOL_MAT.opacity = nightK*0.55; LAMP_CONE_MAT.opacity = nightK*0.07; LAMP_POOL_MAT.visible = LAMP_CONE_MAT.visible = nightK > 0.01;
+  if (BLDG_WIN_MATS.length && Math.abs((animate._winK || 0) - nightK) > 0.01){ animate._winK = nightK; for (var wmi=0; wmi<BLDG_WIN_MATS.length; wmi++) BLDG_WIN_MATS[wmi].emissiveIntensity = nightK*1.25; }
+  // wet road: monsoon soaks it (darker, glossy, more sky in it); it dries over ~25 s after the rain stops
+  animate._wet = Math.max(0, Math.min(1, (animate._wet || 0) + (monsoon.active ? dt*0.5 : -dt/25)));
+  var wet = animate._wet; road.material.roughness = 0.34 - wet*0.24; road.material.color.setScalar(1 - wet*0.32); road.material.userData.envBase = 1.35 * (1 + wet*0.9);
   var lampGlow = 0.15 + dark*1.0;
   lampBulbs.forEach(function(b){ b.material.emissive.setRGB(lampGlow, lampGlow*0.62, lampGlow*0.18); });
   // neon shop signs wake up at dusk (a few of them buzz and flicker)
