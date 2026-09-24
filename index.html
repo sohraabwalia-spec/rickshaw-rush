@@ -634,6 +634,50 @@ window.addEventListener('error', function(e){
     .g2Detail { display:none; } .g2Head h2 { font-size:26px; } .g2Img { height:11vh; margin-top:18px; } .g2Card.big .g2Line { display:none; } .g2Title h1 { font-size:20px; }
     .g2Tools { top:calc(44vh - 48px); bottom:auto; left:auto; right:10px; transform:none; } .g2Tools button { width:34px; height:34px; } .g2Hint { top:calc(44vh - 22px); bottom:auto; left:12px; transform:none; font-size:10px; }
   }
+
+  /* ===================== HUD v2 (24-Sep, from S's concept frame) ===================== */
+  #hud #scoreWrap { top:max(14px, env(safe-area-inset-top)); left:max(22px, env(safe-area-inset-left)); text-shadow:none; }
+  #hud #scoreVal { font:800 clamp(34px,6.2vw,62px)/1 'Baloo 2','Trebuchet MS',sans-serif; color:#fff; letter-spacing:.5px; text-shadow:0 3px 0 rgba(0,0,0,.55), 0 4px 14px rgba(0,0,0,.45); -webkit-text-stroke:1.2px rgba(20,14,8,.55); }
+  #bestLine { display:flex; align-items:center; gap:6px; margin-top:2px; font:700 clamp(14px,2.4vw,22px)/1 'Baloo 2',sans-serif; color:#ffd24a; text-shadow:0 2px 0 rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.5); }
+  #bestLine b { color:#fff; font-weight:800; } #bestLine svg { width:1.15em; height:.9em; filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
+  #comboCap { position:absolute; top:max(14px, env(safe-area-inset-top)); left:50%; transform:translateX(-50%) scale(.9); display:flex; align-items:center; gap:0; opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; }
+  #comboCap.on { opacity:1; transform:translateX(-50%) scale(1); }
+  #comboBar { width:clamp(120px,15vw,200px); height:clamp(20px,2.6vw,30px); border-radius:999px; padding:4px; background:rgba(28,30,32,.78); border:2px solid rgba(255,255,255,.12); box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  #comboFill { display:block; height:100%; width:50%; border-radius:999px; background:linear-gradient(180deg,#ffe066,#f2b21c); box-shadow:inset 0 -3px 0 rgba(160,90,0,.35); transition:width .12s linear; }
+  #hud #multChip { margin:0 0 0 -14px; padding:4px 16px 4px 18px; border-radius:999px; background:rgba(28,30,32,.86); border:2px solid rgba(255,255,255,.12); font:800 clamp(24px,3.6vw,40px)/1 'Baloo 2',sans-serif; color:#ffcf2e;
+    -webkit-text-stroke:1.6px #5a3500; text-shadow:0 3px 0 #7a4a00; box-shadow:0 4px 14px rgba(0,0,0,.35); opacity:1; transform:none; }
+  #hud #multChip.bump { animation:chipBump .32s ease; }
+  #hud #coinPill { position:absolute; top:max(14px, env(safe-area-inset-top)); right:calc(max(14px, env(safe-area-inset-right)) + clamp(52px,6vw,68px)); margin:0; display:flex; align-items:center; gap:10px; height:clamp(40px,5.4vw,60px);
+    padding:0 20px 0 6px; border-radius:999px; background:rgba(28,30,32,.72); border:2px solid rgba(255,255,255,.1); font:800 clamp(18px,2.8vw,30px)/1 'Baloo 2',sans-serif; color:#fff; box-shadow:0 4px 14px rgba(0,0,0,.3); }
+  .hudCoin { width:clamp(30px,4.2vw,48px); height:clamp(30px,4.2vw,48px); border-radius:50%; display:flex; align-items:center; justify-content:center; font:800 clamp(16px,2.4vw,26px)/1 'Baloo 2',sans-serif; color:#8a5400;
+    background:radial-gradient(circle at 35% 30%, #fff1a0, #ffc928 50%, #d98c0a 90%); box-shadow:inset 0 0 0 3px #e8a414, inset 0 0 0 5px #ffe27a, 0 2px 4px rgba(0,0,0,.4); }
+  #pauseBtn { position:absolute; top:max(14px, env(safe-area-inset-top)); right:max(14px, env(safe-area-inset-right)); width:clamp(40px,5.4vw,60px); height:clamp(40px,5.4vw,60px); border-radius:12px; cursor:pointer; pointer-events:auto;
+    background:rgba(28,30,32,.78); border:2px solid rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center; gap:18%; box-shadow:0 4px 14px rgba(0,0,0,.35); }
+  #pauseBtn i { width:14%; height:44%; border-radius:3px; background:#fff; } #pauseBtn:active { transform:scale(.94); }
+  #hud #powerStack { top:calc(max(14px, env(safe-area-inset-top)) + clamp(52px,6.4vw,74px)); }
+  #hud #bossBar { top:calc(max(14px, env(safe-area-inset-top)) + clamp(40px,5vw,56px)); }
+  /* controls: white-ringed glass discs */
+  #hud .ctrl { width:clamp(64px,8.6vw,108px); height:clamp(64px,8.6vw,108px); bottom:max(26px, env(safe-area-inset-bottom)); color:#fff; background:rgba(20,20,22,.18); border:3px solid rgba(255,255,255,.85); box-shadow:0 4px 18px rgba(0,0,0,.28), inset 0 0 18px rgba(0,0,0,.12); backdrop-filter:blur(3px); }
+  #hud .ctrl svg { width:36%; height:36%; filter:drop-shadow(0 2px 2px rgba(0,0,0,.35)); }
+  #hud #ctrlLeft { left:max(6vw, 24px); } #hud #ctrlRight { right:max(6vw, 24px); }
+  #hud #ctrlUp { bottom:calc(max(26px, env(safe-area-inset-bottom)) + 16px); }
+  #hud #ctrlHorn { left:max(2.4vw, 16px); bottom:calc(max(26px, env(safe-area-inset-bottom)) + clamp(64px,8.6vw,108px) + 22px); width:clamp(52px,6.2vw,80px); height:clamp(52px,6.2vw,80px); background:rgba(255,255,255,.92); border:3px solid rgba(255,255,255,.95); }
+  #hud #ctrlHorn svg { width:62%; height:62%; }
+  #duckHint { position:absolute; left:50%; bottom:max(6px, env(safe-area-inset-bottom)); transform:translateX(-50%); display:flex; align-items:center; gap:6px; font:600 clamp(11px,1.4vw,15px)/1 'Oswald','Baloo 2',sans-serif; letter-spacing:1.5px; color:rgba(255,255,255,.88); text-shadow:0 1px 4px rgba(0,0,0,.7); transition:opacity .8s; }
+  #duckHint svg { width:1.2em; height:1.2em; } #duckHint.gone { opacity:0; }
+  /* pause */
+  #pauseMenu { position:absolute; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; background:rgba(12,8,6,.55); backdrop-filter:blur(4px); pointer-events:auto; }
+  #pauseMenu.hidden { display:none; }
+  .pmCard { width:min(86vw,340px); padding:22px 22px 16px; border-radius:16px; background:rgba(28,30,32,.94); border:2px solid rgba(255,255,255,.14); box-shadow:0 20px 50px rgba(0,0,0,.5); text-align:center; font-family:'Baloo 2',sans-serif; color:#fff; }
+  .pmTitle { font:400 34px/1 'Permanent Marker',sans-serif; color:#ffcf2e; margin-bottom:16px; letter-spacing:1px; }
+  .pmBtn { display:block; width:100%; height:50px; border:0; border-radius:10px; cursor:pointer; font:800 20px/1 'Baloo 2',sans-serif; letter-spacing:1px; }
+  .pmGo { background:linear-gradient(180deg,#ffe066,#f2b21c); color:#2a1c05; box-shadow:0 4px 0 #9a6a08; }
+  .pmQuit { margin-top:12px; height:40px; background:transparent; border:2px solid rgba(255,255,255,.25); color:rgba(255,255,255,.8); font-size:15px; }
+  .pmRow { display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-weight:700; font-size:17px; }
+  #pauseMenu #muteBtn { position:static; font-size:18px; } #pauseMenu #volSlider { position:static; width:150px; opacity:1; }
+  .pmHint { margin-top:12px; font-size:12px; opacity:.55; letter-spacing:1px; }
+  @media (max-width:760px){ #hud #coinPill { padding-right:12px; } #comboBar { width:90px; } }
+  @media (max-width:560px){ #comboCap { top:calc(max(14px, env(safe-area-inset-top)) + 58px); } #hud #multChip { font-size:24px; } }
   body.inGarage #perfHud { display:none !important; }
   canvas.chakkar { animation:chakkarHue 2.4s ease-in-out infinite alternate; } @keyframes chakkarHue { from { filter:saturate(1.5) hue-rotate(-18deg) contrast(1.05); } to { filter:saturate(1.7) hue-rotate(28deg) contrast(1.08); } }
   #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
@@ -648,19 +692,28 @@ window.addEventListener('error', function(e){
   <div id="hud" class="hidden">
     <div id="scoreWrap">
       <div id="scoreVal">0</div>
-      <div id="multChip">★ x2</div>
-      <div id="coinPill">🪙 <span id="coinNum">0</span></div>
+      <div id="bestLine"><svg viewBox="0 0 24 18"><path d="M1 16 0 4l6 5 6-9 6 9 6-5-1 12z" fill="#ffc928"/></svg>Best <b id="bestVal">0</b></div>
     </div>
+    <div id="comboCap"><div id="comboBar"><i id="comboFill"></i></div><div id="multChip">x2</div></div>
+    <div id="coinPill"><span class="hudCoin">₹</span><span id="coinNum">0</span></div>
+    <div id="pauseBtn" title="Pause (Esc)"><i></i><i></i></div>
     <div id="powerStack"></div>
     <div id="bossBar" class="hidden"><div id="bossLabel">⚡ RIDER DUEL</div><div id="bossTrack"><div id="bossFill"></div></div></div>
     <div id="bossHint" class="hidden"></div>
-    <input id="volSlider" type="range" min="0" max="100" value="18" title="Music volume">
-    <div id="muteBtn">🔊</div>
+    <div id="pauseMenu" class="hidden"><div class="pmCard">
+      <div class="pmTitle">PAUSED</div>
+      <button class="pmBtn pmGo" id="pmResume">▶ RESUME</button>
+      <div class="pmRow"><span>Sound</span><div id="muteBtn">🔊</div></div>
+      <div class="pmRow"><span>Music</span><input id="volSlider" type="range" min="0" max="100" value="18" title="Music volume"></div>
+      <button class="pmBtn pmQuit" id="pmQuit">End run</button>
+      <div class="pmHint">Esc — resume</div>
+    </div></div>
     <div id="controls">
-      <div class="ctrl" id="ctrlLeft">‹</div>
-      <div class="ctrl" id="ctrlUp">▲</div>
-      <div class="ctrl" id="ctrlRight">›</div>
-      <div class="ctrl" id="ctrlHorn" title="Horn (H)">📯</div>
+      <div class="ctrl" id="ctrlLeft"><svg viewBox="0 0 24 24"><path d="M15 4 7 12l8 8" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="ctrl" id="ctrlUp"><svg viewBox="0 0 24 24"><path d="M12 5 21 18H3z" fill="currentColor"/></svg></div>
+      <div class="ctrl" id="ctrlRight"><svg viewBox="0 0 24 24"><path d="m9 4 8 8-8 8" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="ctrl" id="ctrlHorn" title="Horn (H)"><svg viewBox="0 0 48 40"><path fill="#e9a91a" stroke="#6b4a08" stroke-width="1.6" d="M4 16h6l24-12v32L10 24H4z"/><path fill="#f6d36a" d="M13 26h5l3 9h-5z"/><path fill="none" stroke="#6b4a08" stroke-width="2.4" stroke-linecap="round" d="M38 13a9 9 0 0 1 0 14"/></svg></div>
+      <div id="duckHint"><svg viewBox="0 0 24 24"><path d="m6 6 6 6 6-6M6 12l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>SWIPE TO DUCK</div>
     </div>
   </div>
   <div id="flash"></div>
@@ -1554,7 +1607,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-j';
+var BUILD_TAG = '24-Sep-a';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1914,10 +1967,19 @@ var road = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W, 400, 1, 100),
 road.rotation.x = -Math.PI/2; road.position.z = -160; road.receiveShadow = true;
 scene.add(road);
 
-// plain concrete kerb stones along both edges (no stripes — a moving hazard pattern strobes)
-var kerbMat = new THREE.MeshStandardMaterial({ color:0xb2aa9a, roughness:0.9, metalness:0.0 });
+// 24-Sep: Mumbai's painted yellow-black kerb stones. The earlier plain kerb avoided stripes because a fast pattern strobed;
+// these blocks are 2 m long (≤20 Hz at top speed), soft-edged and mip-mapped, and the stripe scrolls in step with the road
+// (UVs are laid along world z, so every face of the stone shows the same bands).
+var KERB_PERIOD = 4.0;
+var kerbTex = canvasTex(256, 8, function(g, w, h){ var gr = g.createLinearGradient(0, 0, w, 0);
+  gr.addColorStop(0, '#1e1e1f'); gr.addColorStop(0.44, '#1e1e1f'); gr.addColorStop(0.5, '#e8b923'); gr.addColorStop(0.94, '#e8b923'); gr.addColorStop(1, '#1e1e1f');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.08)'; for (var i=0;i<60;i++) g.fillRect(Math.random()*w, Math.random()*h, 3, 1); });
+kerbTex.wrapS = kerbTex.wrapT = THREE.RepeatWrapping; kerbTex.anisotropy = 8; if (THREE.sRGBEncoding) kerbTex.encoding = THREE.sRGBEncoding;
+var kerbMat = new THREE.MeshStandardMaterial({ map:kerbTex, color:0xffffff, roughness:0.82, metalness:0.0 });
 [-1,1].forEach(function(s){
-  var kerb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.34, 400, 1, 1, 100), kerbMat);
+  var kgeo = new THREE.BoxGeometry(0.5, 0.34, 400, 1, 1, 100), kP = kgeo.attributes.position, kU = kgeo.attributes.uv;
+  for (var ki=0; ki<kP.count; ki++) kU.setXY(ki, kP.getZ(ki) / KERB_PERIOD, 0.5);
+  var kerb = new THREE.Mesh(kgeo, kerbMat);
   kerb.position.set(s*(ROAD_W/2 + 0.22), 0.15, -160);
   kerb.castShadow = true; kerb.receiveShadow = true; scene.add(kerb); streetParts.push(kerb);
   // shallow drainage channel just inside the kerb
@@ -1925,6 +1987,13 @@ var kerbMat = new THREE.MeshStandardMaterial({ color:0xb2aa9a, roughness:0.9, me
     new THREE.MeshStandardMaterial({ color:0x2b2b2e, roughness:0.95 }));
   drain.rotation.x = -Math.PI/2; drain.position.set(s*(ROAD_W/2 - 0.35), 0.012, -160);
   scene.add(drain); streetParts.push(drain);
+});
+// contact shade where the facades meet the footpath (buildings don't cast real shadows — too costly — so this grounds them)
+var faoTex = canvasTex(64, 4, function(g, w, h){ var gr = g.createLinearGradient(0, 0, w, 0); gr.addColorStop(0, 'rgba(24,12,4,0.62)'); gr.addColorStop(0.35, 'rgba(24,12,4,0.26)'); gr.addColorStop(1, 'rgba(24,12,4,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h); });
+[-1,1].forEach(function(s){
+  var fao = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 400, 1, 100), new THREE.MeshBasicMaterial({ map:faoTex, transparent:true, depthWrite:false }));
+  fao.rotation.x = -Math.PI/2; if (s > 0) fao.rotation.z = Math.PI; fao.position.set(s*(ROAD_W/2 + 3.0 - 1.3), 0.03, -160); fao.renderOrder = 1;
+  scene.add(fao); streetParts.push(fao);
 });
 
 // paved ground verges — imported tiled pavement (Color + Normal + Roughness), scrolls with road
@@ -2638,6 +2707,33 @@ var NW = 8, WSPACING = 42, WWRAP = NW*WSPACING;
 })();
 
 // ---- kites tangled in the cables (Mumbai's permanent Makar Sankranti leftovers) + crows perched on the wires ----
+/* ---- 24-Sep: overhead direction-sign gantry (green MMRDA-style boards: Marathi over English, ↑ arrows), one recycled
+   every 420–620 m with fresh neighbourhood names each lap. Text is drawn in code, so the Devanagari is always right. ---- */
+var GANTRY = (function(){
+  var AREAS = [['दादर','Dadar'],['परळ','Parel'],['माटुंगा','Matunga'],['वरळी','Worli'],['वांद्रे','Bandra'],['कुलाबा','Colaba'],['अंधेरी','Andheri'],['सायन','Sion'],['भायखळा','Byculla'],['माहीम','Mahim'],['चर्चगेट','Churchgate'],['घाटकोपर','Ghatkopar'],['लालबाग','Lalbaug'],['गिरगाव','Girgaon']];
+  var g = new THREE.Group(), steel = new THREE.MeshStandardMaterial({ color:0x596064, roughness:0.55, metalness:0.55 }), H = 6.7, signs = [];
+  [-1,1].forEach(function(sd){ var pole = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.22, H + 0.9, 10), steel); pole.position.set(sd*(ROAD_W/2 + 1.3), (H + 0.9)/2, 0); pole.castShadow = true; g.add(pole); });
+  var beam = new THREE.Mesh(new THREE.BoxGeometry(ROAD_W + 3.2, 0.32, 0.32), steel); beam.position.set(0, H + 0.62, -0.1); beam.castShadow = true; g.add(beam);
+  var beam2 = beam.clone(); beam2.position.y = H - 0.9; g.add(beam2);
+  for (var i=0;i<3;i++){
+    var cv = document.createElement('canvas'); cv.width = 512; cv.height = 240; var tex = new THREE.CanvasTexture(cv); tex.anisotropy = 8; if (THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
+    var sign = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 1.4), new THREE.MeshStandardMaterial({ map:tex, roughness:0.45, metalness:0.1, emissive:0xffffff, emissiveMap:tex, emissiveIntensity:0.12 }));
+    sign.position.set((i-1)*3.12, H - 0.15, 0.1); sign.castShadow = true; g.add(sign);
+    var back = new THREE.Mesh(new THREE.BoxGeometry(3.06, 1.46, 0.08), steel); back.position.set(sign.position.x, sign.position.y, 0.04); g.add(back);
+    signs.push({ cv:cv, tex:tex });
+  }
+  function draw(sg, pair){ var c = sg.cv.getContext('2d'), w = sg.cv.width, h = sg.cv.height;
+    c.fillStyle = '#0d6a3b'; c.fillRect(0, 0, w, h); c.strokeStyle = '#f4f4ee'; c.lineWidth = 8; c.strokeRect(10, 10, w-20, h-20);
+    c.fillStyle = '#f7f7f0'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '800 92px "Baloo 2", "Noto Sans Devanagari", sans-serif'; c.fillText(pair[0], w*0.42, h*0.38);
+    c.font = '600 54px "Baloo 2", Arial, sans-serif'; c.fillText(pair[1], w*0.42, h*0.74);
+    c.lineWidth = 12; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(w*0.85, h*0.8); c.lineTo(w*0.85, h*0.24); c.moveTo(w*0.85 - 34, h*0.24 + 34); c.lineTo(w*0.85, h*0.24); c.lineTo(w*0.85 + 34, h*0.24 + 34); c.stroke();
+    sg.tex.needsUpdate = true; }
+  function relabel(){ var pool = AREAS.slice(), picks = []; for (var k=0;k<3;k++) picks.push(pool.splice((Math.random()*pool.length)|0, 1)[0]); signs.forEach(function(sg, k){ draw(sg, picks[k]); }); }
+  relabel(); if (document.fonts && document.fonts.load) document.fonts.load('800 92px "Baloo 2"', 'दादर').then(relabel).catch(function(){});
+  staticBatch(g); g.position.z = -260; scene.add(g);
+  return { group:g, update:function(dz){ g.position.z += dz; if (g.position.z > 25){ g.position.z -= rand(420, 620); relabel(); } g.visible = !flyover && g.position.z > -170; } };
+})();
 var kiteMats = [0xff3b3b, 0xffc21a, 0x2fbf71, 0x3b8bff, 0xff5fc8, 0xff7a1a].map(function(c){ return new THREE.MeshLambertMaterial({ color:c, side:THREE.DoubleSide }); });
 var kiteGeo = new THREE.PlaneGeometry(0.62, 0.78); kiteGeo.rotateZ(Math.PI/4);
 var crowGeo = (function(){ var g = new THREE.BufferGeometry();          // a crow = body wedge + two wing triangles, 4 tris total
@@ -2753,10 +2849,21 @@ scene.add(skyDome);
 var sunSprite = new THREE.Mesh(new THREE.CircleGeometry(16, 32),
   new THREE.MeshBasicMaterial({ color:0xfff2c0, transparent:true, opacity:0.9, fog:false,
     blending:THREE.AdditiveBlending, depthWrite:false }));
-sunSprite.position.set(-70, 34, -250); scene.add(sunSprite);
+sunSprite.position.set(17, 40, -250); scene.add(sunSprite);   // 24-Sep: sun sits at the end of the street, just right of the landmark (concept frame)
 var sunHalo = new THREE.Mesh(new THREE.CircleGeometry(30, 32), sunSprite.material.clone());
 sunHalo.material.opacity = 0.35; sunHalo.position.copy(sunSprite.position); sunHalo.position.z += 1; scene.add(sunHalo);
 sunSprite.material.userData.noBend = true; sunHalo.material.userData.noBend = true;   // sun stays on the horizon
+// 24-Sep look: a soft sun instead of two hard discs — radial glow maps, a wide warm corona, and slow-turning light shafts
+(function softSun(){
+  function glow(stops){ return canvasTex(256, 256, function(g, w, h){ var gr = g.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2); stops.forEach(function(st){ gr.addColorStop(st[0], st[1]); }); g.fillStyle = gr; g.fillRect(0, 0, w, h); }); }
+  sunSprite.geometry = new THREE.PlaneGeometry(44, 44); sunSprite.material.map = glow([[0,'rgba(255,255,255,1)'],[0.18,'rgba(255,250,225,1)'],[0.28,'rgba(255,230,160,0.55)'],[0.55,'rgba(255,190,90,0.12)'],[1,'rgba(255,160,60,0)']]); sunSprite.material.needsUpdate = true;
+  sunHalo.geometry = new THREE.PlaneGeometry(210, 210); sunHalo.material.map = glow([[0,'rgba(255,220,150,0.9)'],[0.25,'rgba(255,190,110,0.35)'],[0.6,'rgba(255,160,80,0.08)'],[1,'rgba(255,140,60,0)']]); sunHalo.material.needsUpdate = true;
+  var rayTex = canvasTex(512, 512, function(g, w, h){ g.translate(w/2, h/2); for (var i=0;i<26;i++){ var a = i/26*Math.PI*2 + Math.random()*0.12, len = w*(0.3 + Math.random()*0.2), wd = 0.03 + Math.random()*0.05;
+      var gr = g.createLinearGradient(0, 0, Math.cos(a)*len, Math.sin(a)*len); gr.addColorStop(0, 'rgba(255,236,190,0.55)'); gr.addColorStop(1, 'rgba(255,200,120,0)');
+      g.fillStyle = gr; g.beginPath(); g.moveTo(0, 0); g.lineTo(Math.cos(a-wd)*len, Math.sin(a-wd)*len); g.lineTo(Math.cos(a+wd)*len, Math.sin(a+wd)*len); g.closePath(); g.fill(); } });
+  window.sunRays = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ map:rayTex, color:0xffd9a0, transparent:true, opacity:0.32, blending:THREE.AdditiveBlending, depthWrite:false, fog:false }));
+  sunRays.material.userData.noBend = true; sunRays.position.copy(sunSprite.position); sunRays.position.z += 2; scene.add(sunRays);
+})();
 
 // Mumbai skyline silhouette: Gateway of India, Sea Link, high-rises (drawn white, tinted by material)
 var skylineTex = canvasTex(2048, 512, function(g,w,h){
@@ -2863,10 +2970,24 @@ var farSkyline = new THREE.Group(), farLayerNear = new THREE.Group(), farLayerFa
   for (var j=0;j<26;j++){ var f=makeOne(farSkyMat2); f.position.set(rand(-280,280), 0, -225-rand(0,55)); f.scale.multiplyScalar(rand(0.9,1.4)); farLayerFar.add(f); }
   // leave a sea gap: thin out the near layer on the left so the water shows through between towers
   farLayerNear.children.forEach(function(c){ if (c.position.x > -110 && c.position.x < -28) c.visible = false; });   // the bay opens up left of the road's end
+  farLayerNear.children.forEach(function(c){ if (Math.abs(c.position.x) < 46) c.visible = false; }); farLayerFar.children.forEach(function(c){ if (Math.abs(c.position.x) < 52) c.visible = false; });   // keep the vista down the street clear for the landmark
   farLayerFar.children.forEach(function(c){ if (c.position.x > -95 && c.position.x < -45 && Math.random() < 0.7) c.visible = false; });
   farSkyline.add(farLayerNear); farSkyline.add(farLayerFar);
   scene.add(farSkyline);
   staticBatch(farLayerNear); staticBatch(farLayerFar);                        // 60 silhouettes × 1–6 parts → 2 draw calls
+  // 24-Sep: a domed Indo-Saracenic landmark closing the vista at the end of the street (generic — central dome on a drum,
+  // corner turrets, pointed spires, arcaded base), sun-lit sandstone fading into the haze. One draw call after batching.
+  var lm = new THREE.Group(), stone = new THREE.MeshLambertMaterial({ color:0xe2b48c, fog:false }); window.landmarkMat = stone;
+  function add(geo, x, y, z){ var m = new THREE.Mesh(geo, stone); m.position.set(x, y, z); lm.add(m); return m; }
+  add(new THREE.BoxGeometry(84, 20, 14), 0, 10, 0);                                                      // arcaded base block
+  add(new THREE.BoxGeometry(40, 12, 12), 0, 26, 0);                                                      // upper storey
+  add(new THREE.CylinderGeometry(10, 11, 10, 16), 0, 37, 0);                                              // drum
+  var dome = add(new THREE.SphereGeometry(11, 20, 12, 0, Math.PI*2, 0, Math.PI*0.62), 0, 42, 0); dome.scale.y = 1.25;
+  add(new THREE.ConeGeometry(1.4, 9, 8), 0, 58, 0);                                                        // finial
+  [-1,1].forEach(function(sx){ [-36, -22].forEach(function(ox){ var x = sx*Math.abs(ox);
+    add(new THREE.CylinderGeometry(3.4, 3.8, 12, 10), x, 26, 0); var d = add(new THREE.SphereGeometry(3.8, 12, 8, 0, Math.PI*2, 0, Math.PI*0.6), x, 32, 0); d.scale.y = 1.3; add(new THREE.ConeGeometry(0.6, 5, 6), x, 38.5, 0); }); });
+  [-1,1].forEach(function(sx){ add(new THREE.ConeGeometry(2.2, 14, 8), sx*12, 39, 0); add(new THREE.ConeGeometry(1.2, 8, 6), sx*30, 24, 5); });
+  lm.position.set(0, 0, -238); farLayerNear.add(lm); staticBatch(lm);
 })();
 // ---- the Arabian Sea on the horizon: a wide shimmering sheet behind the skyline, tinted by the day cycle ----
 // Seen from road height the water is a thin band on the horizon, so it is drawn as an upright strip behind the
@@ -2887,6 +3008,7 @@ var SKY_TOP_DAY  = new THREE.Color(0x4f86c6), SKY_TOP_DUSK  = new THREE.Color(0x
 var SKY_BOT_DAY  = new THREE.Color(0xffcf96), SKY_BOT_DUSK  = new THREE.Color(0xff6a30), SKY_BOT_NIGHT  = new THREE.Color(0x1a1436);
 var SKYLINE_DAY  = new THREE.Color(0xb3968a), SKYLINE_DUSK  = new THREE.Color(0x4a2f55), SKYLINE_NIGHT  = new THREE.Color(0x12132a);
 var SKYLINE2_DAY = new THREE.Color(0xc9a792), SKYLINE2_DUSK = new THREE.Color(0x35203f), SKYLINE2_NIGHT = new THREE.Color(0x0c0c1e);
+var LANDMARK_DAY = new THREE.Color(0xe8bb90), LANDMARK_DUSK = new THREE.Color(0x8a5268), LANDMARK_NIGHT = new THREE.Color(0x1c1b34);
 var SUN_DAY      = new THREE.Color(0xffe3a0), SUN_DUSK      = new THREE.Color(0xff5a2a), SUN_NIGHT      = new THREE.Color(0x2a3a66);
 // lerp across the three stops: 0..0.5 day->dusk, 0.5..1 dusk->night
 function lerp3(out, a, b, c, t){
@@ -2903,8 +3025,10 @@ function updateSky(t){
   sunHalo.material.color.copy(sunSprite.material.color);
   sunSprite.material.opacity = 0.9 * (1 - Math.max(0,(t-0.55)/0.45));   // sun fades out into night
   sunHalo.material.opacity = 0.35 * (1 - Math.max(0,(t-0.55)/0.45));
-  sunSprite.position.y = 24 - t*22;    // sits low (golden hour), sinks below the horizon by night
+  sunSprite.position.y = 40 - t*38;    // hangs just right of the landmark's dome (golden hour), sinks below the horizon by night
   sunHalo.position.y = sunSprite.position.y;
+  if (window.landmarkMat) lerp3(landmarkMat.color, LANDMARK_DAY, LANDMARK_DUSK, LANDMARK_NIGHT, t);
+  if (window.sunRays){ sunRays.position.y = sunSprite.position.y; sunRays.material.opacity = 0.32 * (1 - Math.min(1, t/0.45)); sunRays.rotation.z += 0.0006; }
   if (typeof farSkyMat !== 'undefined'){   // tint the distant 3D skyline with the day cycle
     lerp3(farSkyMat.color,  SKYLINE_DAY,  SKYLINE_DUSK,  SKYLINE_NIGHT,  t);
     lerp3(farSkyMat2.color, SKYLINE2_DAY, SKYLINE2_DUSK, SKYLINE2_NIGHT, t);
@@ -6446,7 +6570,20 @@ bindCtrl('ctrlLeft',  function(){ goLane(-1); });
 bindCtrl('ctrlRight', function(){ goLane(1); });
 bindCtrl('ctrlUp',    function(){ doJump(); });
 bindCtrl('ctrlHorn',  function(){ hornNow(); });
+function setPause(on){
+  if (!state.running && on) return; state.paused = !!on;
+  $('pauseMenu').classList.toggle('hidden', !state.paused);
+  try { if (AC){ if (state.paused) AC.suspend(); else AC.resume(); } } catch(e){}
+  if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.mute(state.paused || state.muted); } catch(e){}
+  if (!state.paused) clock.getDelta();                                   // no giant dt on resume
+}
+$('pauseBtn').addEventListener('click', function(e){ e.stopPropagation(); setPause(true); });
+$('pmResume').addEventListener('click', function(){ setPause(false); });
+$('pmQuit').addEventListener('click', function(){ setPause(false); if (state.running) gameOver(); });
+window.addEventListener('keydown', function(e){ if (e.code === 'Escape' && state.running && !(typeof GARAGE !== 'undefined' && GARAGE.isOpen())){ setPause(!state.paused); e.preventDefault(); } });
+document.addEventListener('visibilitychange', function(){ if (document.hidden && state.running && !state.paused) setPause(true); });
 function showControls(){
+  var dh = $('duckHint'); if (dh){ dh.lastChild.textContent = IS_TOUCH ? 'SWIPE TO DUCK' : '↓ / S TO DUCK'; dh.classList.remove('gone'); clearTimeout(showControls._dh); showControls._dh = setTimeout(function(){ dh.classList.add('gone'); }, 9000); }
   $('controls').classList.add('show');
   clearTimeout(ctrlHideTimer);
   if (!IS_TOUCH){                      // desktop: fade out once you've got the idea
@@ -6791,6 +6928,7 @@ function clearWorld(){
   setpieces.forEach(function(S){ S.deco.forEach(function(d){ scene.remove(d); }); }); setpieces.length = 0; distSinceJunction = -200; distSinceSetpiece = -300; state.hydro = 0; state.eventSlow = 1; patrolReset(); zoneNow = 0;
 }
 function startGame(){
+  state.paused = false; var _pm = document.getElementById('pauseMenu'); if (_pm) _pm.classList.add('hidden');
   state.practice = null; var _pc = document.getElementById('practiceChip'); if (_pc) _pc.classList.add('hidden');
   if (typeof attractStop === 'function') attractStop();   // menu traffic (trucks!) must leave with the menu — it used to stay parked on the road as a solid obstacle
   initAudio();
@@ -7467,11 +7605,13 @@ function pwrRow(icon, remain, total, color){
 }
 function updateHUD(){
   state.score = Math.floor(state.dist) + state.bonus;
-  var H = updateHUD._c || (updateHUD._c = { score:-1, coins:-1, mult:-1, html:null, els:{ s:$('scoreVal'), c:$('coinNum'), m:$('multChip'), p:$('powerStack') } });   // DOM writes only on change (each write = a style/layout pass on phones)
+  var H = updateHUD._c || (updateHUD._c = { score:-1, coins:-1, mult:-1, html:null, els:{ s:$('scoreVal'), c:$('coinNum'), m:$('multChip'), p:$('powerStack'), cap:$('comboCap'), f:$('comboFill'), b:$('bestVal') } });   // DOM writes only on change (each write = a style/layout pass on phones)
   if (H.score !== state.score){ H.score = state.score; H.els.s.textContent = fmt(state.score); }
   if (H.coins !== state.coins){ H.coins = state.coins; H.els.c.textContent = state.coins; }
   var chip = H.els.m;
-  if (H.mult !== state.mult){ H.mult = state.mult; if (state.mult > 1){ chip.textContent = '★ x' + state.mult; chip.classList.add('on'); } else chip.classList.remove('on'); }
+  if (H.mult !== state.mult){ H.mult = state.mult; if (state.mult > 1) chip.textContent = 'x' + state.mult; H.els.cap.classList.toggle('on', state.mult > 1); }
+  if (state.mult > 1){ var fw = Math.round(Math.max(0, Math.min(1, state.comboTimer / 4)) * 100); if (H.fw !== fw){ H.fw = fw; H.els.f.style.width = fw + '%'; } }
+  var best = Math.max(profile.best || 0, state.best || 0, state.score); if (H.best !== best){ H.best = best; H.els.b.textContent = fmt(best); }
   // power-up stack (only what's active), each with a live countdown
   var html = '';
   if (state.turbo > 0)  html += pwrRow('⚡', state.turbo, 3, '#30e0ff');
@@ -7482,7 +7622,7 @@ function updateHUD(){
 
 /* ============================== MAIN LOOP ============================== */
 var clock = new THREE.Clock();
-var camBase = new THREE.Vector3(0, 4.4, 7.5);
+var camBase = new THREE.Vector3(0, 3.7, 6.8);   // 24-Sep: lower, closer chase cam (concept frame) — more street and sky, the auto reads bigger
 var crashSpin = 0;
 
 /* ============================ GARAGE (screen + 3D turntable preview) ============================ */
@@ -8438,7 +8578,7 @@ function attractTick(dt){
     pz = (1.6 * Math.sin(Math.min(1, L*1.4) * Math.PI * 0.5) + A.depth) * (1 - lp);
     px = Math.sin(lp * Math.PI) * -1.3;
     yaw = MY + (Math.PI*2 - MY) * ease((L - 0.12) / 0.8);
-    var gp = new THREE.Vector3(0, 4.4, 7.5), gt = new THREE.Vector3(0, 1.6, -8), cl = ease((L - 0.2) / 0.8);
+    var gp = new THREE.Vector3(0, 3.7, 6.8), gt = new THREE.Vector3(0, 2.0, -8), cl = ease((L - 0.2) / 0.8);
     camP = camP.clone().lerp(gp, cl); camT = camT.clone().lerp(gt, cl);
     if (typeof roadTex !== 'undefined' && L > 0.45){ var rs = (L - 0.45) * 14; roadTex.offset.y += rs * dt / 28.57 * 2; roadBump.offset.y = roadTex.offset.y; }
     if (L >= 1){ var done = A.launch.cb; A.launch = null; player.rotation.set(0,0,0); player.position.set(0,0,0); camera.position.copy(gp); camera.lookAt(gt); startGame._noHonk = true; if (done) done(); return; }
@@ -8506,7 +8646,7 @@ function rideThumbs(){                                                 // real r
     if (Object.keys(_thumbDone).length >= 3){ _thumbR.dispose(); if (_thumbR.forceContextLoss) _thumbR.forceContextLoss(); _thumbR = null; }
   } catch(e){ console.warn('ride thumbs', e); }
 }
-function attractStop(){ var A = attract; if (!A.on) return; A.on = false; A.cars.forEach(function(c){ scene.remove(c.mesh); }); A.cars.length = 0; camera.fov = 62; camera.updateProjectionMatrix(); }
+function attractStop(){ var A = attract; if (!A.on) return; A.on = false; A.cars.forEach(function(c){ scene.remove(c.mesh); }); A.cars.length = 0; camera.fov = 58; camera.updateProjectionMatrix(); }
 function windSound(){ if (!AC || state.muted || !noiseBuf) return; var t = AC.currentTime, n = AC.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
   var f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(900, t+1.2); f.frequency.exponentialRampToValueAtTime(250, t+3); f.Q.value = 0.8;
   var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t+1.0); g.gain.exponentialRampToValueAtTime(0.0001, t+3.2);
@@ -8520,6 +8660,7 @@ function streetSound(){ if (!AC || state.muted) return; var r = Math.random();
 function animate(){
   requestAnimationFrame(animate);
   var rawDt = Math.min(clock.getDelta(), 0.05);
+  if (state.paused && state.running) return;                           // frozen frame stays on screen under the pause card
 
   if (state.over){
     // ease slow-mo back, spin the rickshaw
@@ -8610,7 +8751,8 @@ function animate(){
   // road scroll — features must flow TOWARD the player (+Z), so offset increases
   roadTex.offset.y += dz/28.57;
   roadBump.offset.y = roadTex.offset.y;
-  if (!(flyover && flyover.groundFrozen)) for (var _gi=0; _gi<groundTexes.length; _gi++) groundTexes[_gi].offset.y += dz/5;  // verges scroll with road (frozen while the shoreline strip itself travels)
+  if (!(flyover && flyover.groundFrozen)) for (var _gi=0; _gi<groundTexes.length; _gi++) groundTexes[_gi].offset.y += dz/5;
+  if (!(flyover && flyover.groundFrozen)) kerbTex.offset.x -= dz / KERB_PERIOD;  // verges scroll with road (frozen while the shoreline strip itself travels)
 
   // scenery recycle
   var FAR_CULL = -(scene.fog.far + 12);                 // beyond the fog nothing is visible — don't draw it
@@ -8635,6 +8777,7 @@ function animate(){
       if (rk2 <= 0){ p._react = 0; p.position.y = 0; p.rotation.z = 0; }
     }
   });
+  GANTRY.update(dz);
   wires.forEach(function(w){
     w.position.z += dz;
     if (w.position.z > 20){ w.position.z -= WWRAP; w.userData.crowsFlown = false; }
@@ -9042,11 +9185,11 @@ function animate(){
     camBase.z
   );
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
-  camera.lookAt(state.x*0.5 + argueX + BEND.curve.value * 900, 1.6 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
+  camera.lookAt(state.x*0.5 + argueX + BEND.curve.value * 900, 2.0 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
   camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway)
   var evOn = (state.eventSlow && state.eventSlow < 1);                                                // set-piece on: camera drops low and close so the crowd fills the frame
-  camBase.y += ((evOn ? 3.1 : 4.4) - camBase.y) * Math.min(1, rawDt*2.5);
-  camBase.z += ((evOn ? 6.2 : 7.5) - camBase.z) * Math.min(1, rawDt*2.5);
+  camBase.y += ((evOn ? 2.9 : 3.7) - camBase.y) * Math.min(1, rawDt*2.5);
+  camBase.z += ((evOn ? 5.9 : 6.8) - camBase.z) * Math.min(1, rawDt*2.5);
 
   updateHUD();
   renderFrame();
