@@ -635,6 +635,7 @@ window.addEventListener('error', function(e){
     .g2Tools { top:calc(44vh - 48px); bottom:auto; left:auto; right:10px; transform:none; } .g2Tools button { width:34px; height:34px; } .g2Hint { top:calc(44vh - 22px); bottom:auto; left:12px; transform:none; font-size:10px; }
   }
   body.inGarage #perfHud { display:none !important; }
+  canvas.chakkar { animation:chakkarHue 2.4s ease-in-out infinite alternate; } @keyframes chakkarHue { from { filter:saturate(1.5) hue-rotate(-18deg) contrast(1.05); } to { filter:saturate(1.7) hue-rotate(28deg) contrast(1.08); } }
   #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
   #practiceChip.hidden { display:none; }
   @media (prefers-reduced-motion: reduce){ #garageScreen.g2 *, #garageScreen.g2 { animation:none !important; transition:none !important; } }
@@ -1313,6 +1314,7 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <div id="loadScreen"><div class="ldBox"><div class="ldTitle">🛺 RICKSHAW RUSH</div><div class="ldSub" id="ldSub">Loading Mumbai…</div><div class="ldBar"><div class="ldFill" id="ldFill"></div></div><div class="ldPct" id="ldPct">0%</div><div class="ldErr" id="ldErr"></div></div></div>
 <script>
 /* ---- staged asset loader: fetches every model script with a real progress bar, retries once, reports what failed,
@@ -1421,7 +1423,7 @@ var renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-p
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, MOBILE ? 1.0 : 1.5));  // desktop renders at native sharpness (retina = 2×); the quality ladder drops to 1.0 if FPS sags. 1.25 upscaled everything → blurry roadside
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = MOBILE ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;   // soft PCF is 4× the taps: phones get plain PCF
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.72;
@@ -1429,7 +1431,7 @@ document.body.appendChild(renderer.domElement);
 
 var scene = new THREE.Scene();
 var DAY_SKY = new THREE.Color(0xffd9a3), DUSK_SKY = new THREE.Color(0x5e2a6e);
-var DAY_FOG = new THREE.Color(0xffc98a), DUSK_FOG = new THREE.Color(0x6e3a78);
+var DAY_FOG = new THREE.Color(0xf4c894), DUSK_FOG = new THREE.Color(0x6e3a78);
 scene.fog = new THREE.Fog(DAY_FOG.clone(), MOBILE ? 30 : 40, FOG_FAR);
 scene.background = DAY_SKY.clone();
 
@@ -1439,7 +1441,7 @@ camera.position.set(0, 4.4, 7.5);
 var hemi = new THREE.HemisphereLight(0xfff2d0, 0x8a5a30, .45);   // lower: env map now supplies ambient
 scene.add(hemi);
 var sun = new THREE.DirectionalLight(0xffe0ac, 1.7);            // strong warm golden-hour key
-sun.position.set(-16, 24, -6);
+sun.position.set(-21, 16, -9);                                   // 24-Sep: lower golden-hour sun → longer raking shadows across the road
 sun.castShadow = true;
 sun.shadow.mapSize.set(MOBILE ? 512 : 1024, MOBILE ? 512 : 1024);
 sun.shadow.camera.left=-22; sun.shadow.camera.right=22;
@@ -1451,7 +1453,7 @@ var rim = new THREE.DirectionalLight(0xffb070, 0.5);
 rim.position.set(6, 8, 14); scene.add(rim);
 
 /* ---- post-processing: bloom + tone-mapped grade (graceful fallback if CDN scripts miss) ---- */
-var composer = null, bloomPass = null, useComposer = false;
+var composer = null, bloomPass = null, gradePass = null, useComposer = false;
 (function setupPostFX(){
   if (!THREE.EffectComposer || !THREE.RenderPass || !THREE.UnrealBloomPass || !THREE.ShaderPass || !THREE.GammaCorrectionShader) return;
   try {
@@ -1465,8 +1467,25 @@ var composer = null, bloomPass = null, useComposer = false;
       0.5,    // radius
       0.86);  // threshold — only bright things (coins, lamps, sky) bloom
     composer.addPass(bloomPass);
-    var gamma = new THREE.ShaderPass(THREE.GammaCorrectionShader);
-    composer.addPass(gamma);
+    // 24-Sep look pass: the old gamma-only pass becomes a film grade (same cost — one full-screen pass): sRGB encode,
+    // warm white balance, gentle S-curve, split-tone (teal shade / amber light), a little saturation and a soft vignette.
+    gradePass = new THREE.ShaderPass({
+      uniforms:{ tDiffuse:{ value:null }, uWarm:{ value:new THREE.Vector3(1.045, 1.0, 0.93) }, uCon:{ value:0.32 }, uSat:{ value:1.1 }, uVig:{ value:0.34 }, uSplit:{ value:1.0 } },
+      vertexShader:'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader:[
+        'uniform sampler2D tDiffuse; uniform vec3 uWarm; uniform float uCon, uSat, uVig, uSplit; varying vec2 vUv;',
+        'vec3 toSRGB(vec3 c){ return mix(c * 12.92, 1.055 * pow(max(c, vec3(0.0)), vec3(0.41666)) - 0.055, step(vec3(0.0031308), c)); }',
+        'void main(){',
+        '  vec4 t = texture2D(tDiffuse, vUv); vec3 c = toSRGB(t.rgb) * uWarm;',
+        '  c = clamp(c, 0.0, 1.0); c = mix(c, c * c * (3.0 - 2.0 * c), uCon);',
+        '  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));',
+        '  c += uSplit * (vec3(-0.018, 0.004, 0.03) * (1.0 - smoothstep(0.0, 0.45, l)) + vec3(0.03, 0.012, -0.03) * smoothstep(0.55, 1.0, l));',
+        '  c = mix(vec3(l), c, uSat);',
+        '  vec2 q = vUv - 0.5; q.x *= 1.25; float v = smoothstep(0.95, 0.25, length(q)); c *= mix(1.0, v, uVig);',
+        '  gl_FragColor = vec4(c, t.a);',
+        '}'].join('\n')
+    });
+    composer.addPass(gradePass);
     renderer.outputEncoding = THREE.LinearEncoding;   // gamma pass now handles sRGB
     useComposer = true;
   } catch(e){ console.warn('Post-FX unavailable, rendering directly.', e); useComposer = false; }
@@ -1474,12 +1493,17 @@ var composer = null, bloomPass = null, useComposer = false;
 /* ---- adaptive quality: keep the game above 60 fps. Steps down (never up mid-run) when the
    rolling frame time sags: 1 = bloom off, 2 = pixel ratio 1.0, 3 = shadows off. ---- */
 var QUALITY = { level:0, acc:0, slow:0 };
-if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(); }, 0);   // phones: skip the bloom pass from the start
-function qualityStepDown(){
+if (MOBILE) setTimeout(function(){ if (QUALITY.level === 0) qualityStepDown(true); }, 0);   // phones: skip the bloom pass from the start
+/* 24-Sep: mid-run steps must NEVER force a shader recompile (the old level 1 and 3 did scene-wide needsUpdate → a
+   400–900 ms freeze → which looked like more slowness → the next step: the Adreno runs fell q1→q4 in 5 s with 5 fps lows).
+   Now: level 1 = bloom pass off (composer stays, same shaders), level 3 = shadow map drawn every 3rd frame at half size. */
+var SHADOW_EVERY = 1, _shadowN = 0;
+function qualityStepDown(initial){
   QUALITY.level++;
-  if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
+  if (QUALITY.level === 1 && !initial && useComposer && bloomPass){ bloomPass.enabled = false; }
+  else if (QUALITY.level === 1){ useComposer = false; renderer.outputEncoding = THREE.sRGBEncoding; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }   // direct path must gamma-correct itself (the composer's gamma pass is gone)
   else if (QUALITY.level === 2){ if (typeof setRes === 'function') setRes(1); }
-  else if (QUALITY.level === 3){ renderer.shadowMap.enabled = false; scene.traverse(function(o){ if (o.material) o.material.needsUpdate = true; }); }
+  else if (QUALITY.level === 3){ SHADOW_EVERY = 3; renderer.shadowMap.autoUpdate = false; try { sun.shadow.mapSize.set(512, 512); if (sun.shadow.map){ sun.shadow.map.dispose(); sun.shadow.map = null; } } catch(e){} }
   else if (QUALITY.level === 4){ scene.fog.far = FOG_FAR = Math.min(FOG_FAR, 85); if (typeof skyTowers !== 'undefined') skyTowers.forEach(function(k){ k.visible = false; k.userData.off = true; }); }   // last resort for weak phones: shorter draw distance, no back row
   window.QUALITY_LEVEL = QUALITY.level;
   console.warn('Quality stepped down to level ' + QUALITY.level);
@@ -1505,8 +1529,10 @@ function qualityTick(dtMs){
   else { RES.lowWin = 0; if (avg < 15.2 && ++RES.good >= 3 && RES.pr < RES.max - 0.01 && QUALITY.level === 0){ RES.good = 0; setRes(Math.min(RES.max, RES.pr + 0.125)); } }
 }
 function renderFrame(){
+  if (typeof coinInstSync === 'function') coinInstSync();
   // quality/resolution changes resize the canvas, and a resize CLEARS it — do it before drawing, never after (that cleared frame was the black flash at run start)
   var _qn = performance.now(); qualityTick(renderFrame._t ? Math.min(1000, _qn - renderFrame._t) : 16); renderFrame._t = _qn;
+  if (SHADOW_EVERY > 1){ renderer.shadowMap.needsUpdate = (++_shadowN % SHADOW_EVERY) === 0; }
   if (useComposer && composer) composer.render();
   else renderer.render(scene, camera);
   if (window.PERF) PERF.sample(renderer);
@@ -1528,7 +1554,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '23-Sep-i';
+var BUILD_TAG = '23-Sep-j';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1623,36 +1649,42 @@ window.exportDebugLog = function(){ return PERF.export(); };
    The world stays logically straight (lanes, spawning, collision, fairness all untouched); every material gets a
    world-space vertex warp that bends geometry ahead of the player: x += curve·d², y += hill·d² + rolling wave.
    Installed on THREE.Material.prototype so streamed GLB materials pick it up too. userData.noBend opts a material out. */
-var BEND = { curve:{value:0}, hill:{value:0}, wave:{value:new THREE.Vector3(0, 0.085, 0)}, z0:{value:0}, max:{value:150} };
+var BEND = { curve:{value:0}, hill:{value:0}, wave:{value:new THREE.Vector3(0, 0.085, 0)}, z0:{value:0}, max:{value:150}, psych:{value:0} };
 var BEND_GLSL =
-  'uniform float uBendCurve; uniform float uBendHill; uniform vec3 uBendWave; uniform float uBendZ0; uniform float uBendMax;\n' +
+  'uniform float uBendCurve; uniform float uBendHill; uniform vec3 uBendWave; uniform float uBendZ0; uniform float uBendMax; uniform float uPsych;\n' +
   'vec3 rrBend(vec3 p){ float d = clamp(uBendZ0 - p.z, 0.0, uBendMax); float r = smoothstep(4.0, 34.0, d);\n' +
-  '  p.x += uBendCurve * d * d; p.y += uBendHill * d * d + uBendWave.x * r * (1.0 - cos((d + uBendWave.z) * uBendWave.y)); return p; }\n';
+  '  p.x += uBendCurve * d * d; p.y += uBendHill * d * d + uBendWave.x * r * (1.0 - cos((d + uBendWave.z) * uBendWave.y)); return p; }\n' +
+  // rigid bend (24-Sep, Greinum: "winding buildings look like some psych"): a building rides the curve as ONE solid piece —
+  // moved by the bend at its own origin and turned to the road's heading there — instead of every vertex being sheared.
+  'vec3 rrRigid(vec3 p, vec3 o){ vec3 bo = rrBend(o); float d = clamp(uBendZ0 - o.z, 0.0, uBendMax); float a = -atan(2.0 * uBendCurve * d);\n' +
+  '  float c = cos(a), s = sin(a); vec3 q = p - o; return bo + vec3(c*q.x + s*q.z, q.y, -s*q.x + c*q.z); }\n' +
+  'vec3 rrPlace(vec3 p, vec3 o){\n#ifdef RR_RIGID\n  return mix(rrRigid(p, o), rrBend(p), uPsych);\n#else\n  return rrBend(p);\n#endif\n}\n';
 var BEND_PROJECT =
   'vec4 mvPosition = vec4( transformed, 1.0 );\n#ifdef USE_INSTANCING\n\tmvPosition = instanceMatrix * mvPosition;\n#endif\n' +
-  'vec4 rrWorld = modelMatrix * mvPosition; rrWorld.xyz = rrBend(rrWorld.xyz);\n' +
+  '#ifdef USE_INSTANCING\n\tvec3 rrO = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;\n#else\n\tvec3 rrO = (modelMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;\n#endif\n' +
+  'vec4 rrWorld = modelMatrix * mvPosition; rrWorld.xyz = rrPlace(rrWorld.xyz, rrO);\n' +
   'mvPosition = viewMatrix * rrWorld;\ngl_Position = projectionMatrix * mvPosition;\n';
 var BEND_WORLDPOS =
   '#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\tvec4 worldPosition = vec4( transformed, 1.0 );\n' +
   '\t#ifdef USE_INSTANCING\n\t\tworldPosition = instanceMatrix * worldPosition;\n\t#endif\n\tworldPosition = modelMatrix * worldPosition;\n' +
-  '\tworldPosition.xyz = rrBend(worldPosition.xyz);\n#endif\n';
+  '\tworldPosition.xyz = rrPlace(worldPosition.xyz, rrO);\n#endif\n';
 (function installBend(){
   var proto = THREE.Material.prototype;
   proto.onBeforeCompile = function(shader){
     if (this.userData && this.userData.noBend) return;
     if (shader.vertexShader.indexOf('#include <project_vertex>') < 0) return;              // custom shaders (sky dome) are left alone
     shader.uniforms.uBendCurve = BEND.curve; shader.uniforms.uBendHill = BEND.hill; shader.uniforms.uBendWave = BEND.wave;
-    shader.uniforms.uBendZ0 = BEND.z0; shader.uniforms.uBendMax = BEND.max;
+    shader.uniforms.uBendZ0 = BEND.z0; shader.uniforms.uBendMax = BEND.max; shader.uniforms.uPsych = BEND.psych;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\n' + BEND_GLSL)
+      .replace('#include <common>', '#include <common>\n' + (this.userData && this.userData.rigidBend ? '#define RR_RIGID\n' : '') + BEND_GLSL)
       .replace('#include <project_vertex>', BEND_PROJECT)
       .replace('#include <worldpos_vertex>', BEND_WORLDPOS);
   };
-  proto.customProgramCacheKey = function(){ return (this.userData && this.userData.noBend) ? 'rr-nobend' : 'rr-bend'; };
+  proto.customProgramCacheKey = function(){ return (this.userData && this.userData.noBend) ? 'rr-nobend' : (this.userData && this.userData.rigidBend) ? 'rr-rigid' : 'rr-bend'; };
 })();
 var bendPlan = { hold:0, curve:0, hill:0, amp:0, intro:0 };
 function bendReset(){ bendPlan.curve = bendPlan.hill = bendPlan.amp = 0; bendPlan.hold = 0; bendPlan.intro = 7; }
-function bendClear(){ bendReset(); BEND.curve.value = 0; BEND.hill.value = 0; BEND.wave.value.x = 0; }
+function bendClear(){ bendReset(); BEND.psych.value = 0; BEND.curve.value = 0; BEND.hill.value = 0; BEND.wave.value.x = 0; }
 function updateBend(dt, dz){
   if (bendPlan.lock){ }                                                                       // a section (flyover) is driving the plan directly
   else if (bendPlan.intro > 0){ bendPlan.intro -= dt; }                                     // straight, flat opening stretch
@@ -1667,7 +1699,11 @@ function updateBend(dt, dz){
       bendPlan.amp = Math.random() < 0.55 ? 0 : rand(0.35, 1.0);                           // rolling undulation
     }
   }
-  var k = Math.min(1, dt * 0.33);                                                           // ease between plans (~3 s)
+  var ck = state.chakkar > 0;                                                               // CHAKKAR: everything winds, buildings melt, time drags
+  BEND.psych.value += ((ck ? 1 : 0) - BEND.psych.value) * Math.min(1, dt * (ck ? 1.6 : 0.9));
+  if (ck && !bendPlan.lock){ var tt = performance.now() * 0.001;
+    bendPlan.curve = Math.sin(tt*0.9) * 0.0024; bendPlan.hill = Math.sin(tt*0.55) * 0.0005; bendPlan.amp = 1.7 + Math.sin(tt*1.7) * 0.6; }
+  var k = Math.min(1, dt * (ck ? 1.4 : 0.33));                                              // ease between plans (~3 s)
   BEND.curve.value += (bendPlan.curve - BEND.curve.value) * k;
   BEND.hill.value  += (bendPlan.hill  - BEND.hill.value)  * k;
   BEND.wave.value.x += (bendPlan.amp - BEND.wave.value.x) * k;
@@ -1707,6 +1743,62 @@ function makeBlob(w, d, opacity){
 }
 function addBlob(parent, w, d, opacity){ var b = makeBlob(w,d,opacity); parent.add(b); return b; }
 
+
+/* ===================== STATIC BATCHING (24-Sep perf) =====================
+   Live diag: 570–800 draw calls on an M1 / Adreno 730. Most were tiny procedural parts (a cone = 3 meshes with 3 fresh
+   materials). staticBatch(root) merges every static descendant mesh that looks alike (same material type/colour/map/
+   blending/shadow flags) into ONE mesh in root's space. Anything code still points at (userData refs: bulbs, lights,
+   kites, wheels) or that is skinned / instanced / morphing / mirrored is left alone. */
+function _matSig(m){
+  if (!m) return 'none';
+  var c = m.color ? m.color.getHexString() : '', e = m.emissive ? m.emissive.getHexString() + (m.emissiveIntensity||0) : '';
+  return [m.type, c, e, m.map ? m.map.uuid : '', m.transparent, m.opacity, m.blending, m.side, m.depthWrite, m.alphaTest, m.vertexColors, m.roughness, m.metalness, m.fog, m.onBeforeCompile && m.onBeforeCompile.toString().length].join('|');
+}
+function _refSet(root){                                    // every Object3D some userData still points at (and their subtrees) stays untouched
+  var keep = new Set();
+  function add(v, d){ if (!v || d > 2) return; if (v.isObject3D){ v.traverse(function(o){ keep.add(o); }); return; }
+    if (Array.isArray(v)) v.forEach(function(x){ add(x, d+1); }); else if (typeof v === 'object' && !(v.isMaterial || v.isTexture || v.isBufferGeometry || v.isColor || v.isVector3)) Object.keys(v).forEach(function(k){ add(v[k], d+1); }); }
+  root.traverse(function(o){ Object.keys(o.userData).forEach(function(k){ if (k !== 'baseMat') add(o.userData[k], 0); }); });
+  return keep;
+}
+function staticBatch(root, opts){
+  if (!THREE.BufferGeometryUtils || !root) return 0;
+  opts = opts || {};
+  root.updateMatrixWorld(true);
+  var inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), keep = _refSet(root), buckets = {}, order = [], victims = [], merged = 0;
+  root.traverse(function(o){
+    if (o === root || !o.isMesh || o.isSkinnedMesh || o.isInstancedMesh || keep.has(o) || Array.isArray(o.material) || o.morphTargetInfluences) return;
+    if (o.children.length) return;                                   // parents of other things keep their transform
+    var ownUD = Object.keys(o.userData).filter(function(k){ return k !== 'name' && k !== 'baseMat'; }); if (ownUD.length) return;
+    var vis = true, v = o; while (v && v !== root){ if (!v.visible){ vis = false; break; } v = v.parent; }
+    var g = o.geometry; if (!g || !g.attributes.position) return;
+    var m = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld); if (m.determinant() < 0) return;   // mirrored: winding would flip
+    if (!vis){ victims.push(o); return; }
+    var attrs = Object.keys(g.attributes).sort().join(',');
+    var sig = _matSig(o.material) + '#' + attrs + '#' + (o.castShadow?1:0) + (o.receiveShadow?1:0) + '#' + o.renderOrder + '#' + (o.frustumCulled?1:0);
+    var b = buckets[sig]; if (!b){ b = buckets[sig] = { mat:o.material, geos:[], cs:o.castShadow, rs:o.receiveShadow, ro:o.renderOrder, fc:o.frustumCulled, src:[] }; order.push(sig); }
+    b.geos.push({ g:g, m:m }); b.src.push(o);
+  });
+  order.forEach(function(sig){
+    var b = buckets[sig]; if (b.src.length < 2 && !opts.all) return;                      // nothing to gain
+    var list = b.geos.map(function(x){ var gg = x.g.clone(); gg.applyMatrix4(x.m); return gg; });
+    var anyIndexed = list.some(function(gg){ return !!gg.index; }), allIndexed = list.every(function(gg){ return !!gg.index; });
+    if (anyIndexed && !allIndexed) list = list.map(function(gg){ return gg.index ? gg.toNonIndexed() : gg; });
+    list.forEach(function(gg){ Object.keys(gg.morphAttributes || {}).forEach(function(k){ delete gg.morphAttributes[k]; }); gg.groups = []; });
+    var mg = null; try { mg = THREE.BufferGeometryUtils.mergeBufferGeometries(list, false); } catch(e){ mg = null; }
+    list.forEach(function(gg){ gg.dispose(); });
+    if (!mg) return;
+    mg.computeBoundingSphere(); mg.computeBoundingBox();
+    var mesh = new THREE.Mesh(mg, b.mat); mesh.castShadow = b.cs; mesh.receiveShadow = b.rs; mesh.renderOrder = b.ro; mesh.frustumCulled = b.fc;
+    mesh.userData.batched = b.src.length; root.add(mesh); merged += b.src.length;
+    b.src.forEach(function(o){ victims.push(o); });
+  });
+  victims.forEach(function(o){ if (o.parent) o.parent.remove(o); });
+  // prune now-empty groups (but never ones someone still references)
+  var empties = []; root.traverse(function(o){ if (o !== root && !o.isMesh && !o.isLight && !o.isCamera && o.children.length === 0 && !keep.has(o) && o.type === 'Group') empties.push(o); });
+  empties.forEach(function(o){ if (o.parent) o.parent.remove(o); });
+  return merged;
+}
 /* ============================== ROAD ============================== */
 // shared drawing of the asphalt detail (used by both colour + bump maps)
 var RW = 512, RH = 1024;
@@ -1850,7 +1942,7 @@ function _gtex(uri, srgb){
 var sideMat = new THREE.MeshStandardMaterial({ color:0xbfb7a8, roughness:0.95, metalness:0.0 });
 whenModel('GROUND_COLOR', function(){
   sideMat.map = _gtex(window.GROUND_COLOR, true);
-  sideMat.color.set(0xffffff);
+  sideMat.color.set(0xd9c7ae);                                  // 24-Sep: warm sandstone tint — the raw tiles read as blown-out white under the golden sun
   if (window.GROUND_NORMAL){ sideMat.normalMap = _gtex(window.GROUND_NORMAL, false); sideMat.normalScale = new THREE.Vector2(0.7,0.7); }
   if (window.GROUND_ROUGH){ sideMat.roughnessMap = _gtex(window.GROUND_ROUGH, false); }
   sideMat.needsUpdate = true;
@@ -2402,6 +2494,7 @@ var NP = MOBILE ? 20 : 26, PSPACING = 9, PWRAP = NP*PSPACING;   // prop kit deci
     obj.rotation.y = side>0 ? Math.PI : 0;
     if (obj.userData.bulb) obj._lampSide = side;     // for dusk glow
     addBlob(obj, 2.9, 2.9, 0.62);                     // grounding shadow
+    staticBatch(obj);
     scene.add(obj);
     props.push(obj);
   }
@@ -2414,7 +2507,7 @@ function refreshPropsFor(maker){
     var obj = maker(); obj.userData.maker = maker;
     obj.position.copy(old.position); obj.rotation.copy(old.rotation); obj.visible = old.visible;
     if (obj.userData.bulb) obj._lampSide = old._lampSide;
-    addBlob(obj, 2.9, 2.9, 0.62);
+    addBlob(obj, 2.9, 2.9, 0.62); staticBatch(obj);
     scene.remove(old); scene.add(obj); props[i] = obj;
   }
   lampBulbs = props.filter(function(p){ return p.userData.bulb; }).map(function(p){ return p.userData.bulb; });
@@ -2489,7 +2582,7 @@ var MOD_BAG=['STRAIGHT','STRAIGHT','STRAIGHT','DAMAGED','DAMAGED','MARKET','CONS
 var MOD_LEN=48, N_MOD=9, MOD_WRAP=N_MOD*MOD_LEN;
 var roadModules=[];
 function fillModule(mod,variant){ while(mod.children.length) mod.remove(mod.children[0]); mod.userData.variant=variant; (MOD_BUILDERS[variant]||modStraight)(mod); }
-(function makeRoadModules(){ for(var i=0;i<N_MOD;i++){ var mod=new THREE.Group(); mod.position.z=-i*MOD_LEN+20; fillModule(mod, i<2?'STRAIGHT':pick(MOD_BAG)); scene.add(mod); roadModules.push(mod); } })();
+(function makeRoadModules(){ for(var i=0;i<N_MOD;i++){ var mod=new THREE.Group(); mod.position.z=-i*MOD_LEN+20; fillModule(mod, i<2?'STRAIGHT':pick(MOD_BAG)); staticBatch(mod); scene.add(mod); roadModules.push(mod); } })();
 
 /* recycling pedestrians strolling the sidewalks */
 var pedestrians = [];
@@ -2511,6 +2604,7 @@ buildPedestrians();   // procedural now; rebuilt with the GLB once it loads
 
 // overhead wires + laundry
 var wires = [];
+var WIRE_MAT = new THREE.LineBasicMaterial({ color:0x16161a }), CLOTH_MAT = new THREE.MeshLambertMaterial({ vertexColors:true, side:THREE.DoubleSide });
 var NW = 8, WSPACING = 42, WWRAP = NW*WSPACING;
 (function makeWires(){
   var clothColors = [0xe05030, 0x3080c0, 0x40a060, 0xd0c040, 0xc060a0];
@@ -2521,23 +2615,21 @@ var NW = 8, WSPACING = 42, WWRAP = NW*WSPACING;
       var t = k/16;
       pts.push(new THREE.Vector3(-12 + 24*t, 7.8 - Math.sin(t*Math.PI)*1.4, 0));
     }
-    for (var n=0;n<4;n++){
-      var line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(
-        pts.map(function(p){ return p.clone().add(new THREE.Vector3(0,-n*0.25,n*0.18-0.3)); })),
-        new THREE.LineBasicMaterial({ color:0x16161a }));
-      grp.add(line);
-    }
+    var segs = [];                                                   // 4 sagging cables → ONE LineSegments (was 4 lines × 4 materials per pole span)
+    for (var n=0;n<4;n++){ var off = new THREE.Vector3(0,-n*0.25,n*0.18-0.3); for (var q=0;q<pts.length-1;q++){ segs.push(pts[q].clone().add(off), pts[q+1].clone().add(off)); } }
+    grp.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(segs), WIRE_MAT));
     if (Math.random()<.7){
       // small hanging laundry along the wire (smaller + tilted so it reads as cloth, not boxes)
+      var cloths = [];                                               // 5 pieces of laundry → one vertex-coloured mesh
       for (var c=0;c<5;c++){
-        var cw = rand(.35,.6), ch = rand(.45,.7);
-        var cloth = new THREE.Mesh(new THREE.PlaneGeometry(cw, ch),
-          new THREE.MeshLambertMaterial({ color:pick(clothColors), side:THREE.DoubleSide }));
+        var cw = rand(.35,.6), ch = rand(.45,.7), cg = new THREE.PlaneGeometry(cw, ch), col = new THREE.Color(pick(clothColors));
         var t2 = 0.28 + c*0.11 + rand(-0.02,0.02);
-        cloth.position.set(-12+24*t2, 7.8 - Math.sin(t2*Math.PI)*1.4 - ch/2, 0);
-        cloth.rotation.z = rand(-0.18, 0.18);
-        grp.add(cloth);
+        cg.rotateZ(rand(-0.18, 0.18)); cg.translate(-12+24*t2, 7.8 - Math.sin(t2*Math.PI)*1.4 - ch/2, 0);
+        var ca = new Float32Array(cg.attributes.position.count*3); for (var v=0; v<ca.length; v+=3){ ca[v] = col.r; ca[v+1] = col.g; ca[v+2] = col.b; } cg.setAttribute('color', new THREE.BufferAttribute(ca, 3));
+        cloths.push(cg);
       }
+      var lm = THREE.BufferGeometryUtils ? THREE.BufferGeometryUtils.mergeBufferGeometries(cloths, false) : null;
+      if (lm) grp.add(new THREE.Mesh(lm, CLOTH_MAT));
     }
     grp.position.z = -i*WSPACING - rand(0,10);
     scene.add(grp);
@@ -2774,6 +2866,7 @@ var farSkyline = new THREE.Group(), farLayerNear = new THREE.Group(), farLayerFa
   farLayerFar.children.forEach(function(c){ if (c.position.x > -95 && c.position.x < -45 && Math.random() < 0.7) c.visible = false; });
   farSkyline.add(farLayerNear); farSkyline.add(farLayerFar);
   scene.add(farSkyline);
+  staticBatch(farLayerNear); staticBatch(farLayerFar);                        // 60 silhouettes × 1–6 parts → 2 draw calls
 })();
 // ---- the Arabian Sea on the horizon: a wide shimmering sheet behind the skyline, tinted by the day cycle ----
 // Seen from road height the water is a thin band on the horizon, so it is drawn as an upright strip behind the
@@ -2790,11 +2883,11 @@ seaGlint.position.set(-40, 7.9, -261.5); scene.add(seaGlint);   // sun path on t
 var CLOUD_DAY = new THREE.Color(0xf2ecf5), CLOUD_DUSK = new THREE.Color(0xc98a8a), CLOUD_NIGHT = new THREE.Color(0x232238);
 var SEA_DAY = new THREE.Color(0x5b93c4), SEA_DUSK = new THREE.Color(0x8a5a6a), SEA_NIGHT = new THREE.Color(0x101a30);
 // day -> dusk -> night palettes (three stops, lerped in the render loop)
-var SKY_TOP_DAY  = new THREE.Color(0x2f7fd6), SKY_TOP_DUSK  = new THREE.Color(0x6a2f7a), SKY_TOP_NIGHT  = new THREE.Color(0x070a1c);
-var SKY_BOT_DAY  = new THREE.Color(0xffe6b0), SKY_BOT_DUSK  = new THREE.Color(0xff6a30), SKY_BOT_NIGHT  = new THREE.Color(0x1a1436);
-var SKYLINE_DAY  = new THREE.Color(0x8a93b0), SKYLINE_DUSK  = new THREE.Color(0x4a2f55), SKYLINE_NIGHT  = new THREE.Color(0x12132a);
-var SKYLINE2_DAY = new THREE.Color(0x6f6a90), SKYLINE2_DUSK = new THREE.Color(0x35203f), SKYLINE2_NIGHT = new THREE.Color(0x0c0c1e);
-var SUN_DAY      = new THREE.Color(0xfff2c0), SUN_DUSK      = new THREE.Color(0xff5a2a), SUN_NIGHT      = new THREE.Color(0x2a3a66);
+var SKY_TOP_DAY  = new THREE.Color(0x4f86c6), SKY_TOP_DUSK  = new THREE.Color(0x6a2f7a), SKY_TOP_NIGHT  = new THREE.Color(0x070a1c);
+var SKY_BOT_DAY  = new THREE.Color(0xffcf96), SKY_BOT_DUSK  = new THREE.Color(0xff6a30), SKY_BOT_NIGHT  = new THREE.Color(0x1a1436);
+var SKYLINE_DAY  = new THREE.Color(0xb3968a), SKYLINE_DUSK  = new THREE.Color(0x4a2f55), SKYLINE_NIGHT  = new THREE.Color(0x12132a);
+var SKYLINE2_DAY = new THREE.Color(0xc9a792), SKYLINE2_DUSK = new THREE.Color(0x35203f), SKYLINE2_NIGHT = new THREE.Color(0x0c0c1e);
+var SUN_DAY      = new THREE.Color(0xffe3a0), SUN_DUSK      = new THREE.Color(0xff5a2a), SUN_NIGHT      = new THREE.Color(0x2a3a66);
 // lerp across the three stops: 0..0.5 day->dusk, 0.5..1 dusk->night
 function lerp3(out, a, b, c, t){
   if (t < 0.5) out.copy(a).lerp(b, t/0.5);
@@ -2810,7 +2903,7 @@ function updateSky(t){
   sunHalo.material.color.copy(sunSprite.material.color);
   sunSprite.material.opacity = 0.9 * (1 - Math.max(0,(t-0.55)/0.45));   // sun fades out into night
   sunHalo.material.opacity = 0.35 * (1 - Math.max(0,(t-0.55)/0.45));
-  sunSprite.position.y = 34 - t*30;    // sinks below the horizon by night
+  sunSprite.position.y = 24 - t*22;    // sits low (golden hour), sinks below the horizon by night
   sunHalo.position.y = sunSprite.position.y;
   if (typeof farSkyMat !== 'undefined'){   // tint the distant 3D skyline with the day cycle
     lerp3(farSkyMat.color,  SKYLINE_DAY,  SKYLINE_DUSK,  SKYLINE_NIGHT,  t);
@@ -2825,7 +2918,7 @@ function updateSky(t){
   }
 }
 var NIGHT_FOG = new THREE.Color(0x0e1024);
-var SUNLIGHT_DAY = new THREE.Color(0xffe0ac), SUNLIGHT_DUSK = new THREE.Color(0xff8850), SUNLIGHT_NIGHT = new THREE.Color(0x3a4a80);
+var SUNLIGHT_DAY = new THREE.Color(0xffcf8e), SUNLIGHT_DUSK = new THREE.Color(0xff8850), SUNLIGHT_NIGHT = new THREE.Color(0x3a4a80);
 updateSky(0);
 
 /* ---- image-based lighting: a warm golden-hour env map so PBR surfaces reflect the sky ---- */
@@ -4388,7 +4481,7 @@ function loadBuildingGLB(b64, opt){
       box = new THREE.Box3().setFromObject(model); size = box.getSize(new THREE.Vector3());
       var c = box.getCenter(new THREE.Vector3());
       model.position.set(-c.x, -box.min.y, -c.z);
-      model.traverse(function(o){ if (o.isMesh){ o.castShadow = false; o.receiveShadow = true; o.frustumCulled = true; } });   // perf: buildings don't cast
+      model.traverse(function(o){ if (o.isMesh){ o.castShadow = false; o.receiveShadow = true; o.frustumCulled = true; [].concat(o.material).forEach(function(m){ if (m){ m.userData.rigidBend = true; m.needsUpdate = true; } }); } });   // perf: buildings don't cast; rigid bend
       var holder = new THREE.Group(); holder.add(model);
       box = new THREE.Box3().setFromObject(holder); size = box.getSize(new THREE.Vector3());
       buildingDefs.push({
@@ -5050,6 +5143,7 @@ function makePothole(){  // broken asphalt with crumbling rim + a reflective pud
     var r = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(0.05,0.09)), rimMat);
     r.position.set(rand(-0.9,0.9), 0.05, rand(-0.9,0.9)); g.add(r);
   }
+  staticBatch(g);                                                  // 21 meshes → 3
   return { mesh:g, hw:0.85, d:1.1, jumpOver:true, top:0.30, ground:true };   // small hop clears it
 }
 /* ---- high-quality 3D Ganpati toran banner (Higgsfield → Tripo) ---- */
@@ -5183,7 +5277,24 @@ coinFaceTex.encoding = THREE.sRGBEncoding;
 var coinGeo = new THREE.CylinderGeometry(0.34,0.34,0.08,26,1);
 var coinEdgeMat = new THREE.MeshStandardMaterial({ color:0xe0a81e, metalness:1.0, roughness:0.28, emissive:0x3a2600, emissiveIntensity:0.35 });
 var coinFaceMat = new THREE.MeshStandardMaterial({ map:coinFaceTex, metalness:0.9, roughness:0.3, emissive:0x2a1c00, emissiveIntensity:0.35 });
+/* 24-Sep perf: coins are drawn as ONE InstancedMesh per coin part (was a draw call per coin — 20–40 on a coin arc).
+   makeCoin() hands back an empty Object3D proxy; coinInstSync() copies the proxies' matrices in just before each render. */
+var COIN_INST = null, _coinTmp = new THREE.Matrix4(), COIN_CAP = 128;
+function coinInstInit(){
+  if (COIN_INST || !propTemplates.coin) return COIN_INST;
+  var t = propTemplates.coin; t.updateMatrixWorld(true); var inv = new THREE.Matrix4().copy(t.matrixWorld).invert(), parts = [];
+  t.traverse(function(o){ if (!o.isMesh) return; var im = new THREE.InstancedMesh(o.geometry, o.material, COIN_CAP); im.count = 0; im.frustumCulled = false; im.castShadow = false;
+    im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(im); parts.push({ im:im, local:new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld) }); });
+  COIN_INST = parts.length ? parts : null; return COIN_INST;
+}
+function coinInstSync(){
+  if (!COIN_INST) return; var n = 0;
+  for (var i=0; i<coins.length && n < COIN_CAP; i++){ var m = coins[i].mesh; if (!m.userData.inst || !m.visible || !m.parent) continue; m.updateMatrix();
+    for (var k=0; k<COIN_INST.length; k++){ _coinTmp.multiplyMatrices(m.matrix, COIN_INST[k].local); COIN_INST[k].im.setMatrixAt(n, _coinTmp); } n++; }
+  for (var q=0; q<COIN_INST.length; q++){ var im = COIN_INST[q].im; if (im.count !== n || n){ im.count = n; im.instanceMatrix.needsUpdate = true; } }
+}
 function makeCoin(){
+  if (coinInstInit()){ var px = new THREE.Object3D(); px.userData.glb = true; px.userData.inst = true; return px; }
   var cGLB = propClone('coin'); if (cGLB){ cGLB.userData.glb = true; return cGLB; }
   var m = new THREE.Mesh(coinGeo, [coinEdgeMat, coinFaceMat, coinFaceMat]);
   m.rotation.x = Math.PI/2;   // face the player, spins on its axis
@@ -5303,6 +5414,16 @@ function spawnObstacle(type, lane, z){
   }
   return null;
 }
+function startChakkar(){
+  state.chakkar = 7; state.bonus += 500 * state.mult;                                         // the dare pays: +500, but 7 s of driving dizzy
+  if (window.PERF) PERF.mark('chakkar start');
+  popup('🌶️ CHAKKAR! MIRCHI ZYADA HO GAYI!', 'popEvent', 50, 24); popup('+500 · hold the line…', 'popSub', 50, 38);
+  var cv = renderer.domElement; cv.classList.add('chakkar');
+  if (AC && !state.muted){ var t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(), l = AC.createOscillator(), lg = AC.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(160, t + 1.4); l.frequency.value = 6; lg.gain.value = 40; l.connect(lg); lg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); o.connect(g); g.connect(masterGain); o.start(t); l.start(t); o.stop(t + 1.6); l.stop(t + 1.6); }
+}
+function endChakkar(){ state.chakkar = 0; bendPlan.hold = 0; if (bendPlan.lock || bendPlan.intro > 0){ bendPlan.curve = bendPlan.hill = bendPlan.amp = 0; } renderer.domElement.classList.remove('chakkar'); popup('😮‍💨 phew… sab seedha', 'popSub', 50, 30); }
 function spawnCoinRow(lane, z, n, arc){
   for (var i=0;i<n;i++){
     var c = makeCoin();
@@ -5312,8 +5433,16 @@ function spawnCoinRow(lane, z, n, arc){
     coins.push({ mesh:c, active:true });
   }
 }
+function makeMirchi(){                                        // CHAKKAR debuff: a glossy curved green chilli (with its stalk) in a sickly green halo
+  var g = new THREE.Group(), geo = new THREE.ConeGeometry(0.15, 0.95, 12, 8); geo.translate(0, -0.475, 0);
+  var P = geo.attributes.position; for (var i=0;i<P.count;i++){ var y = P.getY(i); P.setX(i, P.getX(i) + y*y*0.55); } geo.computeVertexNormals();
+  var body = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color:0x2fa51f, roughness:0.28, metalness:0.05, emissive:0x0b3a06, emissiveIntensity:0.6 })); body.rotation.z = 0.5; g.add(body);
+  var stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.22, 6), new THREE.MeshStandardMaterial({ color:0x6b7a2a, roughness:0.8 })); stalk.position.set(-0.03, 0.1, 0); stalk.rotation.z = -0.4; g.add(stalk);
+  var cap = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 6, 0, Math.PI*2, 0, Math.PI*0.5), stalk.material); cap.rotation.x = Math.PI; cap.scale.y = 0.5; g.add(cap);
+  g.add(powerHalo(0x7dff4a)); return g;
+}
 function spawnPowerup(kind, lane, z){
-  var m = kind==='chai' ? makeChai() : kind==='ganesh' ? makeGanesh() : makeTurbo();
+  var m = kind==='chai' ? makeChai() : kind==='ganesh' ? makeGanesh() : kind==='mirchi' ? makeMirchi() : makeTurbo();
   m.position.set(LANES[lane], 1.3, z);
   scene.add(m);
   powerups.push({ mesh:m, kind:kind, active:true });
@@ -5466,7 +5595,7 @@ function spawnChunk(z, forcedSafe){
   // powerups
   if (distSincePower > 380){
     distSincePower = 0;
-    spawnPowerup(pick(['chai','ganesh','turbo']), safe, z - 12);
+    spawnPowerup(state.score > 2500 && !state.chakkar && !flyover && Math.random() < 0.22 ? 'mirchi' : pick(['chai','ganesh','turbo']), safe, z - 12);   // mirchi = the CHAKKAR debuff (grab it for a bonus… if you can drive dizzy)
   }
 }
 
@@ -5794,41 +5923,70 @@ var sparkTex = canvasTex(64,64,function(g,w,h){
     g.beginPath(); g.moveTo(0,-w*0.48); g.lineTo(0,w*0.48); g.stroke(); g.restore(); }
 });
 
+
+/* ===================== PFX: pooled GPU particles (24-Sep perf) =====================
+   Every spark/puff used to be its own Mesh with its OWN new material, disposed when it died. That was up to ~60 draw
+   calls in a coin rush, constant garbage, and worse: when the last particle of a kind died its shader program was
+   released, so the next pickup recompiled it mid-run (a real hitch source in the 1 % lows). Now: three THREE.Points
+   pools (soft, soft-additive, spark-additive) with fixed buffers — 3 draw calls, zero allocation per particle. */
+var PFX = (function(){
+  var CAP = 700, sys = {}, scaleU = { value:800 };
+  var VS = 'attribute float alpha; attribute float psize; attribute vec3 pcol; varying float vA; varying vec3 vC; uniform float scale;\n' +
+           'void main(){ vA = alpha; vC = pcol; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = clamp(psize * scale / max(0.1, -mv.z), 1.0, 256.0); gl_Position = projectionMatrix * mv; }';
+  var FS = 'uniform sampler2D map; varying float vA; varying vec3 vC;\n' +
+           'void main(){ vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = linearToOutputTexel(vec4(vC * t.rgb, t.a * vA)); if (gl_FragColor.a < 0.004) discard; }';
+  function make(name, tex, additive){
+    var g = new THREE.BufferGeometry(), S = { n:0, pos:new Float32Array(CAP*3), col:new Float32Array(CAP*3), al:new Float32Array(CAP), sz:new Float32Array(CAP),
+      v:new Float32Array(CAP*3), life:new Float32Array(CAP), decay:new Float32Array(CAP), grav:new Float32Array(CAP), size0:new Float32Array(CAP), flag:new Uint8Array(CAP) };
+    g.setAttribute('position', new THREE.BufferAttribute(S.pos, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('pcol', new THREE.BufferAttribute(S.col, 3).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('alpha', new THREE.BufferAttribute(S.al, 1).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute('psize', new THREE.BufferAttribute(S.sz, 1).setUsage(THREE.DynamicDrawUsage));
+    g.setDrawRange(0, 0);
+    var m = new THREE.ShaderMaterial({ uniforms:{ map:{ value:tex }, scale:scaleU }, vertexShader:VS, fragmentShader:FS, transparent:true, depthWrite:false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending });
+    S.pts = new THREE.Points(g, m); S.pts.frustumCulled = false; S.pts.renderOrder = 5; S.geo = g; scene.add(S.pts); sys[name] = S; return S;
+  }
+  var tmpC = new THREE.Color();
+  // flags: 1 = ring (grow, no motion), 2 = jitter
+  function spawn(kind, x, y, z, vx, vy, vz, size, color, decay, grav, flags){
+    var S = sys[kind]; if (!S) return; var i = S.n; if (i >= CAP){ i = (Math.random() * CAP) | 0; } else S.n++;
+    S.pos[i*3] = x; S.pos[i*3+1] = y; S.pos[i*3+2] = z; S.v[i*3] = vx; S.v[i*3+1] = vy; S.v[i*3+2] = vz;
+    tmpC.setHex(color); S.col[i*3] = tmpC.r; S.col[i*3+1] = tmpC.g; S.col[i*3+2] = tmpC.b;
+    S.life[i] = 1; S.al[i] = 1; S.decay[i] = decay; S.grav[i] = grav; S.sz[i] = S.size0[i] = size; S.flag[i] = flags || 0;
+  }
+  function kill(S, i){ var j = --S.n; if (i === j) return;       // swap the last live particle into slot i
+    S.pos[i*3] = S.pos[j*3]; S.pos[i*3+1] = S.pos[j*3+1]; S.pos[i*3+2] = S.pos[j*3+2]; S.v[i*3] = S.v[j*3]; S.v[i*3+1] = S.v[j*3+1]; S.v[i*3+2] = S.v[j*3+2];
+    S.col[i*3] = S.col[j*3]; S.col[i*3+1] = S.col[j*3+1]; S.col[i*3+2] = S.col[j*3+2]; S.life[i] = S.life[j]; S.al[i] = S.al[j]; S.decay[i] = S.decay[j]; S.grav[i] = S.grav[j]; S.sz[i] = S.sz[j]; S.size0[i] = S.size0[j]; S.flag[i] = S.flag[j]; }
+  var dbs = new THREE.Vector2();
+  function update(dt){
+    if (renderer && camera){ renderer.getDrawingBufferSize(dbs); scaleU.value = dbs.y / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2)); }
+    for (var k in sys){ var S = sys[k];
+      for (var i = S.n - 1; i >= 0; i--){
+        S.life[i] -= dt * S.decay[i]; if (S.life[i] <= 0){ kill(S, i); continue; }
+        if (S.flag[i] & 1){ S.sz[i] = S.size0[i] * (0.5 + (1 - S.life[i]) * 3.4) * 2; S.al[i] = S.life[i] * 0.95; continue; }
+        var b = i*3; S.pos[b] += S.v[b]*dt; S.pos[b+1] += S.v[b+1]*dt; S.pos[b+2] += S.v[b+2]*dt; S.v[b+1] -= S.grav[i]*dt;
+        if (S.flag[i] & 2){ S.pos[b] += (Math.random()-0.5)*0.16; S.pos[b+1] += (Math.random()-0.5)*0.16; }
+        S.al[i] = S.life[i];
+      }
+      var G = S.geo; G.setDrawRange(0, S.n); if (S.n){ G.attributes.position.needsUpdate = true; G.attributes.pcol.needsUpdate = true; G.attributes.alpha.needsUpdate = true; G.attributes.psize.needsUpdate = true; }
+      S.pts.visible = S.n > 0;
+    }
+  }
+  function clear(){ for (var k in sys){ sys[k].n = 0; sys[k].geo.setDrawRange(0, 0); sys[k].pts.visible = false; } }
+  function count(){ var c = 0; for (var k in sys) c += sys[k].n; return c; }
+  return { make:make, spawn:spawn, update:update, clear:clear, count:count, sys:sys };
+})();
+PFX.make('soft', softTex, false); PFX.make('softAdd', softTex, true); PFX.make('spark', sparkTex, true);
 function burst(x,y,z,color,n,spread,up){
-  for (var i=0;i<n;i++){
-    var m = new THREE.MeshBasicMaterial({ map:softTex, color:color, transparent:true, opacity:1, depthWrite:false });
-    var p = new THREE.Mesh(partGeo, m);
-    var sz = rand(0.18,0.34); p.scale.set(sz,sz,sz);
-    p.position.set(x+rand(-0.2,0.2), y+rand(-0.2,0.2), z+rand(-0.2,0.2));
-    p.userData.v = new THREE.Vector3(rand(-spread,spread), rand(up*0.4, up), rand(-spread,spread)+2);
-    p.userData.life = 1; p.userData.decay = 1.8; p.userData.grav = 6; p.userData.spin = 0;
-    scene.add(p); particles.push(p);
-  }
+  for (var i=0;i<n;i++) PFX.spawn('soft', x+rand(-0.2,0.2), y+rand(-0.2,0.2), z+rand(-0.2,0.2), rand(-spread,spread), rand(up*0.4, up), rand(-spread,spread)+2, rand(0.18,0.34), color, 1.8, 6, 0);
 }
-
-// exciting coin pickup: gold/white sparks shooting out + an expanding flash
-function coinPop(x,y,z){
-  for (var i=0;i<16;i++){
-    var col = Math.random()<0.5 ? 0xfff2c0 : 0xffd24a;
-    var m = new THREE.MeshBasicMaterial({ map:sparkTex, color:col, transparent:true, opacity:1,
-      blending:THREE.AdditiveBlending, depthWrite:false });
-    var p = new THREE.Mesh(partGeo, m);
-    var sz = rand(0.22,0.5); p.scale.set(sz,sz,sz);
-    p.position.set(x,y,z);
-    var ang = rand(0,Math.PI*2), sp = rand(3.5,7.5);
-    p.userData.v = new THREE.Vector3(Math.cos(ang)*sp, rand(2.5,6.5), Math.sin(ang)*sp*0.5 + 2);
-    p.userData.life = 1; p.userData.decay = rand(2.2,3.6); p.userData.grav = 9; p.userData.spin = rand(-12,12);
-    scene.add(p); particles.push(p);
-  }
-  var rm = new THREE.MeshBasicMaterial({ map:sparkTex, color:0xffe39a, transparent:true, opacity:0.95,
-    blending:THREE.AdditiveBlending, depthWrite:false });
-  var flash = new THREE.Mesh(partGeo, rm);
-  flash.position.set(x,y,z); flash.scale.set(0.5,0.5,0.5);
-  flash.userData.life = 1; flash.userData.decay = 4.5; flash.userData.ring = true;
-  scene.add(flash); particles.push(flash);
+function coinPop(x,y,z){                                   // exciting coin pickup: gold/white sparks shooting out + an expanding flash
+  for (var i=0;i<16;i++){ var ang = rand(0,Math.PI*2), sp = rand(3.5,7.5);
+    PFX.spawn('spark', x, y, z, Math.cos(ang)*sp, rand(2.5,6.5), Math.sin(ang)*sp*0.5 + 2, rand(0.22,0.5), Math.random()<0.5 ? 0xfff2c0 : 0xffd24a, rand(2.2,3.6), 9, 0); }
+  PFX.spawn('spark', x, y, z, 0, 0, 0, 0.5, 0xffe39a, 4.5, 0, 1);
 }
-
 function updateParticles(dt){
+  PFX.update(dt);
   for (var i=particles.length-1;i>=0;i--){
     var p = particles[i];
     p.userData.life -= dt*(p.userData.decay||1.8);
@@ -6627,7 +6785,7 @@ function clearWorld(){
   coins.forEach(function(c){ scene.remove(c.mesh); });
   powerups.forEach(function(p){ scene.remove(p.mesh); });
   particles.forEach(function(p){ scene.remove(p); });
-  obstacles.length = coins.length = powerups.length = particles.length = 0;
+  obstacles.length = coins.length = powerups.length = particles.length = 0; PFX.clear();
   junctions.forEach(function(J){ scene.remove(J.group); }); junctions.length = 0;
   puddles.forEach(function(p){ scene.remove(p); }); puddles.length = 0;
   setpieces.forEach(function(S){ S.deco.forEach(function(d){ scene.remove(d); }); }); setpieces.length = 0; distSinceJunction = -200; distSinceSetpiece = -300; state.hydro = 0; state.eventSlow = 1; patrolReset(); zoneNow = 0;
@@ -6651,7 +6809,7 @@ function startGame(){
   state.speed = BASE_SPEED; state.timeScale = 1;
   state.lane = 1; state.x = 0; state.y = 0; state.vy = 0;
   state.jumping = false; state.ducking = false;
-  state.shield = false; state.turbo = 0; state.slowmo = 0; state.shake = 0;
+  state.shield = false; state.turbo = 0; state.slowmo = 0; state.shake = 0; state.chakkar = 0; BEND.psych.value = 0; renderer.domElement.classList.remove('chakkar');
   state.lastSpawnZ = SPAWN_AHEAD;
   bendReset();                                           // straight, flat opening
   warmShaders();
@@ -6662,7 +6820,7 @@ function startGame(){
   $('startScreen').classList.add('hidden');
   $('gameOverScreen').classList.add('hidden');
   $('hud').classList.remove('hidden');
-  $('powerStack').innerHTML = '';
+  $('powerStack').innerHTML = ''; updateHUD._c = null;
   showControls();
   // pre-fill the road ahead
   for (var z=-40; z>SPAWN_AHEAD; z-=32) spawnChunk(z, 1);  // intro rows all share the middle open lane (drift-safe)
@@ -6671,7 +6829,7 @@ function startGame(){
 function gameOver(){
   if (typeof endTestRide === 'function' && !state.practice) endTestRide();   // trial kit is over; the ride itself is rebuilt at the next start
   badshahMusic(false); if (flyover){ copSiren(0); }
-  state.running = false; state.over = true;
+  state.running = false; state.over = true; if (state.chakkar) endChakkar();
   bossShow(false);
   if (window.PERF) PERF.mark('DEATH lane=' + state.lane + ' x=' + state.x.toFixed(2) + ' y=' + state.y.toFixed(2) + ' near=' + JSON.stringify(obstacles.filter(function(o){ return o.root.position.z > -45 && o.root.position.z < 12; }).map(function(o){ return [o.kind, o.lane, +o.root.position.x.toFixed(1), +o.root.position.z.toFixed(1), +(o.hit.d||0).toFixed(1), o.hit.jumpOver?'J':o.hit.duckUnder?'D':o.hit.ground?'G':'S']; })));
   if (window.PERF) PERF.mark('DEATH score=' + (Math.floor(state.dist)+state.bonus) + ' speed=' + (state.speed||0).toFixed(1) + (monsoon&&monsoon.active?' [monsoon]':'') + (typeof bike!=='undefined'&&bike?' [boss]':'')+(typeof cop!=='undefined'&&cop&&copPaused?' [cop]':''));
@@ -7309,19 +7467,17 @@ function pwrRow(icon, remain, total, color){
 }
 function updateHUD(){
   state.score = Math.floor(state.dist) + state.bonus;
-  $('scoreVal').textContent = fmt(state.score);
-  $('coinNum').textContent = state.coins;
-  // combo multiplier chip
-  var chip = $('multChip');
-  if (state.mult > 1){ chip.textContent = '★ x' + state.mult; chip.classList.add('on'); }
-  else chip.classList.remove('on');
+  var H = updateHUD._c || (updateHUD._c = { score:-1, coins:-1, mult:-1, html:null, els:{ s:$('scoreVal'), c:$('coinNum'), m:$('multChip'), p:$('powerStack') } });   // DOM writes only on change (each write = a style/layout pass on phones)
+  if (H.score !== state.score){ H.score = state.score; H.els.s.textContent = fmt(state.score); }
+  if (H.coins !== state.coins){ H.coins = state.coins; H.els.c.textContent = state.coins; }
+  var chip = H.els.m;
+  if (H.mult !== state.mult){ H.mult = state.mult; if (state.mult > 1){ chip.textContent = '★ x' + state.mult; chip.classList.add('on'); } else chip.classList.remove('on'); }
   // power-up stack (only what's active), each with a live countdown
   var html = '';
   if (state.turbo > 0)  html += pwrRow('⚡', state.turbo, 3, '#30e0ff');
   if (state.slowmo > 0) html += pwrRow('☕', state.slowmo, 5, '#ffb060');
   if (state.shield)     html += '<div class="pwr"><span class="pic">🛡</span><span class="ptime">ON</span></div>';
-  var ps = $('powerStack');
-  if (ps.innerHTML !== html) ps.innerHTML = html;
+  if (H.html !== html){ H.html = html; H.els.p.innerHTML = html; }
 }
 
 /* ============================== MAIN LOOP ============================== */
@@ -7565,15 +7721,12 @@ function _fxMat(color, add){ var k = color+':'+add; if (!_fxMatCache[k]) _fxMatC
 function emitRideFx(dt){
   var fx = RIDE_FX[equippedOrTrial('fx')] || RIDE_FX.default, n = 0, r = fx.rate*dt*(state.turbo > 0 ? 2.2 : 1);
   while (r > 0){ if (Math.random() < r) n++; r -= 1; }
+  var kind = fx.add ? 'softAdd' : 'soft';
   for (var i=0;i<n;i++){
-    var col = (fx.color2 && Math.random() < 0.45) ? fx.color2 : fx.color;
-    var m = new THREE.MeshBasicMaterial({ map:softTex, color:col, transparent:true, opacity:1, depthWrite:false, blending: fx.add ? THREE.AdditiveBlending : THREE.NormalBlending });
-    var p = new THREE.Mesh(partGeo, m), sz = rand(fx.size[0], fx.size[1]); p.scale.set(sz, sz*(fx.streak ? 2.2 : 1), sz);
-    p.position.set(state.x + rand(-0.32,0.32), 0.28 + rand(0,0.25) + state.y, 1.1 + rand(-0.1,0.2));
-    p.userData.v = new THREE.Vector3(rand(-fx.spread,fx.spread), rand(fx.up*0.4, fx.up), 2 + rand(0, 1.5) + (fx.streak ? state.speed*0.05 : 0));
-    p.userData.life = 1; p.userData.decay = fx.decay; p.userData.grav = fx.grav; p.userData.spin = fx.spin || 0; p.userData.jitter = !!fx.jitter;
-    scene.add(p); particles.push(p);
-    if (fx.pop && Math.random() < 0.06) coinPop(p.position.x, p.position.y + 0.3, p.position.z);
+    var col = (fx.color2 && Math.random() < 0.45) ? fx.color2 : fx.color, sz = rand(fx.size[0], fx.size[1]) * (fx.streak ? 1.5 : 1);
+    var px = state.x + rand(-0.32,0.32), py = 0.28 + rand(0,0.25) + state.y, pz = 1.1 + rand(-0.1,0.2);
+    PFX.spawn(kind, px, py, pz, rand(-fx.spread,fx.spread), rand(fx.up*0.4, fx.up), 2 + rand(0, 1.5) + (fx.streak ? state.speed*0.05 : 0), sz, col, fx.decay, fx.grav, fx.jitter ? 2 : 0);
+    if (fx.pop && Math.random() < 0.06) coinPop(px, py + 0.3, pz);
   }
 }
 /* ---- F: test ride — a 45 s practice run with the garage preview (even unowned picks); nothing is charged, equipped or banked ---- */
@@ -8213,7 +8366,33 @@ function attractCarSpawn(){
   var lane = pick([0,2]); def.mesh.position.set(LANES[lane], 0, -150); scene.add(def.mesh);
   attract.cars.push({ mesh:def.mesh, lane:lane, v: 9 + Math.random()*6, honked:false });
 }
-function menuPrewarm(){                                        // on the menu / game-over screen: build the Sea Link and compile its shaders now, so the run never pays for it
+/* 24-Sep perf: warm every template the run will spawn — shader programs AND texture uploads — while you sit on the menu.
+   A first-time texture upload (a 2k building/vehicle map) or program link mid-run was the other big 1 %-low source.
+   Renders a few templates per call into a 16×16 target from a throwaway camera, in the real scene (same lights/fog → same programs). */
+var _warmed = new Set(), _warmRT = null, _warmCam = null;
+function worldPrewarm(budget){
+  if (!renderer || !scene) return 0;
+  var list = [];
+  function add(t){ if (t && t.isObject3D && !_warmed.has(t.uuid)) list.push(t); }
+  vehicleDefs.forEach(function(d){ add(d.template); }); Object.keys(propTemplates).forEach(function(k){ add(propTemplates[k]); });
+  bikeTemplates.forEach(add); cowTemplates.forEach(add); [carTemplate, policeJeepTemplate, bullockTemplate, roadSignTemplate, stallTemplate, cartTemplate, manTemplate, vendorTemplate, banner3dTemplate, badshahTemplate, playerRickshawTemplate].forEach(add);
+  walkerDefs.forEach(function(w){ add(w.template || w.scene || w.root); });
+  if (!list.length) return 0;
+  list = list.slice(0, budget || 12);
+  if (!_warmRT){ _warmRT = new THREE.WebGLRenderTarget(16, 16); _warmCam = new THREE.PerspectiveCamera(90, 1, 0.1, 400); }
+  var hold = new THREE.Group(), parents = [];
+  list.forEach(function(t, i){ parents.push(t.parent); var w = new THREE.Group(); w.add(t); w.position.set((i % 4 - 1.5) * 6, -600, -10 - Math.floor(i / 4) * 6); hold.add(w); });
+  _warmCam.position.set(0, -596, 12); _warmCam.lookAt(0, -600, -14);
+  scene.add(hold);
+  var prev = renderer.getRenderTarget();
+  try { renderer.setRenderTarget(_warmRT); renderer.render(scene, _warmCam); } catch(e){}
+  renderer.setRenderTarget(prev);
+  scene.remove(hold);
+  list.forEach(function(t, i){ if (t.parent) t.parent.remove(t); if (parents[i]) parents[i].add(t); t.position.set(t.position.x, t.position.y, t.position.z); _warmed.add(t.uuid); });
+  return list.length;
+}
+function menuPrewarm(){
+  try { worldPrewarm(10); } catch(e){}                                        // on the menu / game-over screen: build the Sea Link and compile its shaders now, so the run never pays for it
   if (menuPrewarm.done || typeof buildFlyoverDressing !== 'function') return;
   var T = propTemplates; if (!(T.pylon && T.parapet && T.flylamp && T.flycity && T.tollbooth)) return;
   menuPrewarm.done = true; buildFlyoverDressing(); flyUpgrade();
@@ -8366,7 +8545,8 @@ function animate(){
   // combo multiplier decays when you stop grabbing coins / near-missing
   if (state.comboTimer > 0){ state.comboTimer -= rawDt; if (state.comboTimer <= 0){ state.comboTimer = 0; state.mult = 1; } }
   // time scale comes ONLY from the chai slow-mo power-up (near miss no longer slows time)
-  var tsTarget = Math.min(state.slowmo > 0 ? 0.55 : 1, state.eventSlow || 1);   // chai slow-mo, or cinematic slow-mo while a set-piece is on you
+  var tsTarget = Math.min(state.slowmo > 0 ? 0.55 : 1, state.eventSlow || 1, state.chakkar > 0 ? 0.78 : 1);
+  if (state.chakkar > 0){ state.chakkar -= rawDt; if (state.chakkar <= 0) endChakkar(); }   // chai slow-mo, or cinematic slow-mo while a set-piece is on you
   state.timeScale += (tsTarget - state.timeScale) * Math.min(1, rawDt*12);
 
   // speed ramp
@@ -8807,8 +8987,9 @@ function animate(){
     if (Math.abs(pu.mesh.position.z - PLAYER_Z) < 1.3 &&
         Math.abs(pu.mesh.position.x - player.position.x) < 1.1){
       powerSound(true);
-      burst(pu.mesh.position.x, 1.4, 0, pu.kind==='turbo'?0x30e0ff:pu.kind==='chai'?0xc08040:0xff8c2a, 10, 2.5, 3.5);
-      if (pu.kind==='chai'){ state.slowmo = 5; }
+      burst(pu.mesh.position.x, 1.4, 0, pu.kind==='turbo'?0x30e0ff:pu.kind==='chai'?0xc08040:pu.kind==='mirchi'?0x7dff4a:0xff8c2a, 10, 2.5, 3.5);
+      if (pu.kind==='mirchi'){ startChakkar(); }
+      else if (pu.kind==='chai'){ state.slowmo = 5; }
       else if (pu.kind==='ganesh'){ state.shield = true; }
       else { state.turbo = 3; honk(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn(); }
       scene.remove(pu.mesh); powerups.splice(i,1);
@@ -8832,7 +9013,7 @@ function animate(){
   seaGlint.position.x = -40 + dayT*70 + bend*0.3;        // the sun path on the water drifts with the sinking sun
   lerp3(scene.fog.color, DAY_FOG, DUSK_FOG, NIGHT_FOG, dayT);
   hemi.intensity = 0.45 - dayT*0.34;                    // ambient dims into night
-  sun.intensity = Math.max(0.12, 1.7 - dayT*1.75);      // sunlight -> faint moonlight
+  sun.intensity = Math.max(0.12, 1.95 - dayT*2.0);      // sunlight -> faint moonlight
   lerp3(sun.color, SUNLIGHT_DAY, SUNLIGHT_DUSK, SUNLIGHT_NIGHT, dayT);
   renderer.toneMappingExposure = 0.72 - dayT*0.12;      // a touch moodier after dark
   // headlight & street lamps ramp up as darkness falls
@@ -8862,7 +9043,7 @@ function animate(){
   );
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
   camera.lookAt(state.x*0.5 + argueX + BEND.curve.value * 900, 1.6 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
-  camera.rotateZ(-BEND.curve.value * 60);                                                            // bank with it
+  camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway)
   var evOn = (state.eventSlow && state.eventSlow < 1);                                                // set-piece on: camera drops low and close so the crowd fills the frame
   camBase.y += ((evOn ? 3.1 : 4.4) - camBase.y) * Math.min(1, rawDt*2.5);
   camBase.z += ((evOn ? 6.2 : 7.5) - camBase.z) * Math.min(1, rawDt*2.5);
