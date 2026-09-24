@@ -16,7 +16,7 @@ window.addEventListener('error', function(e){
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { width:100%; height:100%; overflow:hidden; background:#1a0f2e; font-family:'Trebuchet MS','Arial Black',sans-serif; touch-action:none; }
-  canvas { display:block; filter:saturate(1.12) contrast(1.05); }
+  canvas { display:block; }   /* 24-Sep perf: the old CSS saturate/contrast filter re-composited the full-screen WebGL canvas every frame; the grade pass does this on desktop now */
   /* cinematic grade: warm tint + vignette over the 3D, beneath the HUD */
   #grade { position:fixed; inset:0; pointer-events:none; z-index:1;
     background:
@@ -678,6 +678,9 @@ window.addEventListener('error', function(e){
   .pmHint { margin-top:12px; font-size:12px; opacity:.55; letter-spacing:1px; }
   @media (max-width:760px){ #hud #coinPill { padding-right:12px; } #comboBar { width:90px; } }
   @media (max-width:560px){ #comboCap { top:calc(max(14px, env(safe-area-inset-top)) + 58px); } #hud #multChip { font-size:24px; } }
+  #speedLines { position:fixed; inset:-6%; z-index:1; pointer-events:none; opacity:0; background:center/cover no-repeat; }
+  .coinFly { position:fixed; left:0; top:0; z-index:30; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; pointer-events:none; opacity:0; display:flex; align-items:center; justify-content:center;
+    font:800 18px/1 'Baloo 2',sans-serif; color:#8a5400; background:radial-gradient(circle at 35% 30%, #fff1a0, #ffc928 50%, #d98c0a 90%); box-shadow:inset 0 0 0 2px #e8a414, 0 0 12px rgba(255,200,60,.8); will-change:transform; }
   body.inGarage #perfHud { display:none !important; }
   canvas.chakkar { animation:chakkarHue 2.4s ease-in-out infinite alternate; } @keyframes chakkarHue { from { filter:saturate(1.5) hue-rotate(-18deg) contrast(1.05); } to { filter:saturate(1.7) hue-rotate(28deg) contrast(1.08); } }
   #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
@@ -1607,7 +1610,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '24-Sep-c';
+var BUILD_TAG = '24-Sep-d';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -6140,7 +6143,7 @@ function initAudio(){
   limiter.threshold.value = -10; limiter.knee.value = 6; limiter.ratio.value = 14; limiter.attack.value = 0.002; limiter.release.value = 0.18;
   var soft = AC.createWaveShaper(); soft.oversample = '2x';                      // soft-clip safety net after the limiter: nothing can crackle a laptop speaker
   (function(){ var n = 1024, c = new Float32Array(n); for (var i=0;i<n;i++){ var x = i*2/n - 1; c[i] = Math.tanh(x*1.6)/Math.tanh(1.6); } soft.curve = c; })();
-  masterGain.connect(limiter); limiter.connect(soft); soft.connect(AC.destination);
+  masterGain.connect(limiter); limiter.connect(soft); soft.connect(AC.destination); window._rrLimiter = limiter;
   // engine: sawtooth + lowpass, putt-putt via LFO on gain
   engineOsc = AC.createOscillator(); engineOsc.type='sawtooth'; engineOsc.frequency.value = 55;
   var lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 380;
@@ -6302,6 +6305,7 @@ function startDhol(){
         dr.connect(dg); dg.connect(dholGain); dr.start(t); dr.stop(t+stepMs/1000*4+0.05);
       }
     }
+    if (state.running && !state.muted && typeof FEEL !== 'undefined') try { FEEL.lead(beat % 8, frac, AC.currentTime, stepMs); } catch(e){}
     beat++;
     dholTimer = setTimeout(tick, stepMs);
   }
@@ -6391,7 +6395,7 @@ function goLane(dir){
     if (!badshah.doorTold){ badshah.doorTold = true; say('driver', pick(['Arre, gaadi hai idhar!', 'Side nahi milegi, bhai.']), 50, 46); }
     return;
   }
-  if (nl !== state.lane){ state.lane = nl; state.swerveTimer = 0.5; }
+  if (nl !== state.lane){ state.lane = nl; state.swerveTimer = 0.5; if (state.speed > BASE_SPEED + 4 || Math.random() < 0.5) FEEL.skid(dir); }
 }
 function doJump(){
   if (!state.running || state.jumping || state.ducking) return;
@@ -6927,6 +6931,103 @@ function clearWorld(){
   puddles.forEach(function(p){ scene.remove(p); }); puddles.length = 0;
   setpieces.forEach(function(S){ S.deco.forEach(function(d){ scene.remove(d); }); }); setpieces.length = 0; distSinceJunction = -200; distSinceSetpiece = -300; state.hydro = 0; state.eventSlow = 1; patrolReset(); zoneNow = 0;
 }
+
+/* ===================== FEEL + SOUND pass (24-Sep): juice that makes the ride land in your hands =====================
+   speed lines, turbo FOV kick, near-miss camera nudge + whoosh, skid marks on lane changes, landing squash, coins that
+   fly into the counter, crash hit-stop + haptics; engine harmonic + turbo whine, stereo whoosh of passing traffic,
+   an echo under flyover decks, a shehnai-style lead that joins the dhol in the harder zones, soft UI clicks. */
+var FEEL = (function(){
+  var fovKick = 0, lastFov = 58, squash = 0;
+  // speed lines: one pre-drawn radial streak image on a DOM layer (no GPU pass)
+  var sl = document.createElement('div'); sl.id = 'speedLines';
+  (function(){ var c = document.createElement('canvas'); c.width = c.height = 1024; var g = c.getContext('2d'); g.translate(512, 512);
+    for (var i=0;i<150;i++){ var a = Math.random()*Math.PI*2, r0 = 250 + Math.random()*110, r1 = r0 + 160 + Math.random()*320, w = 0.8 + Math.random()*2.6;
+      var gr = g.createLinearGradient(Math.cos(a)*r0, Math.sin(a)*r0, Math.cos(a)*r1, Math.sin(a)*r1); gr.addColorStop(0, 'rgba(255,248,230,0)'); gr.addColorStop(1, 'rgba(255,255,255,0.95)');
+      g.strokeStyle = gr; g.lineWidth = w; g.beginPath(); g.moveTo(Math.cos(a)*r0, Math.sin(a)*r0); g.lineTo(Math.cos(a)*r1, Math.sin(a)*r1); g.stroke(); }
+    sl.style.backgroundImage = 'url(' + c.toDataURL() + ')'; })();
+  document.body.appendChild(sl);
+  // skid marks: a small pool of dark streaks laid on the road behind the rear wheels
+  var skidMat = [], skids = [], skidGeo = new THREE.PlaneGeometry(0.16, 1.5);
+  for (var i=0;i<24;i++){ var m = new THREE.MeshBasicMaterial({ color:0x141210, transparent:true, opacity:0, depthWrite:false }); var q = new THREE.Mesh(skidGeo, m);
+    q.rotation.x = -Math.PI/2; q.position.y = 0.022; q.visible = false; q.renderOrder = 2; scene.add(q); skids.push({ m:q, life:0 }); }
+  var skidI = 0;
+  function skid(dir){
+    if (state.y > 0.2) return;
+    for (var w=-1; w<=1; w+=2){ var s = skids[skidI++ % skids.length]; s.m.visible = true; s.life = 1; s.m.position.set(state.x + w*0.42, 0.022, PLAYER_Z + 1.1); s.m.rotation.z = -dir*0.28; s.m.material.opacity = 0.34; }
+  }
+  // coins that fly to the counter
+  var pool = [], pill = null;
+  for (var k=0;k<10;k++){ var e = document.createElement('div'); e.className = 'coinFly'; e.textContent = '₹'; document.body.appendChild(e); pool.push({ e:e, busy:false }); }
+  var v3 = new THREE.Vector3();
+  function coinFly(pos){
+    var slot = pool.find(function(p){ return !p.busy; }); if (!slot) return; pill = pill || document.getElementById('coinPill'); if (!pill) return;
+    v3.copy(pos).project(camera); var x = (v3.x*0.5+0.5)*innerWidth, y = (-v3.y*0.5+0.5)*innerHeight, r = pill.getBoundingClientRect(), tx = r.left + 26, ty = r.top + r.height/2;
+    var e = slot.e; slot.busy = true; e.style.transition = 'none'; e.style.opacity = '1'; e.style.transform = 'translate(' + x + 'px,' + y + 'px) scale(1.1)'; void e.offsetWidth;
+    e.style.transition = 'transform .5s cubic-bezier(.5,-0.3,.7,1), opacity .5s'; e.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(.55)';
+    setTimeout(function(){ e.style.opacity = '0'; slot.busy = false; }, 480);
+  }
+  function haptic(ms){ try { if (navigator.vibrate && IS_TOUCH) navigator.vibrate(ms); } catch(e){} }
+  // ---- sound ----
+  var eng2 = null, whine = null, send = null;
+  function audioInit(){
+    if (!AC || eng2) return;
+    eng2 = { o:AC.createOscillator(), g:AC.createGain() }; eng2.o.type = 'triangle'; eng2.o.frequency.value = 110; eng2.g.gain.value = 0; var lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
+    eng2.o.connect(lp); lp.connect(eng2.g); eng2.g.connect(masterGain); eng2.o.start();
+    whine = { o:AC.createOscillator(), g:AC.createGain() }; whine.o.type = 'sine'; whine.o.frequency.value = 600; whine.g.gain.value = 0; whine.o.connect(whine.g); whine.g.connect(masterGain); whine.o.start();
+    if (window._rrLimiter){ send = AC.createGain(); send.gain.value = 0; var dl = AC.createDelay(0.5); dl.delayTime.value = 0.11; var fb = AC.createGain(); fb.gain.value = 0.38; var elp = AC.createBiquadFilter(); elp.type = 'lowpass'; elp.frequency.value = 2200;
+      masterGain.connect(send); send.connect(dl); dl.connect(elp); elp.connect(fb); fb.connect(dl); elp.connect(window._rrLimiter); }
+  }
+  function whoosh(pan, big){
+    if (!AC || state.muted || !noiseBuf) return; var t = AC.currentTime, n = AC.createBufferSource(); n.buffer = noiseBuf; n.loop = true;
+    var f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1; f.frequency.setValueAtTime(big ? 900 : 1900, t); f.frequency.exponentialRampToValueAtTime(big ? 220 : 420, t + 0.42);
+    var g = AC.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(big ? 0.16 : 0.09, t + 0.06); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+    var p = AC.createStereoPanner ? AC.createStereoPanner() : null; n.connect(f); f.connect(g); if (p){ p.pan.setValueAtTime(Math.max(-1, Math.min(1, pan)), t); p.pan.linearRampToValueAtTime(Math.max(-1, Math.min(1, pan*0.4)), t + 0.4); g.connect(p); p.connect(masterGain); } else g.connect(masterGain);
+    n.start(t); n.stop(t + 0.5);
+  }
+  function click(){ if (!AC || state.muted) return; var t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(1500, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.04);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06); o.connect(g); g.connect(masterGain); o.start(t); o.stop(t + 0.08); }
+  document.addEventListener('click', function(e){ var b = e.target.closest && e.target.closest('button, .btn, .vehCard, .g2Card, .g2Tab, .gSubTab, #garageBack, #pauseBtn'); if (b) click(); }, true);
+  // shehnai-ish lead that joins the dhol in the harder zones (called from the dhol scheduler, on its clock)
+  var SC = [293.7, 311.1, 370.0, 392.0, 440.0, 466.2, 554.4, 587.3], li = 3;
+  function lead(step, frac, t, stepMs){
+    var lvl = zoneNow >= 3 ? 1 : 0; if (typeof heat === 'function' && heat() > 0.5) lvl = 2; if (!lvl || !state.running || state.muted || !dholGain) return;
+    if (!(step % 2 === 0 && (lvl === 2 || step % 4 === 0))) return; if (Math.random() < 0.25) return;
+    li = Math.max(0, Math.min(SC.length-1, li + (Math.random() < 0.5 ? -1 : 1) * (Math.random() < 0.3 ? 2 : 1)));
+    var dur = stepMs/1000 * (lvl === 2 ? 1.8 : 3.4), o = AC.createOscillator(), vib = AC.createOscillator(), vg = AC.createGain(), bp = AC.createBiquadFilter(), g = AC.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(SC[li]*0.985, t); o.frequency.exponentialRampToValueAtTime(SC[li], t + 0.06); vib.frequency.value = 5.5; vg.gain.value = SC[li]*0.012; vib.connect(vg); vg.connect(o.frequency);
+    bp.type = 'bandpass'; bp.frequency.value = 1250; bp.Q.value = 2.2; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.05, t + 0.04); g.gain.setValueAtTime(0.05, t + dur*0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(bp); bp.connect(g); g.connect(dholGain); o.start(t); vib.start(t); o.stop(t + dur + 0.02); vib.stop(t + dur + 0.02);
+  }
+  function update(rawDt, dz){
+    audioInit();
+    var frac = Math.max(0, Math.min(1, (state.speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED))), tb = state.turbo > 0 ? 1 : 0;
+    // FOV: turbo punch + near-miss kicks, eased
+    fovKick = Math.max(0, fovKick - rawDt*14); var fov = 58 + tb*7 + frac*2 + fovKick; lastFov += (fov - lastFov) * Math.min(1, rawDt*6);
+    if (Math.abs(camera.fov - lastFov) > 0.01){ camera.fov = lastFov; camera.updateProjectionMatrix(); }
+    // speed lines
+    var so = state.running ? Math.max(0, (frac - 0.55) / 0.45) * 0.28 + tb*0.42 : 0; sl.style.opacity = so.toFixed(3);
+    if (so > 0.01) sl.style.transform = 'scale(' + (1.05 + Math.random()*0.04).toFixed(3) + ') rotate(' + (Math.random()*6).toFixed(1) + 'deg)';
+    // skids ride the road and fade
+    for (var i=0;i<skids.length;i++){ var s = skids[i]; if (s.life <= 0) continue; s.life -= rawDt*0.55; s.m.position.z += dz; s.m.material.opacity = Math.max(0, s.life)*0.34; if (s.life <= 0) s.m.visible = false; }
+    // landing squash
+    if (squash > 0){ squash = Math.max(0, squash - rawDt*5); player.scale.y *= 1 - Math.sin(squash*Math.PI)*0.12; }
+    // engine layers
+    if (eng2){ var base = 45 + state.speed*2.6, on = state.running ? 1 : 0, t = AC.currentTime;
+      eng2.o.frequency.setTargetAtTime(base*2, t, 0.1); eng2.g.gain.setTargetAtTime(on*(0.012 + frac*0.03), t, 0.2);
+      whine.o.frequency.setTargetAtTime(base*6, t, 0.2); whine.g.gain.setTargetAtTime(on*tb*0.018, t, 0.15);
+      if (send){ var under = false; for (var m=0;m<roadModules.length;m++){ var md = roadModules[m]; if (md.userData.variant === 'FLYOVER' && Math.abs(md.position.z) < 4.2){ under = true; break; } }
+        if (!under && typeof GANTRY !== 'undefined' && Math.abs(GANTRY.group.position.z) < 1.2 && GANTRY.group.visible) under = true;
+        send.gain.setTargetAtTime(on*(under ? 0.55 : 0), t, under ? 0.05 : 0.25); } }
+  }
+  return {
+    update:update, skid:skid, coinFly:coinFly, haptic:haptic, whoosh:whoosh, lead:lead,
+    nearMiss:function(o){ state.shake = Math.max(state.shake, 0.16); fovKick = Math.min(6, fovKick + 3.5); whoosh((o.root.position.x - player.position.x)/3, o.kind === 'truck' || o.kind === 'bus' || o.kind === 'tanker'); haptic(18); },
+    land:function(){ squash = 1; haptic(12); },
+    crash:function(){ haptic([60, 40, 90]); state.timeScale = 0.02; },
+    reset:function(){ sl.style.opacity = '0'; fovKick = 0; lastFov = 58; squash = 0; if (send && AC) send.gain.value = 0; if (eng2 && AC){ eng2.g.gain.value = 0; whine.g.gain.value = 0; } },
+    pass:function(o){ var big = o.kind === 'truck' || o.kind === 'bus' || o.kind === 'tanker' || o.kind === 'tempo'; whoosh((o.root.position.x - player.position.x)/3.5, big); }
+  };
+})();
 function startGame(){
   state.paused = false; var _pm = document.getElementById('pauseMenu'); if (_pm) _pm.classList.add('hidden');
   state.practice = null; var _pc = document.getElementById('practiceChip'); if (_pc) _pc.classList.add('hidden');
@@ -6972,6 +7073,7 @@ function gameOver(){
   if (window.PERF) PERF.mark('DEATH lane=' + state.lane + ' x=' + state.x.toFixed(2) + ' y=' + state.y.toFixed(2) + ' near=' + JSON.stringify(obstacles.filter(function(o){ return o.root.position.z > -45 && o.root.position.z < 12; }).map(function(o){ return [o.kind, o.lane, +o.root.position.x.toFixed(1), +o.root.position.z.toFixed(1), +(o.hit.d||0).toFixed(1), o.hit.jumpOver?'J':o.hit.duckUnder?'D':o.hit.ground?'G':'S']; })));
   if (window.PERF) PERF.mark('DEATH score=' + (Math.floor(state.dist)+state.bonus) + ' speed=' + (state.speed||0).toFixed(1) + (monsoon&&monsoon.active?' [monsoon]':'') + (typeof bike!=='undefined'&&bike?' [boss]':'')+(typeof cop!=='undefined'&&cop&&copPaused?' [cop]':''));
   state.timeScale = 0.18; // dramatic slow-mo, eased back in render loop
+  FEEL.crash(); setTimeout(function(){ FEEL.reset(); }, 60);                                        // hit-stop beat + haptic
   crashSound();
   if (engineGain) engineGain.gain.setTargetAtTime(0.0, AC.currentTime, 0.2);
   state.score = Math.floor(state.dist) + state.bonus;
@@ -7585,6 +7687,7 @@ function checkNearMiss(o){
         trafficHonk(o.kind);
       }
       reactBystanders(o.root.position.x);
+      FEEL.nearMiss(o);
       addCombo();
       state.bonus += 25 * state.mult;
       var now = Date.now();
@@ -8543,7 +8646,7 @@ function attractTick(dt){
   if ((attractTick._pw = (attractTick._pw || 0) + dt) > 1.5){ attractTick._pw = 0; menuPrewarm(); }
   var kb = Math.min(1, dt*0.5); BEND.curve.value += (0.0006 - BEND.curve.value)*kb; BEND.hill.value += (0.00012 - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
   var A = attract, now = Date.now()*0.001;
-  if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; if (A.roll == null && !A.launch) A.roll = 0; }
+  if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; if (camera.fov !== 62){ camera.fov = 62; camera.updateProjectionMatrix(); } state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; if (A.roll == null && !A.launch) A.roll = 0; }
   A.t += dt;
   // wind: gusts every few seconds — kites yaw, laundry flaps, tassels swing
   A.nextGust -= dt; if (A.nextGust <= 0){ A.gust = 1; A.nextGust = 3 + Math.random()*5; windSound(); }
@@ -8720,9 +8823,9 @@ function animate(){
     state.vy -= 26*dt;
     state.y += state.vy*dt;
     if (state.y <= 0){ state.y = 0; state.jumping = false;
-      burst(state.x, 0.15, 0.8, 0xb09060, 5, 1.2, 1.5); }
+      burst(state.x, 0.15, 0.8, 0xb09060, 5, 1.2, 1.5); FEEL.land(); }
   }
-  player.position.y = state.y;
+  player.position.y = state.y + (state.jumping ? 0 : Math.sin(performance.now()*0.022)*0.008);   // engine shiver on the springs
   player.rotation.x = state.jumping ? -0.28 : (state.ducking ? 0.12 : 0);
   player.scale.y = state.ducking ? 0.62 : 1;
 
@@ -9054,6 +9157,7 @@ function animate(){
     checkNearMiss(o);
     if (!o.passed && o.root.position.z > PLAYER_Z + (o.hit.d||2)/2 + 1.5){   // you just overtook it
       o.passed = true;
+      if ((o.drift || o.isBike) && Math.abs(o.root.position.x - player.position.x) < 4.5 && !o.nearMissed) FEEL.pass(o);
       if (o.kind === 'bus') shout('bus', 0.35, o.root.position.x);
     }
     if (o.root.position.z > KILL_BEHIND){
@@ -9113,7 +9217,7 @@ function animate(){
       state.bonus += 10 * state.mult;
       if (state.comboTimer > 0) state.comboTimer = Math.max(state.comboTimer, 2.5);  // coins sustain combo
       chime(state.coins);
-      coinPop(c.mesh.position.x, c.mesh.position.y, 0);
+      coinPop(c.mesh.position.x, c.mesh.position.y, 0); FEEL.coinFly(c.mesh.position); if (state.coins % 5 === 0) FEEL.haptic(8);
       bumpEl('coinPill');
       scene.remove(c.mesh); coins.splice(i,1);
     }
@@ -9176,6 +9280,7 @@ function animate(){
 
   updateMonsoon(dt);                                    // rain / storm darkening / lightning (layered on the day cycle)
 
+  FEEL.update(rawDt, dz);
   // camera: follow + shake
   state.shake = Math.max(0, state.shake - rawDt*2.2);
   var sh = state.shake;
