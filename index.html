@@ -714,12 +714,92 @@ window.addEventListener('error', function(e){
   .goMis { display:flex; flex-direction:column; gap:6px; align-items:center; margin-top:10px; }
   .goMis .gm { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#fff3d6; } .goMis .gm i { display:block; width:90px; height:7px; border-radius:4px; background:rgba(0,0,0,.4); overflow:hidden; } .goMis .gm em { display:block; height:100%; background:#7dff9b; }
   .goMis .gm.done { color:#ffce3a; } .goMis button { border:0; border-radius:8px; padding:4px 10px; font:800 12px/1 'Baloo 2',sans-serif; background:#ffce3a; color:#2a1c05; cursor:pointer; pointer-events:auto; }
-  /* results screen: two columns on wide screens (run summary | board); compact + scrollable on short ones */
-  @media (min-width:900px){ #gameOverScreen { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr); grid-template-rows:repeat(14, auto); column-gap:48px; align-content:center; justify-items:center; }
-    #gameOverScreen > * { grid-column:1; } #gameOverScreen > .goRight { grid-column:2; grid-row:1 / 15; align-self:center; } #gameOverScreen .goRight .boardTitle { margin-top:0 !important; } }
-  #gameOverScreen .quip { margin-top:8px; } #gameOverScreen .finalScore { margin-top:12px; } #gameOverScreen #restartBtn { margin-top:16px; }
-  @media (max-height:720px){ #gameOverScreen { justify-content:flex-start; overflow-y:auto; } #gameOverScreen .goTitle { font-size:clamp(34px,7vw,56px); } #gameOverScreen .goRight .board .hsRow:nth-child(n+6) { display:none; } }
-  @media (max-width:899px){ #gameOverScreen { justify-content:flex-start; overflow-y:auto; padding-top:14px; } }
+
+  /* ===================== RESULTS v2 (24-Sep): the workshop clipboard scorecard ===================== */
+  #gameOverScreen.go2 { display:flex; flex-direction:row; align-items:center; justify-content:center; gap:min(3vw,40px); padding:max(12px,2vh) 12px; overflow-y:auto; background:#16100b; }
+  #gameOverScreen.go2:not(.hidden) > * { animation:none; }
+  .goBg { position:fixed; inset:0; background:#1a140f center/cover no-repeat; filter:blur(3px) brightness(.62) saturate(1.05); transform:scale(1.04); z-index:0; }
+  .goBg::after { content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 45%, rgba(20,12,6,0) 30%, rgba(12,8,4,.65) 100%); }
+  .goCard { position:relative; z-index:1; width:min(94vw,560px); flex:none; padding:min(1.6vh,14px); border-radius:14px; background:linear-gradient(160deg,#45392f,#2a221c 55%,#3a2f26); box-shadow:0 26px 60px rgba(0,0,0,.6), inset 0 0 0 2px rgba(255,255,255,.06), inset 0 0 0 5px rgba(0,0,0,.25);
+    animation:goDrop .6s cubic-bezier(.2,1.25,.35,1) both; margin-top:max(24px,3.4vh); }
+  @keyframes goDrop { from { opacity:0; transform:translateY(-60px) rotate(-3deg); } to { opacity:1; transform:none; } }
+  .goClip { position:absolute; left:50%; top:max(-30px,-3.6vh); transform:translateX(-50%); width:min(34%,190px); height:max(46px,5.4vh); border-radius:10px 10px 6px 6px; z-index:3;
+    background:linear-gradient(180deg,#b0b5b7,#686e71 55%,#8a9093); box-shadow:0 5px 10px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.55); }
+  .goClip i { position:absolute; left:50%; top:-16px; transform:translateX(-50%); width:36px; height:36px; border-radius:50%; border:6px solid #8c9295; border-bottom-color:transparent; }
+  .goPaper { position:relative; padding:max(26px,3.2vh) min(4vw,28px) min(2vh,16px); border-radius:6px; color:#1c1a18; text-align:center; overflow:hidden;
+    background:radial-gradient(ellipse at 20% 8%, rgba(255,255,255,.45), rgba(255,255,255,0) 50%), radial-gradient(ellipse at 88% 92%, rgba(120,90,40,.24), rgba(0,0,0,0) 55%), repeating-linear-gradient(0deg, rgba(90,70,40,.03) 0 2px, transparent 2px 5px), #ece2c6;
+    box-shadow:inset 0 0 36px rgba(110,80,30,.3); }
+  .goDoodle { position:absolute; pointer-events:none; opacity:.8; } .goCrownL { left:5%; top:max(18px,2.4vh); width:min(9%,48px); transform:rotate(-12deg); }
+  .goPalm { left:3%; top:max(70px,8.5vh); width:min(18%,96px); opacity:.55; } .goGate { right:3%; top:max(70px,8.5vh); width:min(22%,120px); opacity:.55; }
+  .go2 .goTitle { font:400 clamp(34px,min(7.2vw,6.4vh),62px)/1 'Permanent Marker',sans-serif; color:#c8202a; text-shadow:0 2px 0 rgba(90,10,10,.25); letter-spacing:1px; transform:rotate(-2deg); }
+  .go2 .quip { margin:max(6px,.8vh) auto 0; max-width:74%; font:700 clamp(14px,min(2.6vw,2.2vh),19px)/1.25 'Kalam',cursive; color:#2e3b62; font-style:normal; }
+  .goScoreBand { position:relative; display:flex; align-items:center; justify-content:center; gap:min(3vw,18px); margin:max(10px,1.4vh) -6px 0; padding:max(6px,.9vh) 0; }
+  .goBrush { position:absolute; inset:0; width:100%; height:100%; z-index:0; filter:url(#mRoughS); }
+  .goScoreLbl { position:relative; font:400 clamp(20px,min(4.4vw,3.8vh),36px)/1 'Permanent Marker',sans-serif; color:#1c1a18; transform:rotate(-4deg); }
+  .go2 .finalScore { position:relative; margin:0; font:800 clamp(52px,min(13vw,10.5vh),104px)/.95 'Baloo 2',sans-serif; color:#1c1a18; letter-spacing:1px; font-variant-numeric:tabular-nums; }
+  .goCrownS { position:relative; width:min(9vw,44px); transform:rotate(14deg) translateY(-14px); }
+  .go2 .bestScore { margin:max(6px,.8vh) 0 0; min-height:10px; font:700 14px/1 'Baloo 2',sans-serif; color:#5a4f40; }
+  .go2 .newBest { display:inline-flex; align-items:center; gap:14px; padding:max(7px,.9vh) 34px; font:800 clamp(17px,min(3.8vw,3vh),27px)/1 'Baloo 2',sans-serif; color:#fff; letter-spacing:.5px; animation:goStamp .5s .45s cubic-bezier(.2,1.4,.4,1) both;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 60' preserveAspectRatio='none'%3E%3Cpath d='M4 14C120 2 330 8 496 4l-6 50C340 60 150 52 8 58z' fill='%231f5a33'/%3E%3C/svg%3E") center/100% 100% no-repeat; text-shadow:0 2px 0 rgba(0,0,0,.3); transform:rotate(-1.5deg); }
+  .go2 .newBest i { font-style:normal; color:#f2c230; }
+  @keyframes goStamp { from { opacity:0; transform:scale(1.5) rotate(-6deg); } to { opacity:1; transform:scale(1) rotate(-1.5deg); } }
+  .go2 .bestPlain b { color:#1c1a18; }
+  .go2 .goStats { display:grid; grid-template-columns:repeat(3,1fr); gap:0; margin:max(10px,1.3vh) 0 0; border:2px solid rgba(60,50,40,.18); border-radius:8px; background:rgba(255,255,255,.35); overflow:hidden; }
+  .go2 .goStats > div { display:flex; align-items:center; justify-content:center; gap:10px; padding:max(8px,1.1vh) 6px; font:800 clamp(15px,min(3.2vw,2.5vh),22px)/1 'Baloo 2',sans-serif; color:#1f2a52; opacity:0; animation:goPop .35s ease both; }
+  .go2 .goStats > div + div { border-left:2px solid rgba(60,50,40,.15); } .go2 .goStats > div:nth-child(2){ animation-delay:.12s; } .go2 .goStats > div:nth-child(3){ animation-delay:.24s; }
+  @keyframes goPop { from { opacity:0; transform:translateY(8px) scale(.95); } to { opacity:1; transform:none; } }
+  .go2 .goStats svg { width:1.35em; height:1.35em; flex:none; }
+  .go2 .goSub { grid-column:1 / -1; display:block !important; opacity:1 !important; animation:none !important; border-left:0 !important; border-top:2px solid rgba(60,50,40,.12); padding:5px !important; font:700 13px/1.2 'Baloo 2',sans-serif !important; color:#5a4f40 !important; }
+  .go2 .goXp { margin:max(8px,1vh) 0 0; gap:10px; color:#1c1a18; font:700 14px/1 'Baloo 2',sans-serif; }
+  .go2 .goLvl b { color:#b77a10; } .go2 .goXpBar { width:min(50%,260px); height:10px; background:rgba(40,30,20,.18); border:1px solid rgba(60,50,40,.25); } .go2 .goXpTxt { color:#1f6a3a; font-weight:800; }
+  .go2 .goMis { display:flex; flex-direction:column; gap:max(6px,.8vh); margin-top:max(8px,1.1vh); }
+  .go2 .gmRow { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:12px; padding:max(8px,1vh) 12px; border-radius:8px; background:rgba(255,255,255,.4); border:2px solid rgba(60,50,40,.14); text-align:left; opacity:0; animation:goPop .35s ease both; }
+  .go2 .gmRow:nth-child(1){ animation-delay:.35s; } .go2 .gmRow:nth-child(2){ animation-delay:.45s; } .go2 .gmRow:nth-child(3){ animation-delay:.55s; }
+  .go2 .gmIco { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; background:rgba(40,30,20,.08); }
+  .go2 .gmRow.done .gmIco { background:#1f7a3e; color:#fff; font-size:22px; box-shadow:0 0 0 3px rgba(31,122,62,.25); }
+  .go2 .gmTxt { font:800 clamp(13px,min(2.9vw,2.2vh),17px)/1.15 'Baloo 2',sans-serif; color:#1f2a52; text-transform:uppercase; letter-spacing:.3px; }
+  .go2 .gmTxt small { display:block; color:#1f7a3e; font-size:.78em; letter-spacing:.8px; }
+  .go2 .gmProg { display:flex; align-items:center; gap:10px; font:700 13px/1 'Baloo 2',sans-serif; color:#3b3429; }
+  .go2 .gmProg i { display:block; width:min(22vw,150px); height:12px; border-radius:7px; background:rgba(40,30,20,.2); overflow:hidden; } .go2 .gmProg em { display:block; height:100%; background:linear-gradient(180deg,#ffd84a,#e8a91d); }
+  .go2 .gmClaim { display:flex; align-items:center; gap:8px; border:2px solid #9b7418; border-radius:10px; padding:8px 14px; cursor:pointer; background:linear-gradient(180deg,#ffe066,#f2b21c); color:#1c1a18; font:800 14px/1.05 'Baloo 2',sans-serif; text-align:left; box-shadow:0 3px 0 #8e6512; pointer-events:auto; animation:goPulse 1.4s ease-in-out infinite; }
+  .go2 .gmClaim b { font-size:1.35em; } @keyframes goPulse { 50% { transform:scale(1.04); } }
+  .go2 .gmDone { font:800 13px/1 'Baloo 2',sans-serif; color:#1f7a3e; }
+  .goShareIco { position:absolute; right:12px; top:12px; width:40px; height:40px; border-radius:50%; border:2px solid rgba(60,50,40,.25); background:rgba(255,255,255,.5); color:#2e3b62; cursor:pointer; display:flex; align-items:center; justify-content:center; pointer-events:auto; z-index:2; }
+  .goShareIco svg { width:20px; height:20px; } .goShareIco:hover { background:#fff; }
+  .goBtns { padding:min(1.6vh,14px) 2px 2px; display:flex; flex-direction:column; gap:min(1.2vh,10px); }
+  .goRide { display:flex; align-items:center; justify-content:center; gap:16px; width:100%; height:clamp(56px,8.4vh,82px); border:2px solid #9b7418; border-radius:10px; cursor:pointer; pointer-events:auto;
+    background:repeating-linear-gradient(115deg, rgba(0,0,0,.05) 0 6px, transparent 6px 14px) left/22% 100% no-repeat, linear-gradient(180deg,#f7cf52,#e6a824); color:#1c1a18; font:800 clamp(24px,min(5.4vw,4.4vh),38px)/1 'Oswald','Baloo 2',sans-serif; letter-spacing:2px; box-shadow:0 5px 0 #8e6512, 0 12px 22px rgba(0,0,0,.35); transition:transform .1s, filter .15s; }
+  .goRide svg { width:1.5em; height:1.3em; } .goRide i { font-style:normal; font-size:1.2em; transition:transform .15s; } .goRide:hover { filter:brightness(1.06); } .goRide:hover i { transform:translateX(5px); } .goRide:active { transform:translateY(3px); box-shadow:0 2px 0 #8e6512; }
+  .goRow { display:grid; grid-template-columns:1fr 1fr; gap:min(1.2vh,10px); }
+  .goGar, .goMenu { display:flex; align-items:center; justify-content:center; gap:10px; height:clamp(46px,6.4vh,62px); border-radius:10px; cursor:pointer; pointer-events:auto; color:#f4efe2; font:600 clamp(15px,min(3.4vw,2.7vh),22px)/1 'Oswald','Baloo 2',sans-serif; letter-spacing:1.5px; transition:filter .15s, transform .1s; }
+  .goGar { background:linear-gradient(180deg,#2e3f7a,#1f2c5a); border:2px solid #45589a; box-shadow:0 4px 0 #121a38; } .goMenu { background:linear-gradient(180deg,#6d4a32,#4d3322); border:2px solid #86603f; box-shadow:0 4px 0 #2e1f14; }
+  .goGar svg, .goMenu svg { width:1.3em; height:1.3em; } .goGar:hover, .goMenu:hover { filter:brightness(1.15); } .goGar:active, .goMenu:active { transform:translateY(3px); }
+  .goRide:focus-visible, .goGar:focus-visible, .goMenu:focus-visible, .gmClaim:focus-visible, .goShareIco:focus-visible { outline:3px solid #36c5d9; outline-offset:2px; }
+  .go2 .keyHintGo { margin:2px 0 0; font:600 11px/1 'Baloo 2',sans-serif; color:rgba(255,236,200,.5); letter-spacing:1px; text-align:center; }
+  .go2 #nameEntry { margin-top:10px; } .go2 .entryLabel { color:#1f7a3e; } .go2 #initials { background:#fff8e6; color:#1c1a18; border-color:#b89a60; }
+  .go2 .goRight { position:relative; z-index:1; flex:none; width:min(24vw,300px); padding:18px 18px 14px; border-radius:10px; background:#1f2542; box-shadow:0 18px 40px rgba(0,0,0,.5); transform:rotate(1.5deg); animation:goPop .5s .5s ease both; align-self:center; }
+  .go2 .goRight .boardTitle { margin:0 0 8px; font:400 24px/1 'Permanent Marker',sans-serif; color:#ffc928; }
+  .go2 #dbgLogBtn { display:block; margin:10px auto 0; background:none; border:0; color:rgba(255,233,191,.45); font:700 11px 'Baloo 2',sans-serif; letter-spacing:1px; text-decoration:underline; cursor:pointer; pointer-events:auto; }
+  #gameOverScreen.go2 { align-items:flex-start; padding-top:max(34px,4.4vh); } .go2 .goCard { margin:auto 0; } .go2 .goRight { margin:auto 0; align-self:auto; }   /* margin:auto centres but still scrolls to the top when the card is taller than the screen */
+  .go2 .goStats span { padding:0; border:0; background:none; border-radius:0; font:inherit; color:inherit; }
+  .go2 .goMis { align-items:stretch; } .go2 .quip { max-width:62%; }
+  .goBg { will-change:transform; } .go2 .gmProg { width:min(34vw,210px); justify-content:flex-end; } .go2 .gmProg i { flex:1; width:auto; } .go2 .gmProg span { min-width:42px; text-align:right; }
+  .go2 .goMis { gap:5px; } .go2 .goMis.still .gmRow { animation:none; opacity:1; } .go2 .goXp { margin-top:6px; }
+  @media (max-height:960px){ .go2 .finalScore { font-size:clamp(46px,min(13vw,9.2vh),96px); } .go2 .goTitle { font-size:clamp(30px,min(7vw,5.8vh),56px); } .go2 .gmIco { width:34px; height:34px; font-size:18px; } .go2 .gmRow { padding:5px 10px; }
+    .goRide { height:clamp(50px,7.4vh,72px); } .goGar, .goMenu { height:clamp(42px,5.8vh,56px); } .goPaper { padding-top:max(22px,2.8vh); } .go2 .goScoreBand { margin-top:6px; padding:4px 0; } .go2 .goStats > div { padding:6px; } }
+  @media (max-height:760px){ .go2 .keyHintGo { display:none; } }
+  @media (hover:none){ .go2 .keyHintGo { display:none; } }
+  @media (max-height:520px) and (orientation:landscape){   /* phones on their side: two-column scorecard, buttons in one row, nothing below the fold */
+    #gameOverScreen.go2 { padding-top:8px; padding-bottom:8px; } .go2 .goCard { width:min(96vw,860px); margin-top:0; padding:8px; } .goClip, .goDoodle { display:none; }
+    .go2 .goPaper { display:grid; grid-template-columns:1fr 1fr; column-gap:16px; align-content:start; padding:10px 14px; }
+    .go2 .goPaper > :not(.goMis):not(.goShareIco):not(.goDoodle) { grid-column:1; } .go2 .goMis { grid-column:2; grid-row:1 / span 9; margin-top:0; align-self:center; }
+    .go2 .goTitle { font-size:30px; } .go2 .quip { font-size:13px; max-width:100%; margin-top:2px; } .go2 .finalScore { font-size:44px; } .go2 .goScoreLbl { font-size:20px; } .goCrownS { display:none; }
+    .go2 .newBest { font-size:14px; padding:4px 18px; } .go2 .goStats > div { font-size:14px; padding:4px; gap:6px; } .go2 .goSub { font-size:11px !important; padding:3px !important; }
+    .go2 .goShareIco { width:32px; height:32px; right:8px; top:8px; }
+    .goBtns { flex-direction:row; padding-top:8px; } .goRide { flex:1.3; height:48px; font-size:24px; } .goRow { flex:1; } .goGar, .goMenu { height:48px; font-size:15px; } }
+  @media (max-width:1100px){ .go2 .goRight { display:none; } }
+  @media (max-height:700px){ .goPalm, .goGate { display:none; } .go2 .quip { max-width:88%; } }
+  @media (max-width:520px){ .goPalm, .goGate { display:none; } .go2 .quip { max-width:88%; } .go2 .gmProg { width:92px; } .go2 .gmRow { gap:8px; padding:6px 8px; } .go2 .gmClaim { padding:6px 8px; font-size:12px; } .go2 .gmClaim svg { display:none; } .go2 .goStats > div { flex-direction:column; gap:4px; font-size:15px; } }
   body.inGarage #perfHud { display:none !important; }
   canvas.chakkar { animation:chakkarHue 2.4s ease-in-out infinite alternate; } @keyframes chakkarHue { from { filter:saturate(1.5) hue-rotate(-18deg) contrast(1.05); } to { filter:saturate(1.7) hue-rotate(28deg) contrast(1.08); } }
   #practiceChip { position:fixed; left:50%; top:12px; transform:translateX(-50%); z-index:15; padding:6px 16px; border-radius:20px; background:rgba(20,22,22,.8); border:2px solid #efbd3c; color:#ffe7a8; font:600 16px/1 'Oswald',sans-serif; letter-spacing:1.5px; pointer-events:none; }
@@ -870,30 +950,42 @@ window.addEventListener('error', function(e){
     <div id="misList"></div>
     <button class="misClose" id="misClose">Close</button>
   </div></div>
-  <div id="gameOverScreen" class="screen hidden">
-    <div class="goTitle">ARRE YAAR!</div>
-    <div class="quip" id="quip"></div>
-    <div class="finalScore" id="finalScore"></div>
-    <div class="bestScore" id="bestScoreLine"></div>
-    <div class="goStats" id="goStats"></div>
-    <div class="goXp" id="goXp"><div class="goLvl">Lv <b id="goLvlNum">1</b></div><div class="goXpBar"><i id="goXpFill"></i></div><div class="goXpTxt" id="goXpTxt"></div></div>
-    <div class="goMis" id="goMis"></div>
-    <div id="nameEntry" class="hidden">
-      <div class="entryLabel">ENTER YOUR INITIALS</div>
-      <input id="initials" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="AAA">
-      <button class="saveBtn" id="saveScoreBtn">SAVE</button>
+  <div id="gameOverScreen" class="screen hidden go2">
+    <div class="goBg" id="goBg"></div>
+    <div class="goCard">
+      <div class="goClip"><i></i></div>
+      <div class="goPaper">
+        <button id="shareBtn" class="goShareIco" title="Share your score" aria-label="Share your score"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <svg class="goDoodle goCrownL" viewBox="0 0 40 28"><path d="M3 25 2 7l10 8 8-13 8 13 10-8-1 18z" fill="none" stroke="#c8202a" stroke-width="2.2" stroke-linejoin="round"/></svg>
+        <svg class="goDoodle goPalm" viewBox="0 0 90 70"><path d="M30 68c2-14 4-28 2-44M32 24c-6-6-16-7-24-3M32 24c-2-8-9-14-18-15M32 24c5-7 14-10 23-7M32 24c7-3 16-1 22 5M32 24c1-8 6-14 13-17M60 68c1-9 2-18 1-28M61 40c-4-4-10-4-15-2M61 40c3-5 9-7 15-5M61 40c4-2 10 0 13 4M2 68h86M10 68c6-4 14-4 20 0M52 68c5-3 12-3 17 0" fill="none" stroke="#3a342c" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg class="goDoodle goGate" viewBox="0 0 110 70"><path d="M2 68h106M30 68V30h50v38M30 30l6-8h38l6 8M42 68V46a13 13 0 0 1 26 0v22M34 22v-6h42v6M50 16a5 5 0 0 1 10 0M20 68V40h10M80 40h10v28M22 40v-6M88 40v-6M8 68V52h12M90 52h12v16M36 36h4M70 36h4" fill="none" stroke="#3a342c" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        <div class="goTitle">ARRE YAAR!</div>
+        <div class="quip" id="quip"></div>
+        <div class="goScoreBand"><svg class="goBrush" viewBox="0 0 500 110" preserveAspectRatio="none"><path d="M8,26 C120,8 300,14 492,6 L486,98 C330,108 160,100 12,104 Z" fill="#f2c230"/></svg>
+          <span class="goScoreLbl">SCORE</span><span class="finalScore" id="finalScore">0</span><svg class="goCrownS" viewBox="0 0 40 28"><path d="M3 25 2 7l10 8 8-13 8 13 10-8-1 18z" fill="none" stroke="#1c1a18" stroke-width="2.4" stroke-linejoin="round"/></svg></div>
+        <div class="bestScore" id="bestScoreLine"></div>
+        <div id="nameEntry" class="hidden">
+          <div class="entryLabel">ENTER YOUR INITIALS</div>
+          <input id="initials" type="text" maxlength="3" autocomplete="off" spellcheck="false" placeholder="AAA">
+          <button class="saveBtn" id="saveScoreBtn">SAVE</button>
+        </div>
+        <div class="goStats" id="goStats"></div>
+        <div class="goXp" id="goXp"><div class="goLvl">Lv <b id="goLvlNum">1</b></div><div class="goXpBar"><i id="goXpFill"></i></div><div class="goXpTxt" id="goXpTxt"></div></div>
+        <div class="goMis" id="goMis"></div>
+      </div>
+      <div class="goBtns">
+        <button id="restartBtn" class="goRide"><svg viewBox="0 0 48 40"><path fill="currentColor" d="M9 6c0-2 2-4 5-4h17c4 0 7 3 8 6l3 12v9h-4a5 5 0 0 0-10 0H19a5 5 0 0 0-10 0H5v-6l4-2zm5 2v9h9V8zm12 0v9h10l-2-7c-.4-1.2-1.4-2-2.6-2z"/><circle fill="currentColor" cx="14" cy="32" r="4"/><circle fill="currentColor" cx="33" cy="32" r="4"/></svg><span>RIDE AGAIN</span><i>»</i></button>
+        <div class="goRow">
+          <button id="goGarageBtn" class="goGar"><svg viewBox="0 0 24 24"><path d="M3 10 12 4l9 6v10H3zM7 20v-6h10v6M9 14v-3h6v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>GARAGE</button>
+          <button id="menuBtn" class="goMenu"><svg viewBox="0 0 24 24"><path d="M3 11 12 3l9 8M5 9.5V21h5v-6h4v6h5V9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>MAIN MENU</button>
+        </div>
+        <div class="keyHintGo">Enter — ride again · G — garage · Esc — menu</div>
+      </div>
     </div>
-    <div class="goRight"><div class="boardTitle" style="margin-top:18px" id="goBoardTitle">🏆 TOP SCORES</div>
-    <div class="board" id="goBoard"></div>
-    <div class="boardNote" id="goBoardNote"></div></div>
-    <button class="btn" id="restartBtn">EK AUR ROUND 🛺</button>
-    <div class="keyHintGo">Enter — again · Esc — menu · G — garage</div>
-    <div class="goBtnRow">
-      <button class="btn btnSmall goShare" id="shareBtn">📤 SHARE SCORE</button>
-      <button class="btn btnSmall" id="menuBtn">🏠 MENU</button>
-      <button class="btn btnSmall btnGarage" id="goGarageBtn">🛠️ GARAGE</button>
-    </div>
-    <button id="dbgLogBtn" style="margin-top:12px;background:none;border:0;color:rgba(255,233,191,.55);font:700 11px 'Trebuchet MS',sans-serif;letter-spacing:1px;text-decoration:underline;cursor:pointer;pointer-events:auto">export debug log</button>
+    <div class="goRight"><div class="boardTitle" id="goBoardTitle">🏆 TOP SCORES</div>
+      <div class="board" id="goBoard"></div>
+      <div class="boardNote" id="goBoardNote"></div>
+      <button id="dbgLogBtn">export debug log</button></div>
   </div>
 </div>
 
@@ -1660,7 +1752,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '24-Sep-e';
+var BUILD_TAG = '24-Sep-f';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -7169,22 +7261,32 @@ var PROG = (function(){
   }
   function open(){ renderAll(); document.getElementById('misModal').classList.remove('hidden'); setTimeout(function(){ var b = document.querySelector('#misList .misClaim') || document.getElementById('misClose'); if (b) b.focus(); }, 30); }
   function close(){ document.getElementById('misModal').classList.add('hidden'); var b = document.getElementById('missionsBtn'); if (b) b.focus(); }
-  document.addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-claim]'); if (!c) return; var got = claim(+c.getAttribute('data-claim')); if (got){ popup('+₹' + got + ' · +60 XP', 'popEvent', 50, 30); var go = document.getElementById('goMis'); if (go && !document.getElementById('gameOverScreen').classList.contains('hidden')) results.renderMis(); } });
+  document.addEventListener('click', function(e){ var c = e.target.closest && e.target.closest('[data-claim]'); if (!c) return; var got = claim(+c.getAttribute('data-claim')); if (got){ popup('+₹' + got + ' · +60 XP', 'popEvent', 50, 30); var go = document.getElementById('goMis'); if (go && !document.getElementById('gameOverScreen').classList.contains('hidden')){ go.classList.add('still'); results.renderMis(); } } });
   var results = {
     show:function(r){
       var st = document.getElementById('goStats'), xpBox = document.getElementById('goXp');
       if (!r){ st.innerHTML = ''; xpBox.style.display = 'none'; document.getElementById('goMis').innerHTML = ''; return; }
       xpBox.style.display = '';
-      st.innerHTML = '<span>🛣️ ' + r.dist.toLocaleString('en-IN') + ' m</span><span>₹ ' + r.coins + '</span><span>💨 ' + r.near + ' near misses</span><span>×' + r.combo + ' best combo</span>';
+      var gb = document.getElementById('goBg'); if (gb && !gb.style.backgroundImage && window.GARAGE_ART) gb.style.backgroundImage = 'url(' + GARAGE_ART.bg + ')';
+      var IC_ROAD = '<svg viewBox="0 0 32 32"><path d="M11 3 4 29h24L21 3z" fill="#3b4048"/><path d="M16 5v4M16 13v5M16 22v6" stroke="#f2c230" stroke-width="2.4" stroke-linecap="round"/></svg>',
+          IC_COIN = '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="13" fill="#f2c230" stroke="#9b7418" stroke-width="2.4"/><circle cx="16" cy="16" r="8" fill="none" stroke="#c9901a" stroke-width="2"/><path d="M12 12h8M12 15.5h8M14 12c4 0 5 7-1 7l6 5" fill="none" stroke="#7a5510" stroke-width="1.8" stroke-linecap="round"/></svg>',
+          IC_XP = '<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="#1f7a3e"/><path d="M16 6l3 6.5 7 .8-5.2 4.8 1.5 7L16 21.6 9.7 25.1l1.5-7L6 13.3l7-.8z" fill="#f2c230"/></svg>';
+      st.innerHTML = '<div>' + IC_ROAD + '<span>' + r.dist.toLocaleString('en-IN') + ' m</span></div><div>' + IC_COIN + '<span>' + r.coins.toLocaleString('en-IN') + ' coins</span></div><div>' + IC_XP + '<span>+' + r.xp + ' XP</span></div>' +
+        '<div class="goSub">💨 ' + r.near + ' near miss' + (r.near === 1 ? '' : 'es') + ' · ×' + r.combo + ' best combo</div>';
       var fill = document.getElementById('goXpFill'), L0 = r.before.lvl; document.getElementById('goLvlNum').textContent = L0; fill.style.transition = 'none'; fill.style.width = (Math.min(1, r.before.xp/need(L0))*100) + '%'; void fill.offsetWidth; fill.style.transition = '';
       document.getElementById('goXpTxt').textContent = '+' + r.xp + ' XP'; xpBox.classList.remove('lvlUp');
       setTimeout(function(){ if (r.ups){ fill.style.width = '100%'; setTimeout(function(){ document.getElementById('goLvlNum').textContent = profile.level; xpBox.classList.add('lvlUp'); fill.style.transition = 'none'; fill.style.width = '0%'; void fill.offsetWidth; fill.style.transition = '';
             fill.style.width = (profile.xp/need(profile.level)*100) + '%'; document.getElementById('goXpTxt').textContent = 'LEVEL UP! +₹' + r.reward; if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.bell(); } catch(e){} }, 950); }
         else fill.style.width = (profile.xp/need(profile.level)*100) + '%'; }, 500);
-      results.renderMis();
+      document.getElementById('goMis').classList.remove('still'); results.renderMis();
     },
-    renderMis:function(){ var M = ensure(); document.getElementById('goMis').innerHTML = M.list.map(function(m, i){ var pc = Math.min(100, m.p/m.n*100);
-      return '<div class="gm' + (m.done ? ' done' : '') + '">🎯 ' + text(m) + ' <i><em style="width:' + pc.toFixed(0) + '%"></em></i>' + (m.done && !m.claimed ? '<button data-claim="' + i + '">CLAIM ₹' + m.r + '</button>' : m.claimed ? '✓' : '') + '</div>'; }).join(''); renderAll(); }
+    renderMis:function(){ var M = ensure(), ICO = { coins:'🪙', near:'💨', jumps:'⤴️', ducks:'⤵️', honks:'📣', pickups:'⚡', cows:'🐄', dist:'🛣️', runs:'🛺', score:'🏆', combo:'✖️', shoo:'🎺' },
+        STACK = '<svg viewBox="0 0 28 28" width="26" height="26"><ellipse cx="14" cy="21" rx="10" ry="4" fill="#c9901a" stroke="#7a5510" stroke-width="1.5"/><ellipse cx="14" cy="16" rx="10" ry="4" fill="#e8b22a" stroke="#7a5510" stroke-width="1.5"/><ellipse cx="14" cy="11" rx="10" ry="4" fill="#f7d04a" stroke="#7a5510" stroke-width="1.5"/></svg>';
+      document.getElementById('goMis').innerHTML = M.list.map(function(m, i){ var pc = Math.min(100, m.p/m.n*100), right;
+        if (m.claimed) right = '<div class="gmDone">✓ CLAIMED</div>';
+        else if (m.done) right = '<button class="gmClaim" data-claim="' + i + '">' + STACK + '<span>CLAIM <b>' + m.r + '</b><br>COINS</span></button>';
+        else right = '<div class="gmProg"><i><em style="width:' + pc.toFixed(0) + '%"></em></i><span>' + Math.floor(m.p).toLocaleString('en-IN') + '/' + m.n.toLocaleString('en-IN') + '</span></div>';
+        return '<div class="gmRow' + (m.done ? ' done' : '') + '"><div class="gmIco">' + (m.done ? '✓' : (ICO[m.k] || '🎯')) + '</div><div class="gmTxt">' + (m.done ? '<small>' + (m.claimed ? 'MISSION CLAIMED' : 'MISSION COMPLETED!') + '</small>' : '') + text(m) + '</div>' + right + '</div>'; }).join(''); renderAll(); }
   };
   return { start:start, bump:bump, max:maxv, end:end, open:open, close:close, renderAll:renderAll, results:results, claimable:claimable, ensure:ensure };
 })();
@@ -7252,21 +7354,21 @@ function gameOver(){
   if (typeof CLOUD !== 'undefined') try { CLOUD.runEnd(); } catch(e){}                 // score row + save + diagnostics (no-op offline)
   setTimeout(function(){
     $('quip').textContent = '"' + pick(QUIPS) + '"';
-    (function(el, to){ var t0 = performance.now(), dur = Math.min(1400, 500 + to/40); (function step(){ var k = Math.min(1, (performance.now()-t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = 'SCORE: ' + fmt(Math.round(to*e)); if (k < 1) requestAnimationFrame(step); })(); })($('finalScore'), state.score);
+    (function(el, to){ var t0 = performance.now(), dur = Math.min(1400, 500 + to/40); (function step(){ var k = Math.min(1, (performance.now()-t0)/dur), e = 1 - Math.pow(1-k, 3); el.textContent = fmt(Math.round(to*e)); if (k < 1) requestAnimationFrame(step); })(); })($('finalScore'), state.score);
     PROG.results.show(_runSum);
     if (profile.nick){                                                                 // named driver: no initials prompt, board saves itself
       var idxN = qualifies ? addScore(profile.nick, state.score) : -1;
-      $('bestScoreLine').innerHTML = newBest ? '<span class="newBest">★ NEW PERSONAL BEST! ★</span>' : 'BEST: ' + (profile.best||0);
+      $('bestScoreLine').innerHTML = newBest ? '<span class="newBest"><i>★</i> NEW PERSONAL BEST! <i>★</i></span>' : '<span class="bestPlain">Best <b>' + fmt(profile.best||0) + '</b></span>';
       $('nameEntry').classList.add('hidden');
       renderBoard($('goBoard'), idxN);
     } else if (qualifies){
-      $('bestScoreLine').innerHTML = '<span class="newBest">★ NEW HIGH SCORE! ★</span>';
+      $('bestScoreLine').innerHTML = '<span class="newBest"><i>★</i> NEW HIGH SCORE! <i>★</i></span>';
       $('nameEntry').classList.remove('hidden');
       $('initials').value = '';
       renderBoard($('goBoard'), -1);
       setTimeout(function(){ try { $('initials').focus(); } catch(e){} }, 60);
     } else {
-      $('bestScoreLine').innerHTML = 'BEST: ' + state.best;
+      $('bestScoreLine').innerHTML = '<span class="bestPlain">Best <b>' + fmt(state.best||0) + '</b></span>';
       $('nameEntry').classList.add('hidden');
       renderBoard($('goBoard'), -1);
     }
@@ -8941,6 +9043,8 @@ function animate(){
     player.rotation.y = crashSpin;
     player.rotation.z = Math.min(0.6, crashSpin*0.2);
     updateParticles(rawDt*state.timeScale);
+    var _goEl = animate._goEl || (animate._goEl = document.getElementById('gameOverScreen'));
+    if (!_goEl.classList.contains('hidden')) return;   // the scorecard is opaque: stop drawing the street behind it (saves battery on phones)
     renderFrame();
     return;
   }
