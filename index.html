@@ -674,6 +674,7 @@ window.addEventListener('error', function(e){
   .pmGo { background:linear-gradient(180deg,#ffe066,#f2b21c); color:#2a1c05; box-shadow:0 4px 0 #9a6a08; }
   .pmQuit { margin-top:12px; height:40px; background:transparent; border:2px solid rgba(255,255,255,.25); color:rgba(255,255,255,.8); font-size:15px; }
   .pmRow { display:flex; align-items:center; justify-content:space-between; margin-top:14px; font-weight:700; font-size:17px; }
+  .pmTog { min-width:110px; height:34px; border-radius:8px; border:2px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); color:#ffcf2e; font:800 15px/1 'Baloo 2',sans-serif; cursor:pointer; }
   #pauseMenu #muteBtn { position:static; font-size:18px; } #pauseMenu #volSlider, #pauseMenu .pmSl { position:static; width:150px; opacity:1; accent-color:#ffcf2e; cursor:pointer; }
   .pmHint { margin-top:12px; font-size:12px; opacity:.55; letter-spacing:1px; }
   @media (max-width:760px){ #hud #coinPill { padding-right:12px; } #comboBar { width:90px; } }
@@ -828,6 +829,7 @@ window.addEventListener('error', function(e){
       <div class="pmRow"><span>Sound</span><div id="muteBtn">🔊</div></div>
       <div class="pmRow"><span>Music</span><input id="volSlider" type="range" min="0" max="100" value="75" title="Music volume" aria-label="Music volume"></div>
       <div class="pmRow"><span>Effects</span><input id="sfxSlider" class="pmSl" type="range" min="0" max="100" value="90" title="Sound effects volume" aria-label="Sound effects volume"></div>
+      <div class="pmRow"><span>Road motion</span><button id="motionBtn" class="pmTog" aria-label="Road motion">Comfort</button></div>
       <div class="pmRow"><span>Voices</span><input id="voiceSlider" class="pmSl" type="range" min="0" max="100" value="90" title="Voices volume" aria-label="Voices volume"></div>
       <button class="pmBtn pmQuit" id="pmQuit">End run</button>
       <div class="pmHint">Esc — resume</div>
@@ -1792,7 +1794,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '24-Sep-i';
+var BUILD_TAG = '28-Sep-a';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -1920,6 +1922,12 @@ var BEND_WORLDPOS =
   };
   proto.customProgramCacheKey = function(){ return (this.userData && this.userData.noBend) ? 'rr-nobend' : (this.userData && this.userData.rigidBend) ? 'rr-rigid' : 'rr-bend'; };
 })();
+/* COMFORT (28-Sep): every weekend playtester felt dizzy/sick — buildings swinging with the road, the horizon rolling, hills heaving.
+   Default is now COMFORT: the street stays straight and level, the camera never rolls, shake/FOV kicks are softened and the
+   Chakkar debuff is colour + slow-mo only. "Winding" (the old behaviour) is an opt-in in the pause menu. Set-piece ramps
+   (the Sea Link climb) keep their vertical rise — a single, predictable, player-expected motion. */
+var COMFORT = (function(){ try { return localStorage.getItem('rrMotion_v1') !== 'winding'; } catch(e){ return true; } })();
+function setComfort(on){ COMFORT = !!on; try { localStorage.setItem('rrMotion_v1', on ? 'comfort' : 'winding'); } catch(e){} if (on){ BEND.curve.value = 0; BEND.wave.value.x = 0; BEND.psych.value = 0; if (!bendPlan.lock) BEND.hill.value = 0; } }
 var bendPlan = { hold:0, curve:0, hill:0, amp:0, intro:0 };
 function bendReset(){ bendPlan.curve = bendPlan.hill = bendPlan.amp = 0; bendPlan.hold = 0; bendPlan.intro = 7; }
 function bendClear(){ bendReset(); BEND.psych.value = 0; BEND.curve.value = 0; BEND.hill.value = 0; BEND.wave.value.x = 0; }
@@ -1938,13 +1946,14 @@ function updateBend(dt, dz){
     }
   }
   var ck = state.chakkar > 0;                                                               // CHAKKAR: everything winds, buildings melt, time drags
-  BEND.psych.value += ((ck ? 1 : 0) - BEND.psych.value) * Math.min(1, dt * (ck ? 1.6 : 0.9));
-  if (ck && !bendPlan.lock){ var tt = performance.now() * 0.001;
+  BEND.psych.value += (((ck && !COMFORT) ? 1 : 0) - BEND.psych.value) * Math.min(1, dt * (ck ? 1.6 : 0.9));
+  if (ck && !bendPlan.lock && !COMFORT){ var tt = performance.now() * 0.001;
     bendPlan.curve = Math.sin(tt*0.9) * 0.0024; bendPlan.hill = Math.sin(tt*0.55) * 0.0005; bendPlan.amp = 1.7 + Math.sin(tt*1.7) * 0.6; }
   var k = Math.min(1, dt * (ck ? 1.4 : 0.33));                                              // ease between plans (~3 s)
-  BEND.curve.value += (bendPlan.curve - BEND.curve.value) * k;
-  BEND.hill.value  += (bendPlan.hill  - BEND.hill.value)  * k;
-  BEND.wave.value.x += (bendPlan.amp - BEND.wave.value.x) * k;
+  var tc = COMFORT ? 0 : bendPlan.curve, th = (COMFORT && !bendPlan.lock) ? 0 : bendPlan.hill, ta = COMFORT ? 0 : bendPlan.amp;   // comfort: straight + level (set-piece ramps still rise)
+  BEND.curve.value += (tc - BEND.curve.value) * k;
+  BEND.hill.value  += (th - BEND.hill.value)  * k;
+  BEND.wave.value.x += (ta - BEND.wave.value.x) * k;
   BEND.wave.value.z += dz;                                                                  // bumps flow toward the player with the road
 }
 
@@ -6912,6 +6921,8 @@ $('muteBtn').addEventListener('click', function(){
   GAME_AUDIO.mute(state.muted);
 });
 $('volSlider').addEventListener('input', function(){ RRA.set('music', this.value / 100); });
+$('motionBtn').textContent = COMFORT ? 'Comfort' : 'Winding'; $('motionBtn').title = 'Comfort: straight, level street (recommended). Winding: roads curve and roll.';
+$('motionBtn').addEventListener('click', function(){ setComfort(!COMFORT); this.textContent = COMFORT ? 'Comfort' : 'Winding'; });
 $('sfxSlider').addEventListener('input', function(){ RRA.set('sfx', this.value / 100); if (AC) RRA.play('coin', { cat:'sfx', gain:0.4 }); });
 $('voiceSlider').addEventListener('input', function(){ RRA.set('voice', this.value / 100); });
 (function(){ state.muted = !!RRA.get('muted'); $('muteBtn').textContent = state.muted ? '🔇' : '🔊';          // settings survive a reload
@@ -7353,10 +7364,10 @@ var FEEL = (function(){
     audioInit();
     var frac = Math.max(0, Math.min(1, (state.speed - BASE_SPEED) / (MAX_SPEED - BASE_SPEED))), tb = state.turbo > 0 ? 1 : 0;
     // FOV: turbo punch + near-miss kicks, eased
-    fovKick = Math.max(0, fovKick - rawDt*14); var fov = 58 + tb*7 + frac*2 + fovKick; lastFov += (fov - lastFov) * Math.min(1, rawDt*6);
+    fovKick = Math.max(0, fovKick - rawDt*14); var fov = 58 + (tb*7 + frac*2 + fovKick) * (COMFORT ? 0.4 : 1); lastFov += (fov - lastFov) * Math.min(1, rawDt*6);
     if (Math.abs(camera.fov - lastFov) > 0.01){ camera.fov = lastFov; camera.updateProjectionMatrix(); }
     // speed lines
-    var so = state.running ? Math.max(0, (frac - 0.55) / 0.45) * 0.28 + tb*0.42 : 0; sl.style.opacity = so.toFixed(3);
+    var so = (state.running ? Math.max(0, (frac - 0.55) / 0.45) * 0.28 + tb*0.42 : 0) * (COMFORT ? 0.5 : 1); sl.style.opacity = so.toFixed(3);
     if (so > 0.01) sl.style.transform = 'scale(' + (1.05 + Math.random()*0.04).toFixed(3) + ') rotate(' + (Math.random()*6).toFixed(1) + 'deg)';
     // skids ride the road and fade
     for (var i=0;i<skids.length;i++){ var s = skids[i]; if (s.life <= 0) continue; s.life -= rawDt*0.55; s.m.position.z += dz; s.m.material.opacity = Math.max(0, s.life)*0.34; if (s.life <= 0) s.m.visible = false; }
@@ -9109,7 +9120,7 @@ function menuPrewarm(){
 function attractTick(dt){
   var _n = performance.now(); if (attractTick._last && !window.__simming) dt = Math.min(0.2, Math.max(dt, (_n - attractTick._last)/1000)); attractTick._last = _n;   // menu transitions run on real time (a slow first frame mustn't stretch the 1 s launch)
   if ((attractTick._pw = (attractTick._pw || 0) + dt) > 1.5){ attractTick._pw = 0; menuPrewarm(); }
-  var kb = Math.min(1, dt*0.5); BEND.curve.value += (0.0006 - BEND.curve.value)*kb; BEND.hill.value += (0.00012 - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
+  var kb = Math.min(1, dt*0.5); BEND.curve.value += ((COMFORT ? 0 : 0.0006) - BEND.curve.value)*kb; BEND.hill.value += ((COMFORT ? 0 : 0.00012) - BEND.hill.value)*kb; BEND.wave.value.x += (0 - BEND.wave.value.x)*kb;   // menu: one lazy sweeping bend
   var A = attract, now = Date.now()*0.001;
   if (!A.on){ A.on = true; A.t = 0; A.camAng = 0; if (camera.fov !== 62){ camera.fov = 62; camera.updateProjectionMatrix(); } state.x = 0; player.position.set(0,0,0); player.rotation.set(0,0,0); player.scale.y = 1; if (A.roll == null && !A.launch) A.roll = 0; }
   A.t += dt;
@@ -9761,15 +9772,16 @@ function animate(){
   FEEL.update(rawDt, dz);
   // camera: follow + shake
   state.shake = Math.max(0, state.shake - rawDt*2.2);
-  var sh = state.shake;
+  var sh = state.shake * (COMFORT ? 0.45 : 1), _st = performance.now() * 0.001;                     // smooth low-frequency shake (random per-frame jitter was a nausea trigger)
+  animate._camX = (animate._camX == null ? state.x : animate._camX) + (state.x - (animate._camX == null ? state.x : animate._camX)) * Math.min(1, rawDt * 9);   // camera trails the lane change a touch: you feel yourself move across
   camera.position.set(
-    camBase.x + state.x*0.45 + (Math.random()-0.5)*sh*0.5,
-    camBase.y + state.y*0.3 + (Math.random()-0.5)*sh*0.4,
+    camBase.x + animate._camX*0.45 + (Math.sin(_st*31) + Math.sin(_st*47)*0.6) * sh * 0.22,
+    camBase.y + state.y*0.3 + (Math.sin(_st*37 + 1.3) + Math.sin(_st*53)*0.5) * sh * 0.18,
     camBase.z
   );
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
   camera.lookAt(state.x*0.5 + argueX + BEND.curve.value * 900, 2.0 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
-  camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway)
+  if (!COMFORT) camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway) — never in comfort mode: a rolling horizon is the #1 motion-sickness cue
   var evOn = (state.eventSlow && state.eventSlow < 1);                                                // set-piece on: camera drops low and close so the crowd fills the frame
   camBase.y += ((evOn ? 2.9 : 3.7) - camBase.y) * Math.min(1, rawDt*2.5);
   camBase.z += ((evOn ? 5.9 : 6.8) - camBase.z) * Math.min(1, rawDt*2.5);
