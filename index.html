@@ -829,6 +829,7 @@ window.addEventListener('error', function(e){
       <div class="pmRow"><span>Sound</span><div id="muteBtn">🔊</div></div>
       <div class="pmRow"><span>Music</span><input id="volSlider" type="range" min="0" max="100" value="75" title="Music volume" aria-label="Music volume"></div>
       <div class="pmRow"><span>Effects</span><input id="sfxSlider" class="pmSl" type="range" min="0" max="100" value="90" title="Sound effects volume" aria-label="Sound effects volume"></div>
+      <div class="pmRow"><span>Street turns</span><button id="turnsBtn" class="pmTog" aria-label="Street turns">On</button></div>
       <div class="pmRow"><span>Road motion</span><button id="motionBtn" class="pmTog" aria-label="Road motion">Comfort</button></div>
       <div class="pmRow"><span>Voices</span><input id="voiceSlider" class="pmSl" type="range" min="0" max="100" value="90" title="Voices volume" aria-label="Voices volume"></div>
       <button class="pmBtn pmQuit" id="pmQuit">End run</button>
@@ -1794,7 +1795,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '28-Sep-a';
+var BUILD_TAG = '28-Sep-b';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -5810,10 +5811,14 @@ function worldMood(){
 function director(dz){
   state.lastSpawnZ += dz;        // spawn anchor drifts toward player; refill ahead
   distSinceBanner += dz; distSincePower += dz; distSinceJunction += dz; distSinceSetpiece += dz; distSinceAutoX += dz;
+  if (TURN.t) return;                                    // a corner is coming: nothing new beyond it (the fresh road is laid when you take the turn)
   while (state.lastSpawnZ > SPAWN_AHEAD){
     var z = SPAWN_AHEAD - (state.lastSpawnZ - SPAWN_AHEAD);
     var zn = zoneNow, quiet = !bike && !cop && !badshah && !flyover && !prevSafeLow && !prevChunkDeep && !patrol;
     if (quiet && zn >= 1 && distSincePatrol > Math.max(320, PATROL_EVERY - zn*80) && !setpieces.length && !junctions.length && !(monsoon && monsoon.active)){ spawnPatrol(); }   // 🚔 patrol from behind (no spawn slot used)
+    if (!bike && !cop && !badshah && !flyover && TURN.on && TURN.since > turnEvery() && state.dist > 500 && !setpieces.length && junctions.every(function(J){ return J.group.position.z > z + 40; })){   // ↪ street turn (a waiting boss just waits a few seconds more)
+      spawnTurn(z); return;
+    }
     if (quiet && distSinceJunction > Math.max(300, JUNCTION_EVERY - zn*50) && state.dist > 350){      // 🚦 red-light junction (full-width jump, alone in its chunk)
       distSinceJunction = -rand(0,120); spawnJunction(z); state.lastSpawnZ -= 44; prevSafeLow = true; prevChunkDeep = false; continue;
     }
@@ -5985,6 +5990,123 @@ function updateJunctions(dt, dz){
     if (jz > KILL_BEHIND + 12){ scene.remove(J.group); junctions.splice(i,1); }
   }
 }
+
+/* ============================== STREET TURNS (28-Sep, the most-asked-for feature) ==============================
+   Temple Run-style corners. Every ~0.6–0.9 km (when nothing else is on) the street ENDS in a wall of buildings with a
+   side street opening left, right or both. Swipe (or ←/→) inside the window at the corner and the rickshaw and camera
+   swing 90° onto the new street; miss it and you hit the shopfronts.
+   How it stays simple: the world is still one straight scrolling street. The swing is a camera orbit around the
+   rickshaw; at its midpoint (whip-blurred) the corner set is removed and a fresh road is laid ahead — so lanes,
+   spawning, collision and fairness logic are all untouched. Player-initiated, no roll, 0.34 s: comfort-safe. */
+var CROSS_W = 10;                                            // width of the side street (m)
+var TURN = { t:null, yaw:0, wallYaw:Math.PI/2, since:-150, on:(function(){ try { return localStorage.getItem('rrTurns_v1') !== 'off'; } catch(e){ return true; } })(), made:0 };
+function setTurns(on){ TURN.on = !!on; try { localStorage.setItem('rrTurns_v1', on ? 'on' : 'off'); } catch(e){} }
+function turnEvery(){ return Math.max(450, 750 - zoneNow*50); }
+var _turnSignTex = {};
+function turnSignTex(dir){                                   // big hand-painted direction board
+  if (_turnSignTex[dir]) return _turnSignTex[dir];
+  var c = document.createElement('canvas'); c.width = 512; c.height = 256; var g = c.getContext('2d');
+  g.fillStyle = '#f2c230'; g.fillRect(0, 0, 512, 256); g.strokeStyle = '#1c1a18'; g.lineWidth = 14; g.strokeRect(10, 10, 492, 236);
+  g.fillStyle = '#1c1a18'; g.font = '900 150px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(dir < 0 ? '⬅' : dir > 0 ? '➡' : '⬅ ➡', 256, 120);
+  g.font = '800 38px sans-serif'; g.fillText(dir === 0 ? 'LEFT OR RIGHT' : 'TURN ' + (dir < 0 ? 'LEFT' : 'RIGHT'), 256, 214);
+  var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; _turnSignTex[dir] = t; return t;
+}
+var _crossMat = null;
+function crossRoadMat(){
+  if (_crossMat) return _crossMat;
+  var t = roadTex.clone(); t.needsUpdate = true; t.center.set(0.5, 0.5); t.rotation = Math.PI/2; t.repeat.set(1, 4); t.offset.set(0, 0);
+  _crossMat = new THREE.MeshStandardMaterial({ map:t, roughness:0.4, metalness:0.4, envMapIntensity:1.2 }); return _crossMat;
+}
+function spawnTurn(z){
+  var dir = Math.random() < 0.34 ? 0 : (Math.random() < 0.5 ? -1 : 1);
+  var G = new THREE.Group(); G.position.z = z;
+  // the side street (and the mouth of the main road) — overlays the kerbs/verges inside the gap
+  var road = new THREE.Mesh(new THREE.PlaneGeometry(150, CROSS_W), crossRoadMat()); road.rotation.x = -Math.PI/2; road.position.set(0, 0.03, -CROSS_W/2); road.receiveShadow = true; G.add(road);
+  for (var i=0;i<4;i++){ var zb = roadDecal(TEX_ZEBRA, 1.15); zb.position.set(-3.4 + i*2.2, 0.035, 1.2); G.add(zb); }
+  // the far wall: real street buildings turned to face you, shoulder to shoulder across the whole view
+  var pool = buildings.filter(function(b){ return b.isGLB; }); if (!pool.length) pool = buildings.slice();
+  var x = -44;
+  while (x < 44 && pool.length){
+    var src = pick(pool), b = src.group.clone(true); b.rotation.set(0, TURN.wallYaw, 0); b.visible = true; b.traverse(function(o){ if (o.userData && o.userData._turnHid) o.visible = true; });   // facade turned to face the player
+    b.position.set(0, 0, 0); b.updateWorldMatrix(true, true); var bb = new THREE.Box3().setFromObject(b);
+    var w = Math.max(6, bb.max.x - bb.min.x);
+    b.position.set(x - bb.min.x, 0, (-CROSS_W - 0.3) - bb.max.z);           // front face on the far kerb of the side street
+    G.add(b); x += w + 0.3;
+  }
+  // blocked side: the main street's frontage wraps the corner (the ring buildings there simply stay visible)
+  // direction boards on the wall, and a traffic cop pointing the way
+  var sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 3.2), new THREE.MeshBasicMaterial({ map:turnSignTex(dir), fog:false }));
+  sign.position.set(0, 5.2, -CROSS_W - 0.2); G.add(sign);
+  scene.add(G);
+  // nothing old may live beyond the corner — and a clear 25 m run-up before it
+  for (var i2=obstacles.length-1;i2>=0;i2--){ var o = obstacles[i2]; if (o.root.position.z < z + 25){ scene.remove(o.root); obstacles.splice(i2, 1); } }
+  for (var c2=coins.length-1;c2>=0;c2--){ if (coins[c2].mesh.position.z < z + 25){ scene.remove(coins[c2].mesh); coins.splice(c2, 1); } }
+  for (var p2=powerups.length-1;p2>=0;p2--){ if (powerups[p2].mesh.position.z < z + 25){ scene.remove(powerups[p2].mesh); powerups.splice(p2, 1); } }
+  TURN.t = { group:G, dir:dir, phase:'approach', p:0, open:false, queued:0, announced:false, hidden:[] };
+  if (window.PERF) PERF.mark('turn spawn ' + (dir < 0 ? 'L' : dir > 0 ? 'R' : 'T'));
+}
+function turnHide(T){                                        // clear the ring buildings / props / walkers / alleys standing in the side-street gap
+  var near = T.group.position.z + 1.5, far = T.group.position.z - CROSS_W - 1.5;
+  function test(obj, half){ if (!obj) return; var sx = obj.position.x < 0 ? -1 : 1; var open = T.dir === 0 || T.dir === sx;
+    var z = obj.position.z, inGap = open && z + half > far && z - half < near;
+    if (inGap && obj.visible){ obj.visible = false; obj.userData._turnHid = true; T.hidden.push(obj); } }
+  buildings.forEach(function(b){ test(b.group, (b.len || 12)/2 + 1); });
+  props.forEach(function(p){ test(p, 1.5); });
+  pedestrians.forEach(function(p){ test(p, 1); });
+  alleys.forEach(function(a){ test(a, 10); });
+}
+function turnRestore(T){ T.hidden.forEach(function(o){ o.visible = true; o.userData._turnHid = false; }); T.hidden.length = 0; }
+function tryTurn(dir){                                        // called from goLane: inside the window a left/right swipe is a TURN
+  var T = TURN.t; if (!T || T.phase !== 'approach') return false;
+  if (T.dir !== 0 && T.dir !== dir) return false;                                     // wrong way at an L-corner: an ordinary lane change (you'll hit the wall)
+  if (!T.open){ if (T.group.position.z > -(state.speed*0.95 + 6)){ T.queued = dir; T.queuedAt = performance.now(); return true; } return false; }   // a hair early: buffered
+  T.phase = 'swing'; T.turnDir = dir; T.p = 0; T.swapped = false;
+  if (typeof FEEL !== 'undefined' && FEEL.skid) try { FEEL.skid(dir); } catch(e){}
+  if (AC && typeof RRA !== 'undefined') RRA.play('whooshBig', { pan:dir*0.6, gain:0.5 });
+  return true;
+}
+function turnSwap(T){                                         // the cut, hidden in the whip-pan: corner set out, a fresh road in
+  scene.remove(T.group); turnRestore(T);
+  for (var i=obstacles.length-1;i>=0;i--){ var o = obstacles[i]; if (o.root.position.z < 6){ scene.remove(o.root); obstacles.splice(i, 1); } }
+  for (var c=coins.length-1;c>=0;c--){ if (coins[c].mesh.position.z < 6){ scene.remove(coins[c].mesh); coins.splice(c, 1); } }
+  for (var p=powerups.length-1;p>=0;p--){ if (powerups[p].mesh.position.z < 6){ scene.remove(powerups[p].mesh); powerups.splice(p, 1); } }
+  state.lane = 1; state.x = 0; if (animate._camX != null) animate._camX = 0;
+  prevSafe = 1; prevSafeLow = false; state.lastSpawnZ = SPAWN_AHEAD;
+  for (var z = -58; z > SPAWN_AHEAD; z -= 30) spawnChunk(z, 1);
+  TURN.made++; TURN.since = -rand(0, 160);
+  var bonus = 150 * state.mult; state.bonus += bonus; addCombo();
+  popup('↪ MOD LIYA! +' + bonus, 'popNear', 50, 34);
+  if (typeof PROG !== 'undefined') try { PROG.bump('turns'); } catch(e){}
+  if (window.PERF) PERF.mark('turn made');
+}
+function updateTurn(dt, rawDt, dz){
+  var T = TURN.t; if (state.running && !T) TURN.since += dz;
+  if (!T){ TURN.yaw = 0; return; }
+  T.group.position.z += dz;
+  var near = T.group.position.z;
+  if (!T.announced && near > -90){ T.announced = true; popup(T.dir < 0 ? '⬅ MOD AAGE — TURN LEFT' : T.dir > 0 ? 'MOD AAGE — TURN RIGHT ➡' : '⬅ MOD AAGE — LEFT OR RIGHT ➡', 'popEvent', 50, 26); if (typeof seetiSound === 'function') seetiSound(false); }
+  if (T.phase === 'approach'){
+    turnHide(T);
+    T.open = near > -(state.speed*0.55 + 3) && near - CROSS_W*0.5 < PLAYER_Z + 1.5;
+    if (T.open && T.queued && performance.now() - T.queuedAt < 450){ var q = T.queued; T.queued = 0; tryTurn(q); }
+    if (T.phase === 'approach' && near - CROSS_W > PLAYER_Z - 1.2){                    // reached the shopfronts
+      T.phase = 'crashed'; state.deathNote = 'turn wall'; gameOver();
+      if (state.running){ turnSwap(T); TURN.t = null; }                                  // test harness (god mode): carry on
+      return;
+    }
+  }
+  if (T.phase === 'swing'){
+    T.p = Math.min(1, T.p + rawDt / 0.34);
+    var e = T.p < 0.5 ? 2*T.p*T.p : 1 - Math.pow(-2*T.p + 2, 2)/2, full = -T.turnDir * Math.PI/2;
+    if (!T.swapped && T.p >= 0.5){ T.swapped = true; turnSwap(T); }
+    TURN.yaw = T.swapped ? full * (e - 1) : full * e;
+    var blur = Math.max(0, 1 - Math.abs(T.p - 0.5) / 0.22);                              // whip blur peaks at the cut
+    renderer.domElement.style.filter = blur > 0.02 ? 'blur(' + (blur*5).toFixed(1) + 'px)' : '';
+    if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; renderer.domElement.style.filter = ''; }
+  }
+}
+function clearTurn(){ if (TURN.t){ scene.remove(TURN.t.group); turnRestore(TURN.t); TURN.t = null; } TURN.yaw = 0; TURN.since = -150; renderer.domElement.style.filter = ''; }
 
 /* --- Crossing set-pieces: a scripted ~5 s event where a group walks ACROSS all three lanes.
        Actors are spaced ≥ 6 m apart so at most two lanes are ever blocked at once — the gap moves, you time it. --- */
@@ -6750,6 +6872,7 @@ function shoutSound(who){       // procedural stand-in: a gruff two-syllable "o-
 
 /* ============================== INPUT ============================== */
 function goLane(dir){
+  if (state.running && TURN.t && tryTurn(dir)) return;    // at a corner, left/right is the TURN
   if (state.hydro > 0) return;                            // hydroplaning — the wheels have nothing to bite
   if (!state.running) return;
   var nl = Math.max(0, Math.min(2, state.lane + dir));
@@ -6922,6 +7045,8 @@ $('muteBtn').addEventListener('click', function(){
 });
 $('volSlider').addEventListener('input', function(){ RRA.set('music', this.value / 100); });
 $('motionBtn').textContent = COMFORT ? 'Comfort' : 'Winding'; $('motionBtn').title = 'Comfort: straight, level street (recommended). Winding: roads curve and roll.';
+$('turnsBtn').textContent = TURN.on ? 'On' : 'Off';
+$('turnsBtn').addEventListener('click', function(){ setTurns(!TURN.on); this.textContent = TURN.on ? 'On' : 'Off'; });
 $('motionBtn').addEventListener('click', function(){ setComfort(!COMFORT); this.textContent = COMFORT ? 'Comfort' : 'Winding'; });
 $('sfxSlider').addEventListener('input', function(){ RRA.set('sfx', this.value / 100); if (AC) RRA.play('coin', { cat:'sfx', gain:0.4 }); });
 $('voiceSlider').addEventListener('input', function(){ RRA.set('voice', this.value / 100); });
@@ -7252,6 +7377,7 @@ var CLOUD = (function(){
   $('nickModal').addEventListener('click', function(e){ if (e.target === this && profile.nick){ closeModal(); } });
   /* ---- per-run telemetry: score row + player save + (a few) diagnostic reports per session ---- */
   function deathCause(){
+    if (state.deathNote) return state.deathNote;
     var best = null, bd = 1e9;
     for (var i=0;i<obstacles.length;i++){ var o = obstacles[i], dz = Math.abs(o.root.position.z - PLAYER_Z), dx = Math.abs(o.root.position.x - player.position.x);
       if (dz < 4 && (dx < 1.4 || o.hit.allLanes) && dz < bd){ bd = dz; best = o; } }
@@ -7297,6 +7423,7 @@ function clearWorld(){
   obstacles.length = coins.length = powerups.length = particles.length = 0; PFX.clear();
   junctions.forEach(function(J){ scene.remove(J.group); }); junctions.length = 0;
   puddles.forEach(function(p){ scene.remove(p); }); puddles.length = 0;
+  if (typeof clearTurn === 'function') clearTurn();
   setpieces.forEach(function(S){ S.deco.forEach(function(d){ scene.remove(d); }); }); setpieces.length = 0; distSinceJunction = -200; distSinceSetpiece = -300; state.hydro = 0; state.eventSlow = 1; patrolReset(); zoneNow = 0;
 }
 
@@ -7418,7 +7545,7 @@ var PROG = (function(){
     { k:'honks',   t:'Honk {n} times',                b:30,   r:80  }, { k:'pickups', t:'Grab {n} power-ups',     b:4,   r:120 },
     { k:'cows',    t:'Overtake {n} cows',             b:8,    r:120 }, { k:'dist',  t:'Drive {n} m in total',     b:3000, r:150 },
     { k:'runs',    t:'Finish {n} runs',               b:3,    r:100 }, { k:'score', t:'Score {n} in one run',     b:3000, r:200, max:true },
-    { k:'combo',   t:'Hit a ×{n} combo',              b:4,    r:150, max:true, cap:8 }, { k:'shoo', t:'Shoo away the Badshah {n}×', b:1, r:250, minLvl:3 }
+    { k:'combo',   t:'Hit a ×{n} combo',              b:4,    r:150, max:true, cap:8 }, { k:'turns', t:'Take {n} street turns', b:4, r:130 }, { k:'shoo', t:'Shoo away the Badshah {n}×', b:1, r:250, minLvl:3 }
   ];
   var run = null;
   function today(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
@@ -7526,7 +7653,7 @@ function startGame(){
   state.lane = 1; state.x = 0; state.y = 0; state.vy = 0;
   state.jumping = false; state.ducking = false; state.jumpBuf = 0;
   state.shield = false; state.turbo = 0; state.slowmo = 0; state.shake = 0; state.chakkar = 0; BEND.psych.value = 0; renderer.domElement.classList.remove('chakkar');
-  state.lastSpawnZ = SPAWN_AHEAD;
+  state.lastSpawnZ = SPAWN_AHEAD; state.deathNote = null; clearTurn();
   bendReset();                                           // straight, flat opening
   warmShaders();
   distSinceBanner = 0; distSincePower = 200;
@@ -9296,7 +9423,7 @@ function animate(){
   if (Math.abs(targetX - state.x) < 0.001) state.x = targetX;
   player.position.x = state.x;
   player.rotation.z = (prevX - state.x) * 2.2 - BEND.curve.value * 55;   // lean into lane change + into the bend
-  player.rotation.y = (state.x - targetX) * -0.12;
+  player.rotation.y = (state.x - targetX) * -0.12 + TURN.yaw;
 
   // jump physics
   if (state.jumping){
@@ -9375,7 +9502,7 @@ function animate(){
   if (animate._wasBusy && !_bossBusy) bossGapScore = state.score + 700;
   animate._wasBusy = _bossBusy;
   var _stormy = !!(monsoon && monsoon.active);                                    // never open a boss fight in the rain — the two together were the top killer in live data
-  var _street = setpieces.length > 0 || junctions.length > 0;   // a crossing is on — the boss waits for it to pass (the director stops spawning new ones while a boss is waiting: bossWaiting())
+  var _street = setpieces.length > 0 || junctions.length > 0 || !!TURN.t;   // a crossing is on — the boss waits for it to pass (the director stops spawning new ones while a boss is waiting: bossWaiting())
   if (state.running && !flyover && !animate._flyWarm && state.score > nextFlyoverScore - 2500){   // build + compile the bridge ahead of time so it never pops in (or hitches) on the ramp
     animate._flyWarm = true; buildFlyoverDressing(); flyUpgrade(); if (flyGroup){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; } }
   if (state.running && !_bossBusy && !_stormy && !_street && state.score >= nextFlyoverScore) startFlyover();
@@ -9390,7 +9517,7 @@ function animate(){
   if (cop && state.running) updateCop(dt, dz);
   if (badshah && state.running) updateBadshah(dt, dz);
   if (flyover && state.running) updateFlyover(dt, dz);
-  updateZone(); updateJunctions(dt, dz); updateSetpieces(dt, dz); updatePuddles(dt, dz); updatePatrol(dt, dz);
+  updateZone(); updateTurn(dt, rawDt, dz); updateJunctions(dt, dz); updateSetpieces(dt, dz); updatePuddles(dt, dz); updatePatrol(dt, dz);
   if (state.hydro > 0){                                   // hydroplaning: no steering, fishtail wobble, slow sideways slip
     state.hydro -= rawDt; if (state.hydro < 0) state.hydro = 0;
     state.x += state.hydroDir * 0.7 * dt;
@@ -9780,7 +9907,11 @@ function animate(){
     camBase.z
   );
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
-  camera.lookAt(state.x*0.5 + argueX + BEND.curve.value * 900, 2.0 + state.y*0.4 + BEND.hill.value * 900, -8);   // look into the bend / up the hill
+  var _lx = state.x*0.5 + argueX + BEND.curve.value * 900, _ly = 2.0 + state.y*0.4 + BEND.hill.value * 900, _lz = -8;
+  if (TURN.yaw){ var _c = Math.cos(TURN.yaw), _s = Math.sin(TURN.yaw), _px = player.position.x, _pz = PLAYER_Z;    // street turn: orbit camera + aim around the rickshaw
+    var _dx = camera.position.x - _px, _dz = camera.position.z - _pz; camera.position.x = _px + _dx*_c + _dz*_s; camera.position.z = _pz - _dx*_s + _dz*_c;
+    var _ax = _lx - _px, _az = _lz - _pz; _lx = _px + _ax*_c + _az*_s; _lz = _pz - _ax*_s + _az*_c; }
+  camera.lookAt(_lx, _ly, _lz);   // look into the bend / up the hill
   if (!COMFORT) camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway) — never in comfort mode: a rolling horizon is the #1 motion-sickness cue
   var evOn = (state.eventSlow && state.eventSlow < 1);                                                // set-piece on: camera drops low and close so the crowd fills the frame
   camBase.y += ((evOn ? 2.9 : 3.7) - camBase.y) * Math.min(1, rawDt*2.5);
