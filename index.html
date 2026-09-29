@@ -1826,7 +1826,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '29-Sep-b';
+var BUILD_TAG = '29-Sep-c';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -7130,7 +7130,7 @@ $('dbgLogBtn').addEventListener('click', function(){ try{ PERF.export(); var b=$
       card.classList.add('selected');
       var prevIdx = [].indexOf.call(cards, [].filter.call(cards, function(c){ return c.getAttribute('data-veh') === selectedVehicle; })[0]), newIdx = [].indexOf.call(cards, card);
       selectedVehicle = veh;
-      if (veh === 'rickshaw' || veh === 'classic'){ profile.equipped.rickshaw = veh; saveProfile(); }   // menu pick = garage equip
+      if (veh === 'rickshaw' || veh === 'classic'){ rideSwapPaint(veh); profile.equipped.rickshaw = veh; saveProfile(); }   // menu pick = garage equip (each ride keeps its own paint)
       if (typeof menuRideSwap === 'function' && attract.on) menuRideSwap(newIdx - prevIdx); else applyPlayerVehicle();
       if (typeof honk === 'function' && AC) honk();
     });
@@ -7263,6 +7263,7 @@ function loadProfile(){
   return _cloneProfile(DEFAULT_PROFILE);
 }
 var profile = loadProfile();
+if (!profile.paintBy){ profile.paintBy = {}; profile.paintBy[profile.equipped.rickshaw || 'rickshaw'] = profile.equipped.paint || 'default'; }
 selectedVehicle = profile.equipped.rickshaw || 'rickshaw';   // drive whatever the garage has equipped
 (function(){ var cards = document.querySelectorAll('.vehCard'); cards.forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); }); })();
 function saveProfile(){ if (!profile.rideLv) profile.rideLv = {}; try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e){} }
@@ -7275,7 +7276,13 @@ function buyItem(cat, id){                                   // returns true on 
   if (profile.coins < it.price) return false;
   profile.coins -= it.price; profile.owned[cat].push(id); saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon(); return true;
 }
-function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; profile.equipped[cat] = id; saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon();
+/* paint is PER RIDE (29-Sep): the hero auto's Matte Red used to land on every new ride (a red boiler, a pink Maharaja). Each ride keeps its own
+   paint; a ride you've never painted runs in its factory colours. profile.equipped.paint always mirrors the equipped ride's paint. */
+function ridePaint(id){ var pb = profile.paintBy || {}; return pb[id] || (id === profile.equipped.rickshaw ? profile.equipped.paint : 'default') || 'default'; }
+function rideSwapPaint(newId){ var cur = profile.equipped.rickshaw; if (cur === newId) return; profile.paintBy = profile.paintBy || {}; profile.paintBy[cur] = profile.equipped.paint || 'default'; profile.equipped.paint = profile.paintBy[newId] || 'default'; }
+function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; if (cat === 'rickshaw') rideSwapPaint(id); profile.equipped[cat] = id;
+  if (cat === 'paint'){ profile.paintBy = profile.paintBy || {}; profile.paintBy[profile.equipped.rickshaw] = id; }
+  saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon();
   if (cat === 'rickshaw') selectedVehicle = id;
   if (typeof applyPlayerVehicle === 'function') applyPlayerVehicle();   // the ride you drive is always the equipped one
   return true; }
@@ -7342,7 +7349,7 @@ var GARAGE_DATA = {
 var RIDE_DEFS = {
   rickshaw:{ },
   classic: { glb:'desiauto', yaw:-Math.PI/2 },
-  monster: { glb:'ridemonster', yaw:0,          hue:[38,62] },
+  monster: { glb:'ridemonster', yaw:0,          hue:[40,64,0.3] },   // 3rd value = min saturation: paint the yellow cab, not the mud
   steam:   { glb:'ridesteam',   yaw:Math.PI,    hue:[4,30] },
   royal:   { glb:'rideroyal',   yaw:Math.PI,    hue:'ivory' },
   udta:    { glb:'rideudta',    yaw:Math.PI/2,  hue:[85,170], plateY:0.36 }
@@ -7515,7 +7522,7 @@ var CLOUD = (function(){
   function ensurePid(){ if (!profile.pid){ profile.pid = genPid(); saveProfile(); } return profile.pid; }
   function saveBlob(){
     return { pid:ensurePid(), nick:profile.nick || 'Anon', best:profile.best||0, coins:profile.coins, runs:profile.runs||0,
-             profile:{ owned:profile.owned, equipped:profile.equipped, rideLv:profile.rideLv || {}, v:profile.v, xp:profile.xp||0, level:profile.level||1, missions:profile.missions||null } };
+             profile:{ owned:profile.owned, equipped:profile.equipped, rideLv:profile.rideLv || {}, paintBy:profile.paintBy || {}, v:profile.v, xp:profile.xp||0, level:profile.level||1, missions:profile.missions||null } };
   }
   function sync(){ if (!on() || !profile.nick) return; var b = saveBlob(); b.t = 'save'; post(b); }
   function syncSoon(){ clearTimeout(syncT); syncT = setTimeout(sync, 2500); }          // garage purchases: coalesce into one save
@@ -7538,7 +7545,7 @@ var CLOUD = (function(){
     get({ action:'load', code:code }).then(function(r){
       if (!r || !r.ok){ cb(false, r && r.err === 'not found' ? 'No driver with that code.' : 'Could not load that code.'); return; }
       profile.pid = r.pid; profile.nick = r.nick; profile.best = Math.max(profile.best||0, r.best||0); profile.coins = r.coins; profile.runs = r.runs||0;
-      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; if (r.profile.level){ profile.level = r.profile.level; profile.xp = r.profile.xp||0; } if (r.profile.missions) profile.missions = r.profile.missions; if (r.profile.rideLv) profile.rideLv = r.profile.rideLv; }
+      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; if (r.profile.level){ profile.level = r.profile.level; profile.xp = r.profile.xp||0; } if (r.profile.missions) profile.missions = r.profile.missions; if (r.profile.rideLv) profile.rideLv = r.profile.rideLv; if (r.profile.paintBy) profile.paintBy = r.profile.paintBy; }
       saveProfile(); profile = loadProfile();                                             // re-run the normaliser/migrations on the restored data
       selectedVehicle = profile.equipped.rickshaw || 'rickshaw';
       document.querySelectorAll('.vehCard').forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); });
@@ -8612,7 +8619,8 @@ function repaintTexture(map, hueRange, colorHex){
   var ivory = hueRange === 'ivory';                                                           // Maharaja Express: the body is ivory (unsaturated) — paint the warm whites, leave gold + velvet alone
   if (ivory) hueRange = [15, 75];
   var h0 = hueRange[0], h1 = hueRange[1], mid = (h0+h1)/2, half = (h1-h0)/2, feather = 14;
-  function inMask(hsl){ return ivory ? (hsl[1] < 0.42 && hsl[2] > 0.5 && hsl[2] < 0.97) : (hsl[1] > 0.28 && hsl[2] > 0.08 && hsl[2] < 0.92); }
+  var minS = hueRange[2] || 0.28;
+  function inMask(hsl){ return ivory ? (hsl[1] < 0.42 && hsl[2] > 0.5 && hsl[2] < 0.97) : (hsl[1] > minS && hsl[2] > 0.08 && hsl[2] < 0.92); }
   var sumL = 0, n = 0, i, hsl;
   for (i=0; i<d.length; i+=4){ hsl = _rgb2hsl(d[i]/255, d[i+1]/255, d[i+2]/255);
     if (inMask(hsl) && Math.abs(hsl[0]-mid) < half){ sumL += hsl[2]; n++; } }
@@ -9173,6 +9181,7 @@ var GARAGE = (function(){
   function tabCats(){ return activeCat === 'paint' ? ['paint','rearArt','trim'] : [activeCat]; }
   function selectItem(cat, id, fromKey){
     var prevVeh = sel.rickshaw; sel[cat] = id;
+    if (cat === 'rickshaw' && id !== prevVeh) sel.paint = ridePaint(id);   // each ride shows its own paint job
     if (cat === 'horn') playPreview(id);
     if (cat === 'rickshaw' && id !== prevVeh) buildPreviewModel(true); else applyLook();
     renderPanel();
