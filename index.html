@@ -1814,7 +1814,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '28-Sep-c';
+var BUILD_TAG = '29-Sep-a';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -6029,7 +6029,7 @@ function updateJunctions(dt, dz){
    with weight: the auto leads the camera, tyres screech and smoke, a small FOV kick, a lighter blur. */
 var CROSS_W = 10;                                            // width of the side street (m)
 var TURN = { t:null, yaw:0, lead:0, fwd:0, wallYaw:Math.PI/2, since:-150, on:(function(){ try { return localStorage.getItem('rrTurns_v1') !== 'off'; } catch(e){ return true; } })(), made:0 };
-var TURN_SWING = 0.5, TURN_CUT = 0.62;                      // swing length (s) and where in it the set is swapped (the blur peaks there)
+var TURN_SWING = 0.55, TURN_CUT = 0.8;                       // swing length (s) and where in it the set is swapped (the blur peaks there)
 function setTurns(on){ TURN.on = !!on; try { localStorage.setItem('rrTurns_v1', on ? 'on' : 'off'); } catch(e){} }
 function turnEvery(){ return Math.max(450, 750 - zoneNow*50); }
 function turnEase(p){ return p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2; }
@@ -6136,12 +6136,14 @@ function spawnTurn(z){
 }
 function turnHide(T){                                        // clear the gap on the open side(s) — and EVERYTHING of the old street beyond the corner (it would poke over the wall)
   var near = T.group.position.z + 1.5, far = T.group.position.z - CROSS_W - 1.5;
-  function test(obj, half){ if (!obj || !obj.visible) return; var sx = obj.position.x < 0 ? -1 : 1; var open = T.dir === 0 || T.dir === sx;
+  // runs every frame AFTER the scenery recycle (which sets .visible = true again) — so already-hidden things are simply re-hidden
+  function test(obj, half, bothSides){ if (!obj) return; if (obj.userData._turnHid){ obj.visible = false; return; } if (!obj.visible) return;
+    var sx = obj.position.x < 0 ? -1 : 1; var open = bothSides || T.dir === 0 || T.dir === sx;
     var z = obj.position.z, beyond = z + half < far + 3, inGap = open && z + half > far && z - half < near;
     if (beyond || inGap){ obj.visible = false; obj.userData._turnHid = true; T.hidden.push(obj); } }
   buildings.forEach(function(b){ test(b.group, (b.len || 12)/2 + 1); });
-  props.forEach(function(p){ test(p, 1.5); });
-  pedestrians.forEach(function(p){ test(p, 1); });
+  props.forEach(function(p){ test(p, 1.5, true); });            // kerbside props on BOTH sides of the mouth: the swinging camera passes through there
+  pedestrians.forEach(function(p){ test(p, 1, true); });
   alleys.forEach(function(a){ test(a, 10); });
   if (typeof wires !== 'undefined') wires.forEach(function(w){ test(w, 0.5); });
 }
@@ -6213,15 +6215,15 @@ function updateTurn(dt, rawDt, dz){
   }
   if (T.phase === 'swing'){
     T.p = Math.min(1, T.p + rawDt / TURN_SWING);
-    var e = turnEase(T.p), full = -T.turnDir * Math.PI/2;
-    if (!T.swapped){ turnKerbGap(T); if (T.p >= TURN_CUT){ T.swapped = true; turnSwap(T); burst(player.position.x, 0.25, 1.0, 0xc9b79a, 8, 2, 2); } }
+    var e = 1 - Math.pow(1 - T.p, 3), full = -T.turnDir * Math.PI/2;   // ease-OUT: the heading swings round first and the auto follows, so the view never rams the far wall
+    if (!T.swapped){ turnHide(T); turnKerbGap(T); if (T.p >= TURN_CUT){ T.swapped = true; turnSwap(T); burst(player.position.x, 0.25, 1.0, 0xc9b79a, 8, 2, 2); } }
     TURN.yaw = T.swapped ? full * (e - 1) : full * e;
-    if (!T.swapped){ var u = Math.min(1, T.p / TURN_CUT); TURN.fwd = Math.min(0, T.group.position.z - CROSS_W*0.45) * u*u*(3 - 2*u); } else TURN.fwd = 0;   // the auto drives INTO the junction as it swings, so the camera ends up looking down the side street, not into the corner shop
+    if (!T.swapped){ var u = Math.min(1, T.p / TURN_CUT); TURN.fwd = Math.min(0, T.group.position.z - CROSS_W*0.5) * u*u*(3 - 2*u); } else TURN.fwd = 0;   // the auto drives INTO the junction as it swings, so the camera ends up looking down the side street, not into the corner shop
     player.position.z = PLAYER_Z + TURN.fwd;
     TURN.lead = full * 0.22 * Math.sin(Math.min(1, T.p*1.25) * Math.PI);                 // the auto noses into the corner ahead of the camera
     if (T.p > 0.1 && T.p < 0.55 && Math.random() < rawDt*18) burst(player.position.x - T.turnDir*0.45, 0.2, 1.1, 0xbdb3a2, 2, 1.2, 1.2);   // tyre smoke through the slide
-    var blur = Math.max(0, 1 - Math.abs(T.p - TURN_CUT) / 0.16);                          // whip blur peaks at the cut
-    renderer.domElement.style.filter = blur > 0.05 ? 'blur(' + (blur*3).toFixed(1) + 'px)' : '';
+    var blur = Math.max(0, 1 - Math.abs(T.p - TURN_CUT) / 0.1);                          // whip blur peaks at the cut
+    renderer.domElement.style.filter = blur > 0.05 ? 'blur(' + (blur*2.2).toFixed(1) + 'px)' : '';
     if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; renderer.domElement.style.filter = ''; }
   }
 }
@@ -10066,7 +10068,9 @@ function animate(){
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
   var _lx = state.x*0.5 + argueX + BEND.curve.value * 900, _ly = 2.0 + state.y*0.4 + BEND.hill.value * 900, _lz = -8;
   if (TURN.yaw || TURN.fwd){ camera.position.z += TURN.fwd; _lz += TURN.fwd; var _c = Math.cos(TURN.yaw), _s = Math.sin(TURN.yaw), _px = player.position.x, _pz = PLAYER_Z + TURN.fwd;    // street turn: orbit camera + aim around the rickshaw
-    var _dx = camera.position.x - _px, _dz = camera.position.z - _pz; camera.position.x = _px + _dx*_c + _dz*_s; camera.position.z = _pz - _dx*_s + _dz*_c;
+    var _w = Math.min(1, Math.abs(TURN.yaw)/0.35); camera.position.x += (_px - camera.position.x)*_w; _lx += (_px - _lx)*_w;   // square up behind the auto (the chase cam's lane offsets would turn into a sideways skew once rotated)
+    var _k = 1 - 0.15*Math.abs(Math.sin(TURN.yaw)), _dx = (camera.position.x - _px)*_k, _dz = (camera.position.z - _pz)*_k;   // pull the camera in while side-on, so it never swings into the shopfronts
+    camera.position.x = Math.max(-5.6, Math.min(5.6, _px + _dx*_c + _dz*_s)); camera.position.z = _pz - _dx*_s + _dz*_c;   // side-on, the camera slides along the side street — never out over the pavement into a shopfront
     var _ax = _lx - _px, _az = _lz - _pz; _lx = _px + _ax*_c + _az*_s; _lz = _pz - _ax*_s + _az*_c; }
   camera.lookAt(_lx, _ly, _lz);   // look into the bend / up the hill
   if (!COMFORT) camera.rotateZ(-BEND.curve.value * 60 + BEND.psych.value * Math.sin(performance.now()*0.0021) * 0.07);   // bank with it (+ the chakkar sway) — never in comfort mode: a rolling horizon is the #1 motion-sickness cue
