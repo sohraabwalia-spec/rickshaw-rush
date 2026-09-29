@@ -121,6 +121,23 @@ window.addEventListener('error', function(e){
   #ctrlRight { right:20px; }
   #ctrlHorn { left:20px; bottom:calc(26px + clamp(56px,15vw,84px) + 14px); width:clamp(44px,11vw,64px); height:clamp(44px,11vw,64px); font-size:clamp(18px,4.5vw,26px); }
   #ctrlHorn.bump { animation:chipBump .28s ease; }
+  #bhCue { position:absolute; left:0; top:0; z-index:25; pointer-events:none; transform:translate(-50%,-100%); text-align:center; font:900 clamp(15px,2.6vw,26px)/1 system-ui,-apple-system,sans-serif; color:#fff; display:none; will-change:left,top; }
+  #bhCue .tag { display:inline-block; white-space:nowrap; padding:.38em .8em; border-radius:999px; background:#e0312b; box-shadow:0 0 0 3px #fff, 0 6px 18px rgba(0,0,0,.45); letter-spacing:.03em; }
+  #bhCue .ring { width:2.4em; height:2.4em; margin:.35em auto 0; border-radius:50%; background:conic-gradient(#ffd21e calc(var(--p,1)*360deg), rgba(255,255,255,.22) 0); -webkit-mask:radial-gradient(circle, transparent 52%, #000 55%); mask:radial-gradient(circle, transparent 52%, #000 55%); display:none; }
+  #bhCue.warn .tag { animation:bhBlink .3s steps(2) infinite; }
+  #bhCue.go .tag { background:#ffd21e; color:#1c1a18; font-size:1.3em; box-shadow:0 0 0 4px #1c1a18, 0 0 26px 6px rgba(255,210,30,.75); animation:bhGo .22s ease-in-out infinite alternate; }
+  #bhCue.go .ring { display:block; }
+  #bhCue.shoo .tag { background:#ffd21e; color:#1c1a18; }
+  #bhCue.late .tag { background:#1c1a18; color:#ffd21e; box-shadow:0 0 0 3px #ffd21e; }
+  @keyframes bhBlink { 50% { opacity:.4; } }
+  @keyframes bhGo { to { transform:scale(1.12); } }
+  #ctrlHorn.hot, #hud #ctrlHorn.hot { background:#ffd21e; border-color:#1c1a18; box-shadow:0 0 0 4px #ffd21e, 0 0 28px 10px rgba(255,210,30,.85); animation:hornHot .22s ease-in-out infinite alternate; }
+  @keyframes hornHot { to { transform:scale(1.2); } }
+  #turnCue { position:absolute; left:50%; top:23%; z-index:24; pointer-events:none; transform:translate(-50%,-50%); white-space:nowrap; font:900 clamp(18px,3.4vw,34px)/1 system-ui,-apple-system,sans-serif; letter-spacing:.04em; padding:.35em .8em; border-radius:14px; display:none; }
+  #turnCue.on { display:block; }
+  #turnCue.warn { background:rgba(28,26,24,.72); color:#f2c230; font-size:clamp(14px,2.2vw,22px); }
+  #turnCue.go { background:#f2c230; color:#1c1a18; box-shadow:0 0 0 4px #1c1a18, 0 0 30px 8px rgba(242,194,48,.7); animation:turnGo .2s ease-in-out infinite alternate; }
+  @keyframes turnGo { from { transform:translate(-50%,-50%) scale(1); } to { transform:translate(-50%,-50%) scale(1.1); } }
   #ctrlUp { left:50%; transform:translateX(-50%); bottom:34px; }
   /* --- floating popups (juice) --- */
   #popupLayer { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
@@ -823,6 +840,8 @@ window.addEventListener('error', function(e){
     <div id="powerStack"></div>
     <div id="bossBar" class="hidden"><div id="bossLabel">⚡ RIDER DUEL</div><div id="bossTrack"><div id="bossFill"></div></div></div>
     <div id="bossHint" class="hidden"></div>
+    <div id="turnCue"></div>
+    <div id="bhCue"><div class="tag"></div><div class="ring"></div></div>
     <div id="pauseMenu" class="hidden"><div class="pmCard">
       <div class="pmTitle">PAUSED</div>
       <button class="pmBtn pmGo" id="pmResume">▶ RESUME</button>
@@ -1795,7 +1814,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '28-Sep-b';
+var BUILD_TAG = '28-Sep-c';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -2171,6 +2190,11 @@ var kerbTex = canvasTex(256, 8, function(g, w, h){ var gr = g.createLinearGradie
   g.fillStyle = gr; g.fillRect(0, 0, w, h); g.fillStyle = 'rgba(0,0,0,0.08)'; for (var i=0;i<60;i++) g.fillRect(Math.random()*w, Math.random()*h, 3, 1); });
 kerbTex.wrapS = kerbTex.wrapT = THREE.RepeatWrapping; kerbTex.anisotropy = 8; if (THREE.sRGBEncoding) kerbTex.encoding = THREE.sRGBEncoding;
 var kerbMat = new THREE.MeshStandardMaterial({ map:kerbTex, color:0xffffff, roughness:0.82, metalness:0.0 });
+var KERB_GAP = { value:new THREE.Vector4(0, 0, 0, 0) };      // street turns: (zNear, zFar, leftOpen, rightOpen) — the main kerbs are cut open at a side street's mouth
+kerbMat.onBeforeCompile = function(sh){ THREE.Material.prototype.onBeforeCompile.call(this, sh); sh.uniforms.uKerbGap = KERB_GAP;   // keep the road-bend warp, then add the gap
+  sh.vertexShader = 'varying vec3 vKW;\n' + sh.vertexShader.replace('#include <fog_vertex>', '#include <fog_vertex>\n  vKW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+  sh.fragmentShader = 'uniform vec4 uKerbGap;\nvarying vec3 vKW;\n' + sh.fragmentShader.replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n  if (vKW.z < uKerbGap.x && vKW.z > uKerbGap.y && abs(vKW.x) < 6.5 && ((vKW.x < 0.0 && uKerbGap.z > 0.5) || (vKW.x > 0.0 && uKerbGap.w > 0.5))) discard;'); };
+kerbMat.customProgramCacheKey = function(){ return 'rr-bend-kerbgap'; };   // its own program (the shared bend key would hand this shader to every other standard material)
 [-1,1].forEach(function(s){
   var kgeo = new THREE.BoxGeometry(0.5, 0.34, 400, 1, 1, 100), kP = kgeo.attributes.position, kU = kgeo.attributes.uv;
   for (var ki=0; ki<kP.count; ki++) kU.setXY(ki, kP.getZ(ki) / KERB_PERIOD, 0.5);
@@ -3195,7 +3219,7 @@ var farSkyline = new THREE.Group(), farLayerNear = new THREE.Group(), farLayerFa
   [-1,1].forEach(function(sx){ [-36, -22].forEach(function(ox){ var x = sx*Math.abs(ox);
     add(new THREE.CylinderGeometry(3.4, 3.8, 12, 10), x, 26, 0); var d = add(new THREE.SphereGeometry(3.8, 12, 8, 0, Math.PI*2, 0, Math.PI*0.6), x, 32, 0); d.scale.y = 1.3; add(new THREE.ConeGeometry(0.6, 5, 6), x, 38.5, 0); }); });
   [-1,1].forEach(function(sx){ add(new THREE.ConeGeometry(2.2, 14, 8), sx*12, 39, 0); add(new THREE.ConeGeometry(1.2, 8, 6), sx*30, 24, 5); });
-  lm.position.set(0, 0, -238); farLayerNear.add(lm); staticBatch(lm);
+  lm.position.set(0, 0, -238); farLayerNear.add(lm); staticBatch(lm); window._landmark = lm;
 })();
 // ---- the Arabian Sea on the horizon: a wide shimmering sheet behind the skyline, tinted by the day cycle ----
 // Seen from road height the water is a thin band on the horizon, so it is drawn as an upright strip behind the
@@ -3899,7 +3923,7 @@ whenModel(['BIKE_GLB_B64','BIKE_TEX_ORANGE'], function(){ loadBikeModel(window.B
 var bike = null, nextBikeScore = 2000, bikePaused = false, BIKE_HOLD_Z = -4.5;   // rider leads further ahead
 var BIKE_INTERVAL = 2000;   // gap (in score) AFTER one duel ends before the next can start
 function startBikeEncounter(){
-  if (!bikeTemplates.length || bike || cop) return;
+  if (!bikeTemplates.length || bike || cop || flyover || badshah) return;
   bikePaused = true; if (window.PERF) PERF.mark('duel start');
   for (var i=obstacles.length-1;i>=0;i--){ if (obstacles[i].root.position.z < -10){ scene.remove(obstacles[i].root); obstacles.splice(i,1); } }
   var lanes = [0,1,2].filter(function(l){ return l !== state.lane; });
@@ -3927,6 +3951,7 @@ function bossHint(key, title, text){                    // coaching card beside 
   if (key === null){ el.classList.add('hidden'); _bossHintKey = null; return; }
   if (_bossHintKey === key) return;
   _bossHintKey = key; el.innerHTML = '<div class="bhT">' + title + '</div>' + text; el.classList.remove('hidden');
+  clearTimeout(bossHint._t); bossHint._t = setTimeout(function(){ if (_bossHintKey === key) el.classList.add('hidden'); }, 7000);   // read it, then get it out of the view
 }
 function bhKey(action){                                 // control chip for the current input method
   var T = IS_TOUCH;
@@ -4389,7 +4414,7 @@ function copSpawnStation(c){
   c.stations.push(st);
 }
 function startCopEncounter(){
-  if (cop || bike) return;
+  if (cop || bike || flyover || badshah) return;
   copPaused = true; if (window.PERF) PERF.mark('nakabandi start');
   for (var i=obstacles.length-1;i>=0;i--){ if (obstacles[i].root.position.z < -10){ scene.remove(obstacles[i].root); obstacles.splice(i,1); } }
   cop = { plan:copBuildStations(), stations:[], spawned:0, cleared:0, done:false, anim:0 };
@@ -5882,7 +5907,7 @@ function spawnChunk(z, forcedSafe){
     if (l===safe) continue;
     var r = Math.random();
     if (r < 0.42 + difficulty*0.2){                // max ~0.62 both-lane block (was up to 0.75)
-      var onDeck = flyover && (flyover.phase === 'deck' || flyover.phase === 'toll');
+      var onDeck = flyover && flyover.phase !== 'signs';                                            // ramp too: no cows / chaat carts / stalls on the bridge
       var tt = onDeck ? pickWeighted({ car:3.2, fullbar:0.5, overheadbar:1.1, brokentempo:0.9 }) : pickWeighted(worldMood().tall);
       var rec = spawnObstacle(tt, l, z + rand(-0.5,0.5)); if (rec) row.push(rec);
       if (tt==='car') deep = true;                 // traffic vehicle (may be a long bus/truck) → widen next gap
@@ -5991,17 +6016,23 @@ function updateJunctions(dt, dz){
   }
 }
 
-/* ============================== STREET TURNS (28-Sep, the most-asked-for feature) ==============================
-   Temple Run-style corners. Every ~0.6–0.9 km (when nothing else is on) the street ENDS in a wall of buildings with a
+/* ============================== STREET TURNS (28-Sep, the most-asked-for feature; polished 28-Sep-c) ==============================
+   Temple Run-style corners. Every ~0.45–0.75 km (when nothing else is on) the street ENDS in a wall of buildings with a
    side street opening left, right or both. Swipe (or ←/→) inside the window at the corner and the rickshaw and camera
    swing 90° onto the new street; miss it and you hit the shopfronts.
    How it stays simple: the world is still one straight scrolling street. The swing is a camera orbit around the
-   rickshaw; at its midpoint (whip-blurred) the corner set is removed and a fresh road is laid ahead — so lanes,
-   spawning, collision and fairness logic are all untouched. Player-initiated, no roll, 0.34 s: comfort-safe. */
+   rickshaw; late in the swing (whip-blurred) the corner set is removed and a fresh road is laid ahead — so lanes,
+   spawning, collision and fairness logic are all untouched. Player-initiated, no roll, under half a second: comfort-safe.
+   28-Sep-c polish: the corner reads as a real T/L junction — a tall continuous wall, the main kerb opens at the mouth,
+   kerbs + buildings line the side street (so the swing looks INTO a street, not at nothing), bollards + chevrons where
+   the road dead-ends, painted turn arrows in every lane, an on-screen SWIPE cue while the window is open, and a swing
+   with weight: the auto leads the camera, tyres screech and smoke, a small FOV kick, a lighter blur. */
 var CROSS_W = 10;                                            // width of the side street (m)
-var TURN = { t:null, yaw:0, wallYaw:Math.PI/2, since:-150, on:(function(){ try { return localStorage.getItem('rrTurns_v1') !== 'off'; } catch(e){ return true; } })(), made:0 };
+var TURN = { t:null, yaw:0, lead:0, fwd:0, wallYaw:Math.PI/2, since:-150, on:(function(){ try { return localStorage.getItem('rrTurns_v1') !== 'off'; } catch(e){ return true; } })(), made:0 };
+var TURN_SWING = 0.5, TURN_CUT = 0.62;                      // swing length (s) and where in it the set is swapped (the blur peaks there)
 function setTurns(on){ TURN.on = !!on; try { localStorage.setItem('rrTurns_v1', on ? 'on' : 'off'); } catch(e){} }
 function turnEvery(){ return Math.max(450, 750 - zoneNow*50); }
+function turnEase(p){ return p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p + 2, 2)/2; }
 var _turnSignTex = {};
 function turnSignTex(dir){                                   // big hand-painted direction board
   if (_turnSignTex[dir]) return _turnSignTex[dir];
@@ -6012,62 +6043,144 @@ function turnSignTex(dir){                                   // big hand-painted
   g.font = '800 38px sans-serif'; g.fillText(dir === 0 ? 'LEFT OR RIGHT' : 'TURN ' + (dir < 0 ? 'LEFT' : 'RIGHT'), 256, 214);
   var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; _turnSignTex[dir] = t; return t;
 }
+var _turnChevTex = {};
+function turnChevTex(dir){                                   // black/yellow chevron board where the road dead-ends, pointing the way out
+  if (_turnChevTex[dir]) return _turnChevTex[dir];
+  var c = document.createElement('canvas'); c.width = 512; c.height = 96; var g = c.getContext('2d');
+  g.fillStyle = '#1c1a18'; g.fillRect(0, 0, 512, 96); g.fillStyle = '#f2c230';
+  for (var i=0;i<8;i++){ var cx = 32 + i*64, d = dir !== 0 ? dir : (cx < 256 ? -1 : 1);
+    g.beginPath(); g.moveTo(cx - d*18, 10); g.lineTo(cx + d*12, 48); g.lineTo(cx - d*18, 86); g.lineTo(cx - d*2, 86); g.lineTo(cx + d*28, 48); g.lineTo(cx - d*2, 10); g.closePath(); g.fill(); }
+  var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; _turnChevTex[dir] = t; return t;
+}
+var _turnArrowMat = {};
+function turnArrowMat(dir){                                  // a painted lane arrow that bends the way to go (both ways at a T)
+  if (_turnArrowMat[dir]) return _turnArrowMat[dir];
+  var c = document.createElement('canvas'); c.width = 128; c.height = 256; var g = c.getContext('2d');
+  g.strokeStyle = g.fillStyle = 'rgba(246,242,228,0.95)'; g.lineWidth = 20; g.lineCap = 'round'; g.lineJoin = 'round';
+  function bend(d){ g.beginPath(); g.moveTo(64, 246); g.lineTo(64, 120); g.quadraticCurveTo(64, 74, 64 + d*34, 74); g.stroke();
+    g.beginPath(); g.moveTo(64 + d*62, 74); g.lineTo(64 + d*26, 40); g.lineTo(64 + d*26, 108); g.closePath(); g.fill(); }
+  if (dir === 0){ bend(-1); bend(1); } else bend(dir);
+  var t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4;
+  _turnArrowMat[dir] = new THREE.MeshBasicMaterial({ map:t, transparent:true, depthWrite:false, opacity:0.9 }); return _turnArrowMat[dir];
+}
 var _crossMat = null;
 function crossRoadMat(){
   if (_crossMat) return _crossMat;
-  var t = roadTex.clone(); t.needsUpdate = true; t.center.set(0.5, 0.5); t.rotation = Math.PI/2; t.repeat.set(1, 4); t.offset.set(0, 0);
+  var t = roadTex.clone(); t.needsUpdate = true; t.center.set(0.5, 0.5); t.rotation = Math.PI/2; t.repeat.set(1, 5.4); t.offset.set(0, 0);
   _crossMat = new THREE.MeshStandardMaterial({ map:t, roughness:0.4, metalness:0.4, envMapIntensity:1.2 }); return _crossMat;
+}
+var _bollardMat = null;
+function bollardMat(){
+  if (_bollardMat) return _bollardMat;
+  var t = canvasTex(8, 64, function(g, w, h){ for (var i=0;i<4;i++){ g.fillStyle = i%2 ? '#f2c230' : '#1c1a18'; g.fillRect(0, i*h/4, w, h/4); } });
+  _bollardMat = new THREE.MeshStandardMaterial({ map:t, roughness:0.7 }); return _bollardMat;
+}
+function turnKerb(len){                                      // a kerb stone strip laid along x (the side street's edges), same paint as the main kerbs
+  var g = new THREE.BoxGeometry(len, 0.34, 0.5, Math.max(1, Math.round(len/2)), 1, 1), P = g.attributes.position, U = g.attributes.uv;
+  for (var i=0;i<P.count;i++) U.setXY(i, P.getX(i) / KERB_PERIOD, 0.5);
+  if (!turnKerb.mat){ turnKerb.mat = kerbMat.clone(); if (turnKerb.mat.hasOwnProperty('onBeforeCompile')) delete turnKerb.mat.onBeforeCompile; if (turnKerb.mat.hasOwnProperty('customProgramCacheKey')) delete turnKerb.mat.customProgramCacheKey; }   // same paint, WITHOUT the main kerbs' gap cut
+  var m = new THREE.Mesh(g, turnKerb.mat); m.receiveShadow = true; return m;
+}
+var _bHeights = null;
+function turnBuildingPool(){                                 // the taller street GLBs make the best wall (a stubby one reads as "a house in the road")
+  var pool = buildings.filter(function(b){ return b.isGLB; }); if (!pool.length) pool = buildings.slice();
+  pool.forEach(function(b){ if (b._h == null){ var bb = new THREE.Box3().setFromObject(b.group); b._h = bb.max.y - bb.min.y; } });
+  pool.sort(function(a, b){ return b._h - a._h; }); return pool.slice(0, Math.max(3, Math.ceil(pool.length*0.6)));
+}
+function turnRow(G, pool, face, x0, x1, zFront){            // shoulder-to-shoulder clones from x0 to x1, front face on zFront; face +1 = facade toward the player (+z), -1 = toward -z
+  var x = x0, n = 0;
+  while (x < x1 && pool.length && n++ < 14){
+    var src = pick(pool), b = src.group.clone(true), sx = src.group.position.x < 0 ? -1 : 1, faceMin = face < 0;
+    b.rotation.set(0, src.group.rotation.y + sx*face*Math.PI/2, 0);   // turn it from facing the road (±x, as the ring placed it) to facing ±z
+    b.visible = true; b.traverse(function(o){ if (o.userData && o.userData._turnHid) o.visible = true; });
+    b.position.set(0, 0, 0); b.updateWorldMatrix(true, true); var bb = new THREE.Box3().setFromObject(b);
+    var h = bb.max.y - bb.min.y; if (h < 12) b.scale.y = Math.min(1.45, 12 / Math.max(1, h));
+    var w = Math.max(6, bb.max.x - bb.min.x);
+    b.position.set(x - bb.min.x, 0, faceMin ? zFront - bb.min.z : zFront - bb.max.z);
+    G.add(b); x += w + 0.25;
+  }
 }
 function spawnTurn(z){
   var dir = Math.random() < 0.34 ? 0 : (Math.random() < 0.5 ? -1 : 1);
   var G = new THREE.Group(); G.position.z = z;
-  // the side street (and the mouth of the main road) — overlays the kerbs/verges inside the gap
-  var road = new THREE.Mesh(new THREE.PlaneGeometry(150, CROSS_W), crossRoadMat()); road.rotation.x = -Math.PI/2; road.position.set(0, 0.03, -CROSS_W/2); road.receiveShadow = true; G.add(road);
+  var openL = dir <= 0, openR = dir >= 0, reach = MOBILE && TIER === 'low' ? 50 : 70;
+  // the side street (and the mouth of the main road) — overlays the verges inside the gap
+  var road = new THREE.Mesh(new THREE.PlaneGeometry(200, CROSS_W), crossRoadMat()); road.rotation.x = -Math.PI/2; road.position.set(0, 0.03, -CROSS_W/2); road.receiveShadow = true; G.add(road);
   for (var i=0;i<4;i++){ var zb = roadDecal(TEX_ZEBRA, 1.15); zb.position.set(-3.4 + i*2.2, 0.035, 1.2); G.add(zb); }
-  // the far wall: real street buildings turned to face you, shoulder to shoulder across the whole view
-  var pool = buildings.filter(function(b){ return b.isGLB; }); if (!pool.length) pool = buildings.slice();
-  var x = -44;
-  while (x < 44 && pool.length){
-    var src = pick(pool), b = src.group.clone(true); b.rotation.set(0, TURN.wallYaw, 0); b.visible = true; b.traverse(function(o){ if (o.userData && o.userData._turnHid) o.visible = true; });   // facade turned to face the player
-    b.position.set(0, 0, 0); b.updateWorldMatrix(true, true); var bb = new THREE.Box3().setFromObject(b);
-    var w = Math.max(6, bb.max.x - bb.min.x);
-    b.position.set(x - bb.min.x, 0, (-CROSS_W - 0.3) - bb.max.z);           // front face on the far kerb of the side street
-    G.add(b); x += w + 0.3;
-  }
-  // blocked side: the main street's frontage wraps the corner (the ring buildings there simply stay visible)
-  // direction boards on the wall, and a traffic cop pointing the way
-  var sign = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 3.2), new THREE.MeshBasicMaterial({ map:turnSignTex(dir), fog:false }));
-  sign.position.set(0, 5.2, -CROSS_W - 0.2); G.add(sign);
+  // kerbs along the side street: the far edge right across (the main road dead-ends into it), the near edge on each open side
+  var kf = turnKerb(2*reach + 20); kf.position.set(0, 0.15, -CROSS_W - 0.25); G.add(kf);
+  [-1, 1].forEach(function(s){ if ((s < 0 && !openL) || (s > 0 && !openR)) return; var len = reach + 10 - (ROAD_W/2 + 0.5), kn = turnKerb(len); kn.position.set(s*(ROAD_W/2 + 0.5 + len/2), 0.15, 0.25); G.add(kn); });
+  // the far wall: tall street buildings turned to face you, shoulder to shoulder — reaching far down every open side
+  var pool = turnBuildingPool();
+  turnRow(G, pool, 1, openL ? -reach : -22, openR ? reach : 22, -CROSS_W - 0.6);
+  // the near side of the side street (you only see these while swinging into it): facades turned to face the side street
+  if (openL) turnRow(G, pool, -1, -reach, -22, 0.6);
+  if (openR) turnRow(G, pool, -1, 22, reach, 0.6);
+  // where the road dead-ends: a row of bollards and a chevron board pointing the way out, a big direction board above
+  var bg = new THREE.CylinderGeometry(0.13, 0.15, 0.95, 8), bm = bollardMat(), nb = 9, bi = new THREE.InstancedMesh(bg, bm, nb), mtx = new THREE.Matrix4();
+  for (var k=0;k<nb;k++){ mtx.makeTranslation(-ROAD_W/2 + 0.4 + k*(ROAD_W - 0.8)/(nb - 1), 0.47, -CROSS_W - 0.9); bi.setMatrixAt(k, mtx); } bi.castShadow = true; G.add(bi);
+  var chev = new THREE.Mesh(new THREE.PlaneGeometry(ROAD_W + 1.2, 1.3), new THREE.MeshBasicMaterial({ map:turnChevTex(dir), toneMapped:false }));
+  chev.position.set(0, 1.75, -CROSS_W - 1.2); G.add(chev);
+  var sign = new THREE.Mesh(new THREE.PlaneGeometry(8, 4), new THREE.MeshBasicMaterial({ map:turnSignTex(dir), fog:false, toneMapped:false }));
+  sign.position.set(0, 7.4, -CROSS_W - 0.45); G.add(sign);
+  // painted arrows in every lane on the run-up
+  var am = turnArrowMat(dir);
+  [16, 34].forEach(function(dzA){ LANES.forEach(function(lx){ var a = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3.4), am); a.rotation.x = -Math.PI/2; a.position.set(lx, 0.025, dzA); a.renderOrder = 2; G.add(a); }); });
   scene.add(G);
   // nothing old may live beyond the corner — and a clear 25 m run-up before it
   for (var i2=obstacles.length-1;i2>=0;i2--){ var o = obstacles[i2]; if (o.root.position.z < z + 25){ scene.remove(o.root); obstacles.splice(i2, 1); } }
   for (var c2=coins.length-1;c2>=0;c2--){ if (coins[c2].mesh.position.z < z + 25){ scene.remove(coins[c2].mesh); coins.splice(c2, 1); } }
   for (var p2=powerups.length-1;p2>=0;p2--){ if (powerups[p2].mesh.position.z < z + 25){ scene.remove(powerups[p2].mesh); powerups.splice(p2, 1); } }
-  TURN.t = { group:G, dir:dir, phase:'approach', p:0, open:false, queued:0, announced:false, hidden:[] };
+  TURN.t = { group:G, dir:dir, openL:openL, openR:openR, phase:'approach', p:0, open:false, queued:0, announced:false, hidden:[] };
   if (window.PERF) PERF.mark('turn spawn ' + (dir < 0 ? 'L' : dir > 0 ? 'R' : 'T'));
 }
-function turnHide(T){                                        // clear the ring buildings / props / walkers / alleys standing in the side-street gap
+function turnHide(T){                                        // clear the gap on the open side(s) — and EVERYTHING of the old street beyond the corner (it would poke over the wall)
   var near = T.group.position.z + 1.5, far = T.group.position.z - CROSS_W - 1.5;
-  function test(obj, half){ if (!obj) return; var sx = obj.position.x < 0 ? -1 : 1; var open = T.dir === 0 || T.dir === sx;
-    var z = obj.position.z, inGap = open && z + half > far && z - half < near;
-    if (inGap && obj.visible){ obj.visible = false; obj.userData._turnHid = true; T.hidden.push(obj); } }
+  function test(obj, half){ if (!obj || !obj.visible) return; var sx = obj.position.x < 0 ? -1 : 1; var open = T.dir === 0 || T.dir === sx;
+    var z = obj.position.z, beyond = z + half < far + 3, inGap = open && z + half > far && z - half < near;
+    if (beyond || inGap){ obj.visible = false; obj.userData._turnHid = true; T.hidden.push(obj); } }
   buildings.forEach(function(b){ test(b.group, (b.len || 12)/2 + 1); });
   props.forEach(function(p){ test(p, 1.5); });
   pedestrians.forEach(function(p){ test(p, 1); });
   alleys.forEach(function(a){ test(a, 10); });
+  if (typeof wires !== 'undefined') wires.forEach(function(w){ test(w, 0.5); });
 }
 function turnRestore(T){ T.hidden.forEach(function(o){ o.visible = true; o.userData._turnHid = false; }); T.hidden.length = 0; }
+function turnKerbGap(T){                                     // cut the main kerbs open at the mouth of the side street (shader discard, see kerbMat)
+  var g = KERB_GAP.value; if (!T){ g.set(0, 0, 0, 0); return; }
+  var z = T.group.position.z; g.set(z + 0.5, z - CROSS_W - 0.5, T.openL ? 1 : 0, T.openR ? 1 : 0);
+}
+var _turnCue = null;
+function turnCue(mode, T){                                   // on-screen instruction, centre-top: what to do and which way
+  if (!_turnCue){ _turnCue = $('turnCue'); if (!_turnCue) return; _turnCue._m = ''; }
+  if (_turnCue._m === mode) return; _turnCue._m = mode;
+  if (!mode){ _turnCue.className = ''; return; }
+  var d = T.dir, L = '⬅', R = '➡', verb = IS_TOUCH ? 'SWIPE' : 'TURN NOW';
+  _turnCue.textContent = mode === 'go' ? (d < 0 ? L + ' ' + verb : d > 0 ? verb + ' ' + R : L + ' ' + verb + ' ' + R) : (d < 0 ? L + ' TURN LEFT AHEAD' : d > 0 ? 'TURN RIGHT AHEAD ' + R : L + ' LEFT OR RIGHT ' + R);
+  _turnCue.className = 'on ' + mode;
+}
+function turnScreech(dir){                                   // short tyre squeal: two detuned saws through a tight band-pass, wobbling
+  if (!AC || state.muted || typeof RRA === 'undefined' || !RRA.gate('screech', 1, 0.3, 0.45)) return;
+  var t = AC.currentTime, bp = AC.createBiquadFilter(), g = AC.createGain(), lfo = AC.createOscillator(), lg = AC.createGain();
+  bp.type = 'bandpass'; bp.frequency.value = 2300; bp.Q.value = 9; lfo.frequency.value = 23; lg.gain.value = 260; lfo.connect(lg); lg.connect(bp.frequency);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.04); g.gain.setValueAtTime(0.09, t + 0.22); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
+  [1, 1.013].forEach(function(m){ var o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(1180*m, t); o.frequency.linearRampToValueAtTime(980*m, t + 0.42); o.connect(bp); o.start(t); o.stop(t + 0.45); });
+  bp.connect(g); g.connect(RRA.out('sfx', dir*0.4)); lfo.start(t); lfo.stop(t + 0.45);
+}
 function tryTurn(dir){                                        // called from goLane: inside the window a left/right swipe is a TURN
   var T = TURN.t; if (!T || T.phase !== 'approach') return false;
   if (T.dir !== 0 && T.dir !== dir) return false;                                     // wrong way at an L-corner: an ordinary lane change (you'll hit the wall)
   if (!T.open){ if (T.group.position.z > -(state.speed*0.95 + 6)){ T.queued = dir; T.queuedAt = performance.now(); return true; } return false; }   // a hair early: buffered
-  T.phase = 'swing'; T.turnDir = dir; T.p = 0; T.swapped = false;
-  if (typeof FEEL !== 'undefined' && FEEL.skid) try { FEEL.skid(dir); } catch(e){}
-  if (AC && typeof RRA !== 'undefined') RRA.play('whooshBig', { pan:dir*0.6, gain:0.5 });
+  T.phase = 'swing'; T.turnDir = dir; T.p = 0; T.swapped = false; turnCue('', T);
+  if (typeof FEEL !== 'undefined'){ try { FEEL.skid(dir); if (FEEL.kick) FEEL.kick(3); FEEL.haptic && FEEL.haptic(25); } catch(e){} }
+  burst(player.position.x - dir*0.4, 0.25, 1.0, 0xc9b79a, 12, 2.2, 2.2);                // rear tyres kick up dust
+  state.shake = Math.max(state.shake, 0.12);
+  turnScreech(dir);
+  if (AC && typeof RRA !== 'undefined') RRA.play('whooshBig', { pan:dir*0.6, gain:0.4 });
   return true;
 }
 function turnSwap(T){                                         // the cut, hidden in the whip-pan: corner set out, a fresh road in
-  scene.remove(T.group); turnRestore(T);
+  scene.remove(T.group); turnRestore(T); turnKerbGap(null);
   for (var i=obstacles.length-1;i>=0;i--){ var o = obstacles[i]; if (o.root.position.z < 6){ scene.remove(o.root); obstacles.splice(i, 1); } }
   for (var c=coins.length-1;c>=0;c--){ if (coins[c].mesh.position.z < 6){ scene.remove(coins[c].mesh); coins.splice(c, 1); } }
   for (var p=powerups.length-1;p>=0;p--){ if (powerups[p].mesh.position.z < 6){ scene.remove(powerups[p].mesh); powerups.splice(p, 1); } }
@@ -6082,31 +6195,37 @@ function turnSwap(T){                                         // the cut, hidden
 }
 function updateTurn(dt, rawDt, dz){
   var T = TURN.t; if (state.running && !T) TURN.since += dz;
-  if (!T){ TURN.yaw = 0; return; }
+  if (!T){ TURN.yaw = 0; TURN.lead = 0; return; }
   T.group.position.z += dz;
   var near = T.group.position.z;
-  if (!T.announced && near > -90){ T.announced = true; popup(T.dir < 0 ? '⬅ MOD AAGE — TURN LEFT' : T.dir > 0 ? 'MOD AAGE — TURN RIGHT ➡' : '⬅ MOD AAGE — LEFT OR RIGHT ➡', 'popEvent', 50, 26); if (typeof seetiSound === 'function') seetiSound(false); }
+  if (!T.announced && near > -90){ T.announced = true; if (typeof seetiSound === 'function') seetiSound(false); }
   if (T.phase === 'approach'){
-    turnHide(T);
+    turnHide(T); turnKerbGap(T);
     T.open = near > -(state.speed*0.55 + 3) && near - CROSS_W*0.5 < PLAYER_Z + 1.5;
+    turnCue(T.open ? 'go' : near > -95 ? 'warn' : '', T);
+    if (T.open && !T.cued){ T.cued = true; if (typeof FEEL !== 'undefined' && FEEL.haptic) try { FEEL.haptic(20); } catch(e){} }
     if (T.open && T.queued && performance.now() - T.queuedAt < 450){ var q = T.queued; T.queued = 0; tryTurn(q); }
     if (T.phase === 'approach' && near - CROSS_W > PLAYER_Z - 1.2){                    // reached the shopfronts
-      T.phase = 'crashed'; state.deathNote = 'turn wall'; gameOver();
+      T.phase = 'crashed'; turnCue('', T); state.deathNote = 'turn wall'; gameOver();
       if (state.running){ turnSwap(T); TURN.t = null; }                                  // test harness (god mode): carry on
       return;
     }
   }
   if (T.phase === 'swing'){
-    T.p = Math.min(1, T.p + rawDt / 0.34);
-    var e = T.p < 0.5 ? 2*T.p*T.p : 1 - Math.pow(-2*T.p + 2, 2)/2, full = -T.turnDir * Math.PI/2;
-    if (!T.swapped && T.p >= 0.5){ T.swapped = true; turnSwap(T); }
+    T.p = Math.min(1, T.p + rawDt / TURN_SWING);
+    var e = turnEase(T.p), full = -T.turnDir * Math.PI/2;
+    if (!T.swapped){ turnKerbGap(T); if (T.p >= TURN_CUT){ T.swapped = true; turnSwap(T); burst(player.position.x, 0.25, 1.0, 0xc9b79a, 8, 2, 2); } }
     TURN.yaw = T.swapped ? full * (e - 1) : full * e;
-    var blur = Math.max(0, 1 - Math.abs(T.p - 0.5) / 0.22);                              // whip blur peaks at the cut
-    renderer.domElement.style.filter = blur > 0.02 ? 'blur(' + (blur*5).toFixed(1) + 'px)' : '';
-    if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; renderer.domElement.style.filter = ''; }
+    if (!T.swapped){ var u = Math.min(1, T.p / TURN_CUT); TURN.fwd = Math.min(0, T.group.position.z - CROSS_W*0.45) * u*u*(3 - 2*u); } else TURN.fwd = 0;   // the auto drives INTO the junction as it swings, so the camera ends up looking down the side street, not into the corner shop
+    player.position.z = PLAYER_Z + TURN.fwd;
+    TURN.lead = full * 0.22 * Math.sin(Math.min(1, T.p*1.25) * Math.PI);                 // the auto noses into the corner ahead of the camera
+    if (T.p > 0.1 && T.p < 0.55 && Math.random() < rawDt*18) burst(player.position.x - T.turnDir*0.45, 0.2, 1.1, 0xbdb3a2, 2, 1.2, 1.2);   // tyre smoke through the slide
+    var blur = Math.max(0, 1 - Math.abs(T.p - TURN_CUT) / 0.16);                          // whip blur peaks at the cut
+    renderer.domElement.style.filter = blur > 0.05 ? 'blur(' + (blur*3).toFixed(1) + 'px)' : '';
+    if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; renderer.domElement.style.filter = ''; }
   }
 }
-function clearTurn(){ if (TURN.t){ scene.remove(TURN.t.group); turnRestore(TURN.t); TURN.t = null; } TURN.yaw = 0; TURN.since = -150; renderer.domElement.style.filter = ''; }
+function clearTurn(){ if (TURN.t){ scene.remove(TURN.t.group); turnRestore(TURN.t); TURN.t = null; } TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; TURN.since = -150; turnKerbGap(null); turnCue('', null); renderer.domElement.style.filter = ''; }
 
 /* --- Crossing set-pieces: a scripted ~5 s event where a group walks ACROSS all three lanes.
        Actors are spaced ≥ 6 m apart so at most two lanes are ever blocked at once — the gap moves, you time it. --- */
@@ -7525,7 +7644,7 @@ var FEEL = (function(){
   return {
     flockTick:flockTick,
     dust:function(dt, dayDark){ if (!state.running || dayDark > 0.5 || (monsoon && monsoon.active)) return; var n = dt*7; while (n > 0){ if (Math.random() < n) PFX.spawn('softAdd', rand(-6, 6) + state.x*0.5, rand(0.6, 4.5), rand(-14, -2), rand(-0.2, 0.2), rand(-0.05, 0.12), state.speed*0.98, rand(0.035, 0.07), 0xffe2b0, 0.55, -0.05, 0); n -= 1; } },
-    update:update, skid:skid, coinFly:coinFly, haptic:haptic, whoosh:whoosh, lead:lead,
+    kick:function(v){ fovKick = Math.min(8, fovKick + v); }, update:update, skid:skid, coinFly:coinFly, haptic:haptic, whoosh:whoosh, lead:lead,
     nearMiss:function(o){ state.shake = Math.max(state.shake, 0.16); fovKick = Math.min(6, fovKick + 3.5); whoosh((o.root.position.x - player.position.x)/3, o.kind === 'truck' || o.kind === 'bus' || o.kind === 'tanker'); haptic(18); },
     land:function(){ squash = 1; haptic(12); },
     crash:function(){ haptic([60, 40, 90]); state.timeScale = 0.02; },
@@ -7646,7 +7765,7 @@ function startGame(){
   state.dist = 0; state.coins = 0; state.score = 0;
   bike = null; bikePaused = false; nextBikeScore = 2000; bossShow(false);   // reset bike boss
   if (cop) copRemove(cop); cop = null; copPaused = false; nextCopScore = 3500; bossGapScore = 0; copSiren(0);   // reset cop boss
-  if (badshah){ scene.remove(badshah.root); badshah = null; } badshahMusic(false); nextBadshahScore = 4200;   // reset the SUV boss
+  if (badshah){ scene.remove(badshah.root); badshah = null; } badshahMusic(false); bhCueHide(); nextBadshahScore = 4200;   // reset the SUV boss
   if (flyover) flyoverEnd(); nextFlyoverScore = FLYOVER_FIRST; animate._flyWarm = false;
   state.bonus = 0; state.mult = 1; state.comboTimer = 0; state.swerveTimer = 0;
   state.speed = BASE_SPEED; state.timeScale = 1;
@@ -7809,7 +7928,7 @@ function instFrom(tpl, mats){                                  // template holde
 function flyUpgrade(){                                         // swap procedural Sea Link pieces for the modelled kit as each template arrives
   if (!flyGroup) return; setTimeout(function(){ if (flyGroup && !flyGroup.visible){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; } }, 0); var T = propTemplates, M = THREE.Matrix4;
   if (T.pylon && !flyUp.pylon){ flyUp.pylon = true;
-    var pb = new THREE.Box3().setFromObject(T.pylon), ps = pb.getSize(new THREE.Vector3()), sx = 40 / Math.max(ps.x, 0.1), baseY = -FLY.drop - 11, top = ps.y + baseY;   // footing deep in the sea so the crossbeam sits under the deck and the legs rise through it
+    var pb = new THREE.Box3().setFromObject(T.pylon), ps = pb.getSize(new THREE.Vector3()), sx = 54 / Math.max(ps.x, 0.1), baseY = -FLY.drop - 11, top = ps.y + baseY;   // footing deep in the sea so the crossbeam sits under the deck and the legs rise through it
     var cab = mergedTubes((function(){ var L = []; for (var c=0;c<10;c++){ var y = top - 3 - c*1.9, zc = 8 + c*7; [-1,1].forEach(function(sd){ [-1,1].forEach(function(dir){ L.push([0, y, dir*0.6, sd*(ROAD_W/2 + 0.5), 1.3, dir*zc]); }); }); } return L; })(), 0.06);
     var cabMat = new THREE.MeshStandardMaterial({ color:0xf2f4f6, roughness:0.4, metalness:0.5 });
     flyPylons.forEach(function(py){ py.children.forEach(function(ch){ ch.visible = false; }); var pc = T.pylon.clone(true); pc.scale.set(1, 1, sx); /* holder is yawed −90°: local z = world x (scaling x stretched the legs ALONG the road) */ pc.position.y = baseY; py.add(pc); py.add(new THREE.Mesh(cab, cabMat)); });
@@ -8033,14 +8152,14 @@ whenModel('BADSHAH_GLB_B64', function(){ deferHeavy(function(){ loadBadshahModel
 var badshah = null, nextBadshahScore = 4200, BADSHAH_INTERVAL = 9000;
 var BADSHAH_LINES = { start:['Hat be! Papa ka naam suna hai?', 'Jaanta hai main kaun hoon?!', 'Side ho, tin ke dabbe!'], lunge:['Bach ke!', 'Dekh kya raha hai?', 'Aaja aaja!'], flinch:['Arre arre arre!', 'Oye!', 'Pagal hai kya?'], leave:['Papa ka phone… baad mein dekhta hoon tujhe.', 'Chal, next time.'], driver:['Papa ka naam, mummy ki gaadi.', 'Badshah nahi, bachcha hai!', 'Jaa, tuition ka time ho gaya.'] };
 function startBadshahEncounter(){
-  if (!badshahTemplate || badshah || bike || cop) return;
+  if (!badshahTemplate || badshah || bike || cop || flyover) return;
   var root = badshahTemplate.clone(true); addBlob(root, BADSHAH_HW*2 + 0.6, BADSHAH_D + 0.8, 0.85); scene.add(root);
   var lane = state.lane === 1 ? pick([0,2]) : 1;
   root.position.set(LANES[lane], 0, 26);
   badshah = { root:root, lane:lane, x:LANES[lane], z:26, phase:'arrive', t:0, lunges:0, stuck:0, xOff:0, lean:0, need:5 + (zoneNow >= 3 ? 1 : 0) + Math.floor(heat()), roamT:0, tz:-40, tele:0, honkT:0.4, beat:0, fake:false, hornWindow:false, shake:0 };
   var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE 0 / ' + badshah.need;
   bossShow(true); bossFill(0);
-  bossHint('badshah', '👑 JAANTA HAI MAIN KAUN HOON?', 'Rich kid, monster SUV, zero brakes in the head. He is harmless until his BRAKE LIGHTS flare and the horn blasts — then get OUT of his lane ' + bhKey('lane') + '. Or wait till he is right on your bumper and HONK BACK ' + bhKey('horn') + ' — he flinches. He cannot drive through traffic either: use the jams. Watch the road too.');
+  bossHint('badshah', '👑 JAANTA HAI MAIN KAUN HOON?', 'Rich kid, monster SUV, zero brakes in the head. When his BRAKE LIGHTS flash he drops in front of you to brake-check. The moment a yellow 📯 HONK! pops over his car, HONK BACK ' + bhKey('horn') + ' — he flinches. Missed it? Get OUT of his lane ' + bhKey('lane') + '. He cannot drive through traffic either: use the jams. Watch the road too.');
   popup('👑 JAANTA HAI MAIN KAUN HOON?!', 'popEvent', 50, 20); popup('BADSHAH IS ON THE ROAD · ' + (IS_TOUCH ? 'TAP 📯' : 'PRESS H') + ' TO HONK BACK', 'popSub', 50, 36);
   badshahMusic(true); badshahHorn(true);
   setTimeout(function(){ if (badshah) say('badshah', pick(BADSHAH_LINES.start), 50 + badshah.x*6, 26); }, 700);
@@ -8048,7 +8167,7 @@ function startBadshahEncounter(){
 }
 function badshahEnd(win){
   if (!badshah) return;
-  var b = badshah; badshahMusic(false); bossShow(false); nextBadshahScore = state.score + bossInterval(BADSHAH_INTERVAL);
+  var b = badshah; badshahMusic(false); bossShow(false); bhCueHide(); nextBadshahScore = state.score + bossInterval(BADSHAH_INTERVAL);
   if (win){
     popup('👑 BADSHAH BHAGA! +' + (500*state.mult), 'popEvent', 50, 24); state.bonus += 500*state.mult; addCombo(); addCombo(); addCombo();
     for (var L=0;L<3;L++) spawnCoinRow(L, -16, 7, true); burst(player.position.x, 1.4, -2, 0xffce3a, 30, 4, 5);
@@ -8139,11 +8258,13 @@ function updateBadshah(dt, dz){
     if ((b.roamT -= dt) <= 0){ b.roamT = rand(1.2, 2.6); b.tz = rand(-62, -24); var wo = []; if (b.lane>0) wo.push(b.lane-1); if (b.lane<2) wo.push(b.lane+1);
       wo = wo.filter(function(l){ return bLaneClear(l, b.z - 14, b.z + 9); }); if (wo.length) b.lane = pick(wo); }
     b.z += (b.tz - b.z) * Math.min(1, dt*1.6);
+    if (b.pLane !== state.lane){ b.pLane = state.lane; b.mirrorAt = b.t + 0.35; }                  // he reacts to you: change lanes and he cuts across to sit in front of you again
+    if (b.mirrorAt && b.t > b.mirrorAt){ b.mirrorAt = 0; if (b.lane !== state.lane && b.t - (b.lastMirror||-9) > 1.6 && Math.abs(state.lane - b.lane) === 1 && bLaneClear(state.lane, b.z - 14, b.z + 9)){ b.lastMirror = b.t; b.lane = state.lane; b.roamT = Math.max(b.roamT, 1.2); b.hold = Math.min(b.hold||0, 1.0); badshahHorn(false); if (Math.random() < 0.4) say('badshah', pick(['Kahan ja raha hai?', 'Aage mat nikal!', 'Mere saamne?']), 50 + b.x*6, 26); } }
     lim = bAheadLimit(b); if (lim != null && b.z < lim){ b.z = lim; b.stuck = (b.stuck||0) + dt; } else b.stuck = 0;
     if (b.stuck > 0.5){                                       // boxed in behind a slow truck → find a gap, else sit there fuming
       var esc = [b.lane-1, b.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, b.z - 16, b.z + 9); });
       if (esc.length){ b.lane = pick(esc); b.stuck = 0; b.roamT = rand(1.0, 2.0); } else b.tz = Math.max(b.tz, b.z); }
-    var teleNow = Math.max(0.9, 1.25 - zoneNow*0.07);
+    var teleNow = Math.max(1.1, 1.5 - zoneNow*0.06);
     if (b.t > 70 && b.lunges < b.need){ say('badshah', pick(['Papa ka phone… bach gaya tu.', 'Time nahi hai mere paas — nikal.']), 50 + b.x*6, 26); badshahEnd(true); return; }   // he never gets his run-in on a jammed road → papa calls anyway
     if (b.hold > 1.2 && b.tz < -34) b.tz = rand(-32, -24);                                      // lining up a lunge: he closes in first so the run-in is short
     if ((b.hold = (b.hold||0) + dt) > rand(1.8, 3.2) && Math.abs(b.z - b.tz) < 6 && !state.jumping && badshahEscapable(teleNow) && bLaneClear(state.lane, b.z - 2, 3)){   // set up a lunge — only when you can dodge AND his whole run-in is clear
@@ -8152,7 +8273,7 @@ function updateBadshah(dt, dz){
         b.swiped = true; b.phase = 'swipe'; b.swipeT = 0; b.lane = pick([state.lane-1, state.lane+1].filter(function(l){ return l>=0 && l<=2 && bLaneClear(l, -16, 6); }));
         badshahHorn(true); say('badshah', pick(['Chal hat, side!', 'Dabba hai tera, dabba!', 'Ghar pe bolke aaya hai?']), 50 + b.x*6, 26); popup('SHOWING OFF — HOLD YOUR LANE (or honk him off)', 'popSub', 50, 44);
       } else {
-        b.lane = state.lane; b.phase = 'tell'; b.tele = teleNow; b.hornWindow = false; b.near = false; b.fake = false; b.approachT = 0;
+        b.lane = state.lane; b.phase = 'tell'; b.tele = teleNow; b.teleMax = teleNow; b.hornWindow = false; b.near = false; b.fake = false; b.approachT = 0;
         badshahHorn(true); say('badshah', pick(BADSHAH_LINES.lunge), 50 + b.x*6, 26);
         burst(b.x, 0.4, b.z + 1.5, 0xc9b79a, 8, 2, 2);
       }
@@ -8167,12 +8288,15 @@ function updateBadshah(dt, dz){
     if (b.swipeT > 2.3){ b.phase = 'recover'; b.tz = rand(-55, -35); b.xOff = 0; b.lean = 0; b.swipeHit = false; b.shooed = false; }
   } else if (b.phase === 'tell'){                            // brake lights + horn; he drops right onto your bumper, THEN the honk window opens
     b.approachT += dt; b.z += (-8 - b.z) * Math.min(1, dt*2.6);
-    if (!b.near && (b.z > -12.5 || b.approachT > 1.3)){ b.near = true; b.hornWindow = true; if (b.earlyHonk != null && b.t - b.earlyHonk < 0.5){ badshahHonkBack(); return; } popup('🎺 HONK BACK ' + (IS_TOUCH ? '— TAP 📯' : '— PRESS H'), 'popNear', 50, 40); }
+    if (!b.near && b.lane !== state.lane && bLaneClear(state.lane, b.z - 2, 3) && badshahEscapable(b.tele)){ b.lane = state.lane; b.approachT = Math.min(b.approachT, 0.9); if (Math.random() < 0.5) say('badshah', pick(['Kahan ja raha hai?', 'Bhaag ke dikha!']), 50 + b.x*6, 26); }   // dodging early doesn't work: he follows you until he's on your bumper
+    if (b.earlyHonk != null && b.earlyShown !== b.earlyHonk && b.t - b.earlyHonk > 0.5 && b.phase === 'tell'){ b.earlyShown = b.earlyHonk; popup('TOO EARLY — WAIT FOR 📯', 'popSub', 50, 44); }
+    if (!b.near && (b.z > -12.5 || b.approachT > 1.3)){ b.near = true; b.hornWindow = true; if (b.earlyHonk != null && b.t - b.earlyHonk < 0.5){ badshahHonkBack(); return; } bhCueSound(); bhHaptic(35); }
     if (b.near) b.tele -= dt;
     b.noEsc = (!badshahEscapable(b.tele + 0.1) || !bLaneClear(b.lane, b.z - 1, 2)) ? (b.noEsc||0) + dt : 0;
     if (b.noEsc > 0.3){ b.phase = 'recover'; b.tz = rand(-52, -36); b.hornWindow = false; b.near = false; b.noEsc = 0; burst(b.x, 0.6, b.z + 1.5, 0xc9b79a, 6, 2, 2); }   // traffic closed the gap for good since the tell began → he peels off (no strike); a one-frame flicker doesn't count
     else if (b.near && b.tele <= 0){ b.hornWindow = false; if (b.fake){ b.phase = 'recover'; b.tz = rand(-55, -35); } else { b.phase = 'strike'; b.strikeT = 0.75; if (window.PERF) PERF.mark('badshah strike lane=' + b.lane + ' you=' + state.lane); } }
   } else if (b.phase === 'strike'){                          // brake-check: right in front of you — lethal in his lane
+    if (b.lateHonk){ b.lateHonk = false; popup('TOO LATE — CHANGE LANE!', 'popNear', 50, 40); }
     b.strikeT -= dt; b.z += (-2.2 - b.z) * Math.min(1, dt*9);
     if (Math.random() < dt*30) burst(b.x + rand(-0.8,0.8), 0.3, b.z + 2.6, 0xc9b79a, 2, 1.5, 1.5);   // tyre smoke
     if (b.strikeT <= 0){ b.phase = 'recover'; b.tz = rand(-55, -35); b.lunges++; bossFill(b.lunges / b.need);
@@ -8191,8 +8315,10 @@ function updateBadshah(dt, dz){
   // lateral: ease to the lane
   b.x += ((LANES[b.lane] + (b.xOff||0)) - b.x) * Math.min(1, dt*4.5);
   b.root.position.set(b.x, 0, b.z);
-  b.root.rotation.z = (LANES[b.lane] - b.x) * -0.08 + (b.lean||0); b.root.rotation.y = (LANES[b.lane] + (b.xOff||0) - b.x) * -0.12;
+  b.wob = Math.max(0, (b.wob||0) - dt*1.6);
+  b.root.rotation.z = (LANES[b.lane] - b.x) * -0.08 + (b.lean||0) + Math.sin(b.t*38)*0.07*b.wob; b.root.rotation.y = (LANES[b.lane] + (b.xOff||0) - b.x) * -0.12;
   b.root.rotation.x = b.phase === 'strike' ? -0.06 : b.phase === 'tell' ? -0.03 : 0;                  // nose dips under braking
+  bhCueUpdate(b);
   // the hit: only during the strike, only his lane
   if (b.phase === 'strike' && state.lane === b.lane && Math.abs(b.z - PLAYER_Z) < BADSHAH_D/2 + PLAYER_HD && Math.abs(b.x - player.position.x) < BADSHAH_HW + PLAYER_HW - 0.2){
     if (state.shield){ state.shield = false; powerSound(false); burst(player.position.x, 1.4, 0, 0xffd24a, 16, 3, 4); b.phase = 'recover'; b.tz = -50; b.lunges++; bossFill(b.lunges/b.need); state.shake = 0.5; }
@@ -8200,13 +8326,43 @@ function updateBadshah(dt, dz){
     else { burst(player.position.x, 1.2, 0, 0xff6040, 20, 4, 5); state.shake = 1.0; gameOver(); }
   }
 }
+function bhHaptic(ms){ try { if (navigator.vibrate && IS_TOUCH) navigator.vibrate(ms); } catch(e){} }
+function bhCueSound(){                                      // a bright two-note "now!" ding, distinct from every other sound in the game
+  if (!AC || state.muted || typeof RRA === 'undefined') return; var t = AC.currentTime, out = RRA.out('sfx', 0);
+  [[1318, 0], [1976, 0.07]].forEach(function(n){ var o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.value = n[0];
+    g.gain.setValueAtTime(0.0001, t + n[1]); g.gain.exponentialRampToValueAtTime(0.16, t + n[1] + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + n[1] + 0.22);
+    o.connect(g); g.connect(out); o.start(t + n[1]); o.stop(t + n[1] + 0.25); });
+}
+var _bhCue = { el:null, tag:null, mode:'', v:null };
+function bhCueHide(){ var c = _bhCue; if (c.el && c.mode){ c.el.style.display = 'none'; c.el.className = ''; c.mode = ''; } var h = $('ctrlHorn'); if (h) h.classList.remove('hot'); }
+function bhCueUpdate(b){                                    // the readable part of the fight: a marker riding above his roof that says exactly what to do, and when
+  var c = _bhCue; if (!c.el){ c.el = $('bhCue'); if (!c.el) return; c.tag = c.el.querySelector('.tag'); c.v = new THREE.Vector3(); }
+  var key = IS_TOUCH ? '' : ' (H)', mode = '', text = '';
+  if (b.phase === 'tell' && !b.hornWindow){ mode = 'warn'; text = '⚠ BRAKE-CHECK!'; }
+  else if (b.phase === 'tell' && b.hornWindow){ mode = 'go'; text = '📯 HONK!' + key; }
+  else if (b.phase === 'strike' && state.lane === b.lane){ mode = 'late'; text = '⬅ MOVE! ➡'; }
+  else if (b.phase === 'swipe' && !b.shooed && b.swipeT > 0.3 && b.swipeT < 1.8){ mode = 'shoo'; text = '📯 HONK HIM OFF'; }
+  if (mode !== c.mode){ c.mode = mode; c.el.className = mode; c.el.style.display = mode ? 'block' : 'none'; c.tag.textContent = text; var h = $('ctrlHorn'); if (h) h.classList.toggle('hot', mode === 'go' || mode === 'shoo'); }
+  if (!mode) return;
+  if (mode === 'go') c.el.style.setProperty('--p', Math.max(0, Math.min(1, b.tele / (b.teleMax || 1.3))).toFixed(3));
+  c.v.set(b.x, 3.1, b.z); c.v.project(camera);
+  if (c.v.z > 1){ c.el.style.display = 'none'; return; } c.el.style.display = 'block';
+  var x = Math.max(70, Math.min(innerWidth - 70, (c.v.x*0.5 + 0.5)*innerWidth)), y = Math.max(90, Math.min(innerHeight*0.6, (-c.v.y*0.5 + 0.5)*innerHeight));
+  c.el.style.left = x.toFixed(0) + 'px'; c.el.style.top = y.toFixed(0) + 'px';
+}
 function badshahHonkBack(){                                 // your horn during his tell → he flinches and aborts
   var b = badshah; if (!b) return;
   if (window.PERF && b.phase !== 'roam') PERF.mark('honk @' + b.phase + (b.hornWindow ? ' window' : '') + ' z=' + b.z.toFixed(1));
-  if (b.phase === 'tell' && !b.hornWindow){ b.earlyHonk = b.t; if (!b.earlyTold){ b.earlyTold = true; popup('…wait till he is on your bumper', 'popSub', 50, 44); } return; }   // remembered: a honk just before the window still counts
+  if (b.phase === 'tell' && !b.hornWindow){ b.earlyHonk = b.t; return; }   // remembered: a honk just before the window still counts (TOO EARLY shows only if it didn't)
+  if (b.phase === 'strike'){ if (state.lane === b.lane) b.lateHonk = true; return; }
   if (b.phase === 'swipe' && !b.shooed && b.swipeT > 0.3){ b.shooed = true; b.xOff = 0; state.bonus += 40*state.mult; PROG.bump('shoo'); popup('🎺 SHOO! +' + (40*state.mult), 'popNear', 50, 40); say('badshah', pick(['Theek hai, theek hai!', 'Chill, bro!']), 50 + b.x*6, 26); return; }   // honking at the show-off sends him back to his lane
-  if (b.phase !== 'tell' || !b.hornWindow) return;
-  b.hornWindow = false; b.phase = 'recover'; b.tz = rand(-50, -34); b.lane = b.lane === 1 ? pick([0,2]) : 1;
+  if (b.phase !== 'tell' || !b.hornWindow){                  // honking at him when he isn't brake-checking: he notices (wobble, honks back, a jibe) — so you know it landed but didn't count
+    if (b.phase === 'leave') return;
+    b.wob = 1; if (b.t - (b.jibeT||-9) > 2.2){ b.jibeT = b.t; badshahHorn(false); b.offHonks = (b.offHonks||0) + 1;
+      if (b.offHonks <= 2) popup('HONK WHEN THE 📯 POPS OVER HIM', 'popSub', 50, 44); else say('badshah', pick(['Honk kar le, kuch nahi hoga!', 'Abhi nahi, chhotu!', 'Horn se kya hoga?', 'Papa ko bolu?']), 50 + b.x*6, 26); }
+    return;
+  }
+  b.hornWindow = false; b.wob = 1.6; b.phase = 'recover'; b.tz = rand(-50, -34); b.lane = b.lane === 1 ? pick([0,2]) : 1;
   b.lunges++; bossFill(b.lunges / b.need); var lbl = $('bossLabel'); if (lbl) lbl.textContent = '👑 BADSHAH · SURVIVE ' + b.lunges + ' / ' + b.need;
   say('badshah', pick(BADSHAH_LINES.flinch), 50 + b.x*6, 26); popup('🎺 FLINCHED!', 'popNear', 50, 36); if (window.PERF) PERF.mark('badshah flinch ' + b.lunges + '/' + b.need); state.bonus += 80*state.mult; addCombo();
   if (b.lunges >= b.need){ setTimeout(function(){ if (badshah){ say('badshah', pick(BADSHAH_LINES.leave), 50 + badshah.x*6, 26); badshahEnd(true); } }, 600); }
@@ -9423,7 +9579,7 @@ function animate(){
   if (Math.abs(targetX - state.x) < 0.001) state.x = targetX;
   player.position.x = state.x;
   player.rotation.z = (prevX - state.x) * 2.2 - BEND.curve.value * 55;   // lean into lane change + into the bend
-  player.rotation.y = (state.x - targetX) * -0.12 + TURN.yaw;
+  player.rotation.y = (state.x - targetX) * -0.12 + TURN.yaw + TURN.lead;
 
   // jump physics
   if (state.jumping){
@@ -9505,7 +9661,7 @@ function animate(){
   var _street = setpieces.length > 0 || junctions.length > 0 || !!TURN.t;   // a crossing is on — the boss waits for it to pass (the director stops spawning new ones while a boss is waiting: bossWaiting())
   if (state.running && !flyover && !animate._flyWarm && state.score > nextFlyoverScore - 2500){   // build + compile the bridge ahead of time so it never pops in (or hitches) on the ramp
     animate._flyWarm = true; buildFlyoverDressing(); flyUpgrade(); if (flyGroup){ flyGroup.visible = true; try { renderer.compile(scene, camera); } catch(e){} flyGroup.visible = false; } }
-  if (state.running && !_bossBusy && !_stormy && !_street && state.score >= nextFlyoverScore) startFlyover();
+  if (state.running && !_bossBusy && !_stormy && !_street && state.score >= nextFlyoverScore){ startFlyover(); _bossBusy = _bossBusy || !!flyover; }   // same-frame guard: a duel used to start in the frame the Sea Link did
   if (state.running && !_bossBusy && !_stormy && !_street && state.score >= bossGapScore && state.score < nextFlyoverScore){   // a due Sea Link gets the next quiet window before any boss; then whichever boss has waited longest goes first (a fixed order never let the nakabandi in)
     var _due = [];
     if (state.score >= nextBadshahScore && badshahTemplate) _due.push([nextBadshahScore, startBadshahEncounter]);
@@ -9859,6 +10015,7 @@ function animate(){
   // horizon parallax: the far city slides sideways as the road gently bends (near layer more than far), sea shimmers
   var bend = Math.sin(state.dist*0.0016)*26 - state.x*0.9;
   farLayerNear.position.x = bend; farLayerFar.position.x = bend*0.42; sea.position.x = bend*0.3;
+  if (window._landmark) window._landmark.visible = !(typeof flyover !== 'undefined' && flyover && flyover.drop > 0.3);   // the old-city dome doesn't belong on the horizon over the open sea
   seaTex.offset.x += dt*0.012;
   // full day cycle (~5 km): day → dusk → night (held) → dawn → day, then again. dayT 0 = noon, 1 = deepest night.
   var DAY_PERIOD = 5000, ph = (state.dist % DAY_PERIOD) / DAY_PERIOD;
@@ -9908,7 +10065,7 @@ function animate(){
   );
   var argueX = (bike && bike.phase === 'argue') ? (bike.toX > player.position.x ? 1 : -1) * 1.1 : 0;                 // showdown: camera drifts to the rider's side
   var _lx = state.x*0.5 + argueX + BEND.curve.value * 900, _ly = 2.0 + state.y*0.4 + BEND.hill.value * 900, _lz = -8;
-  if (TURN.yaw){ var _c = Math.cos(TURN.yaw), _s = Math.sin(TURN.yaw), _px = player.position.x, _pz = PLAYER_Z;    // street turn: orbit camera + aim around the rickshaw
+  if (TURN.yaw || TURN.fwd){ camera.position.z += TURN.fwd; _lz += TURN.fwd; var _c = Math.cos(TURN.yaw), _s = Math.sin(TURN.yaw), _px = player.position.x, _pz = PLAYER_Z + TURN.fwd;    // street turn: orbit camera + aim around the rickshaw
     var _dx = camera.position.x - _px, _dz = camera.position.z - _pz; camera.position.x = _px + _dx*_c + _dz*_s; camera.position.z = _pz - _dx*_s + _dz*_c;
     var _ax = _lx - _px, _az = _lz - _pz; _lx = _px + _ax*_c + _az*_s; _lz = _pz - _ax*_s + _az*_c; }
   camera.lookAt(_lx, _ly, _lz);   // look into the bend / up the hill
