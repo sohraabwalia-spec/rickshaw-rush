@@ -588,6 +588,16 @@ window.addEventListener('error', function(e){
   .g2Card.row .g2Right { text-align:right; } .g2Card.row .g2Price, .g2Card.row .g2State { margin-top:0; }
   /* detail + actions */
   .g2Detail { font:400 min(1.8vh,15px)/1.3 'Oswald',sans-serif; color:#3b3429; margin:min(1vh,8px) 2px 0; min-height:1.3em; }
+  .g2Ride { margin:min(1vh,8px) 2px 0; font:600 min(1.5vh,12px)/1.2 'Oswald',sans-serif; color:#3b3429; letter-spacing:.6px; }
+  .g2Stats { display:grid; grid-template-columns:auto 1fr auto; gap:3px 8px; align-items:center; }
+  .g2Stats b { font-weight:600; font-size:.95em; } .g2Stats i { display:block; height:7px; border-radius:4px; background:rgba(40,30,20,.14); overflow:hidden; }
+  .g2Stats i s { display:block; height:100%; border-radius:4px; background:linear-gradient(90deg,#2f8f4d,#f2c200); transition:width .35s; } .g2Stats u { text-decoration:none; font-size:.9em; opacity:.75; min-width:2.4em; text-align:right; }
+  .g2Stats i s.up { background:linear-gradient(90deg,#c46a12,#ffcf3a); }
+  .g2LvRow { display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap; } .g2LvTxt { background:#1d1f20; color:#f2c200; padding:2px 7px; border-radius:4px; }
+  .g2Pips { display:inline-flex; gap:3px; } .g2Pips span { width:12px; height:6px; border-radius:2px; background:rgba(40,30,20,.18); } .g2Pips span.on { background:#e8a21a; }
+  .g2PerkS { flex-basis:100%; color:#7a4d0a; font-weight:500; letter-spacing:.2px; }
+  .g2Up { flex:0 0 auto; cursor:pointer; border:0; border-radius:8px; height:min(6vh,52px); padding:0 14px; font:600 min(2vh,17px)/1 'Oswald',sans-serif; letter-spacing:1px; color:#1d1f20; background:linear-gradient(180deg,#ffd75a,#e8a21a); box-shadow:0 3px 0 #a06a0a; }
+  .g2Up.poor { filter:grayscale(.7); opacity:.7; } .g2Up.max { background:#2f7a4e; color:#f4f0e2; box-shadow:none; cursor:default; }
   .g2Detail b { font-weight:600; color:#1d1f20; margin-right:6px; letter-spacing:.5px; } .g2Detail em { display:block; font-style:normal; color:#7a4d0a; }
   .g2Actions { display:flex; gap:8px; margin-top:min(1.2vh,10px); }
   .g2Act { flex:1; cursor:pointer; border:0; border-radius:8px; height:min(6vh,52px); font:600 min(2.4vh,21px)/1 'Oswald',sans-serif; letter-spacing:1.5px; color:#f4f0e2;
@@ -941,8 +951,10 @@ window.addEventListener('error', function(e){
         </div>
         <div class="g2Cards" id="gCards" role="listbox" aria-label="Items"></div>
         <div class="g2Detail" id="g2Detail"><b id="gSelName"></b><span id="gSelDesc"></span><em id="gPerk"></em></div>
+        <div class="g2Ride hidden" id="g2Ride"><div class="g2Stats" id="g2Stats"></div><div class="g2LvRow"><span class="g2LvTxt" id="g2LvTxt">LV 1</span><span class="g2Pips" id="g2Pips"></span><span class="g2PerkS" id="g2PerkS"></span></div></div>
         <div class="g2Actions">
           <button class="g2Act" id="gActionBtn">EQUIPPED</button>
+          <button class="g2Up hidden" id="g2UpBtn">⬆ UPGRADE</button>
           <button class="g2Revert hidden" id="g2Revert" title="Back to what you have equipped">↺ Revert</button>
         </div>
         <button class="g2Test" id="gTestBtn"><svg viewBox="0 0 40 32"><path fill="currentColor" d="M14 2h12l12 28H2zM19 6h2v5h-2zm-.4 8h2.8v6h-2.8zm-.6 9h4v6h-4z"/></svg><span class="g2TestTxt"><b>TEST RIDE</b><small id="g2TestSub">your equipped ride · 45 s practice</small></span><i>›</i></button>
@@ -1542,11 +1554,11 @@ window.MeshoptDecoderJS = MeshoptDecoderJS;
 /* ---- staged asset loader: fetches every model script with a real progress bar, retries once, reports what failed,
         then runs the game script. Replaces 43 blocking <script src> tags (≈50 MB) that showed a blank page while downloading. ---- */
 (function(){
-  var FILES = ["ui-art.js", "rickshaw-model.js", "garage-art.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js"];
-  var SIZES = {"rickshaw-model.js": 639848, "garage-art.js": 430300, "car-model.js": 64739, "cow-model.js": 236738, "cow-tex-variants.js": 391629, "cart-model.js": 276483, "vendor-model.js": 175673, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 213492, "bldg-old-model.js": 777928, "bldg-mixed-model.js": 701574, "bldg-modern-model.js": 1020711, "bldg-market-model.js": 772811, "bldg-corner-model.js": 796231, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1021977, "bus-model.js": 197710, "bus-tex-variants.js": 396874, "wagon-model.js": 218152, "wagon-tex-variants.js": 398421, "truck2-model.js": 306757, "bike-model.js": 205091, "bike-tex-variants.js": 380592, "police-model.js": 350990, "bldg-paan-model.js": 632445, "bldg-hotel-model.js": 648446, "bldg-hospital-model.js": 636573, "bldg-lodge-model.js": 698590, "bldg-clinic-model.js": 554863, "bldg-office-model.js": 764075, "bldg-police-model.js": 575295, "props-model.js": 4581063, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 919923, "flyover-models.js": 3083148, "flyover2-models.js": 798835};
+  var FILES = ["ui-art.js", "rickshaw-model.js", "garage-art.js", "car-model.js", "cow-model.js", "cow-tex-variants.js", "cart-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "auntie-model.js", "taxi-model.js", "bldg-old-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-market-model.js", "bldg-corner-model.js", "ground-tex.js", "signs-tex.js", "banner3d-model.js", "tree-models.js", "posters-model.js", "parcel-models.js", "road-asphalt.js", "audio-assets-v2.js", "truck-model.js", "bus-model.js", "bus-tex-variants.js", "wagon-model.js", "wagon-tex-variants.js", "truck2-model.js", "bike-model.js", "bike-tex-variants.js", "police-model.js", "bldg-paan-model.js", "bldg-hotel-model.js", "bldg-hospital-model.js", "bldg-lodge-model.js", "bldg-clinic-model.js", "bldg-office-model.js", "bldg-police-model.js", "props-model.js", "roadsign-model.js", "badshah-model.js", "flyover-models.js", "flyover2-models.js", "rides-model.js"];
+  var SIZES = {"rickshaw-model.js": 639848, "garage-art.js": 430300, "car-model.js": 64739, "cow-model.js": 236738, "cow-tex-variants.js": 391629, "cart-model.js": 276483, "vendor-model.js": 175673, "walker-model.js": 478318, "walker2-model.js": 783716, "auntie-model.js": 429546, "taxi-model.js": 213492, "bldg-old-model.js": 777928, "bldg-mixed-model.js": 701574, "bldg-modern-model.js": 1020711, "bldg-market-model.js": 772811, "bldg-corner-model.js": 796231, "ground-tex.js": 305257, "signs-tex.js": 123749, "banner3d-model.js": 302940, "tree-models.js": 530786, "posters-model.js": 252939, "parcel-models.js": 329477, "road-asphalt.js": 21620, "audio-assets-v2.js": 152458, "truck-model.js": 1021977, "bus-model.js": 197710, "bus-tex-variants.js": 396874, "wagon-model.js": 218152, "wagon-tex-variants.js": 398421, "truck2-model.js": 306757, "bike-model.js": 205091, "bike-tex-variants.js": 380592, "police-model.js": 350990, "bldg-paan-model.js": 632445, "bldg-hotel-model.js": 648446, "bldg-hospital-model.js": 636573, "bldg-lodge-model.js": 698590, "bldg-clinic-model.js": 554863, "bldg-office-model.js": 764075, "bldg-police-model.js": 575295, "props-model.js": 4581063, "roadsign-model.js": 207068, "ui-art.js": 275204, "badshah-model.js": 919923, "flyover-models.js": 3083148, "flyover2-models.js": 798835, "rides-model.js": 2499617};
   /* phones (24-Sep-i): buildings + walkers come from lo/ — 40 percent of the triangles, 1024px textures instead of 2048px (a quarter of the
      GPU memory), roughly half the download. Same window.* names, so nothing downstream changes. */
-  var LO_FILES = ["auntie-model.js", "badshah-model.js", "bldg-clinic-model.js", "bldg-corner-model.js", "bldg-hospital-model.js", "bldg-hotel-model.js", "bldg-lodge-model.js", "bldg-market-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-office-model.js", "bldg-old-model.js", "bldg-paan-model.js", "bldg-police-model.js", "cart-model.js", "cow-model.js", "flyover-models.js", "flyover2-models.js", "props-model.js", "truck-model.js", "truck2-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js"], LO_SIZES = {"auntie-model.js": 323066, "badshah-model.js": 494887, "bldg-clinic-model.js": 268711, "bldg-corner-model.js": 447879, "bldg-hospital-model.js": 309565, "bldg-hotel-model.js": 318326, "bldg-lodge-model.js": 344510, "bldg-market-model.js": 417991, "bldg-mixed-model.js": 344778, "bldg-modern-model.js": 516175, "bldg-office-model.js": 421823, "bldg-old-model.js": 385332, "bldg-paan-model.js": 307305, "bldg-police-model.js": 284919, "cart-model.js": 177647, "cow-model.js": 147982, "flyover-models.js": 1595560, "flyover2-models.js": 476675, "props-model.js": 2419147, "truck-model.js": 597393, "truck2-model.js": 180389, "vendor-model.js": 94977, "walker-model.js": 326582, "walker2-model.js": 603960};
+  var LO_FILES = ["auntie-model.js", "badshah-model.js", "bldg-clinic-model.js", "bldg-corner-model.js", "bldg-hospital-model.js", "bldg-hotel-model.js", "bldg-lodge-model.js", "bldg-market-model.js", "bldg-mixed-model.js", "bldg-modern-model.js", "bldg-office-model.js", "bldg-old-model.js", "bldg-paan-model.js", "bldg-police-model.js", "cart-model.js", "cow-model.js", "flyover-models.js", "flyover2-models.js", "props-model.js", "truck-model.js", "truck2-model.js", "vendor-model.js", "walker-model.js", "walker2-model.js", "rides-model.js"], LO_SIZES = {"auntie-model.js": 323066, "badshah-model.js": 494887, "bldg-clinic-model.js": 268711, "bldg-corner-model.js": 447879, "bldg-hospital-model.js": 309565, "bldg-hotel-model.js": 318326, "bldg-lodge-model.js": 344510, "bldg-market-model.js": 417991, "bldg-mixed-model.js": 344778, "bldg-modern-model.js": 516175, "bldg-office-model.js": 421823, "bldg-old-model.js": 385332, "bldg-paan-model.js": 307305, "bldg-police-model.js": 284919, "cart-model.js": 177647, "cow-model.js": 147982, "flyover-models.js": 1595560, "flyover2-models.js": 476675, "props-model.js": 2419147, "truck-model.js": 597393, "truck2-model.js": 180389, "vendor-model.js": 94977, "walker-model.js": 326582, "walker2-model.js": 603960, "rides-model.js": 1276685};
   if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))){
     FILES = FILES.map(function(f){ return LO_FILES.indexOf(f) >= 0 ? 'lo/' + f : f; });
     LO_FILES.forEach(function(f){ if (SIZES[f] != null){ SIZES['lo/' + f] = LO_SIZES[f]; delete SIZES[f]; } });
@@ -1814,7 +1826,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '29-Sep-a';
+var BUILD_TAG = '29-Sep-b';
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
   var A = window.UI_ART; if (!A) return;
@@ -2412,6 +2424,7 @@ var PROP_SPECS = {   // targetH = height in metres (targetW = width instead when
   stall:{ targetW:2.6, yaw:0 },  vendor:{ targetH:1.72, yaw:-Math.PI/2 },  desiauto:{ targetW:2.85, yaw:0 },
   cop:{ targetH:1.86, yaw:0 },  copf:{ targetH:1.78, yaw:0 },   // havaldars: front faces −Z in the model; makeHavaldar spins them toward the player
   tollbooth:{ targetH:3.4, yaw:-Math.PI/2 },  gantrybig:{ targetW:14.5, yaw:-Math.PI/2 },  debris:{ targetW:1.7, yaw:-Math.PI/2 },   // Sea Link kit
+  rideudta:{ targetW:2.85, yaw:0 },  ridesteam:{ targetW:2.85, yaw:0 },  rideroyal:{ targetW:2.9, yaw:0 },  ridemonster:{ targetW:3.05, yaw:0 },   // garage rides (29-Sep): spun per ride in RIDE_DEFS
   pylon:{ targetH:50, yaw:-Math.PI/2 },  parapet:{ targetW:8, yaw:0 },  flylamp:{ targetH:8.6, yaw:0 },  flycity:{ targetW:56, yaw:0 }   // Sea Link kit 2 (23-Sep)
 };
 function loadPropKit(src){
@@ -2432,13 +2445,15 @@ function loadPropKit(src){
       holder.userData.size = box.getSize(new THREE.Vector3());
       propTemplates[name] = holder;
       var mk = { lamp:makeStreetLamp, signal:makeSignal, shrine:makeShrine, cone:makeConeProp, waterbar:makeWaterBarrier, bollard:makeBollard, rubble:makeRubble, dirt:makeDirtMound, stall:makeStallDecor }[name];
-      if (name === 'desiauto' && selectedVehicle === 'classic') applyPlayerVehicle();
+      if (typeof RIDE_DEFS !== 'undefined' && RIDE_DEFS[selectedVehicle] && RIDE_DEFS[selectedVehicle].glb === name) applyPlayerVehicle();   // the equipped ride's model just arrived
+      if (/^(desiauto|ride)/.test(name) && typeof GARAGE !== 'undefined' && GARAGE.onRideModel) try { GARAGE.onRideModel(name); } catch(e){}
       if (/^(pylon|parapet|flylamp|flycity)$/.test(name) && typeof flyUpgrade === 'function') flyUpgrade();
       if (mk && typeof refreshPropsFor === 'function' && typeof props !== 'undefined') refreshPropsFor(mk);
     }, function(e){ console.warn('Prop GLB failed: '+name, e); }); } catch(e){ console.warn('Prop GLB err: '+name, e); }
   });
 }
 whenModel('PROP_GLB', function(){ loadPropKit(window.PROP_GLB); });
+whenModel('RIDES_GLB', function(){ loadPropKit(window.RIDES_GLB); });   // garage rides: Udta, Bhaap Gaadi, Maharaja Express, Chakka Jam
 whenModel('FLY_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY_GLB); }, function(){ return state.score > nextFlyoverScore - 7000; }); });
 whenModel('FLY2_GLB', function(){ deferHeavy(function(){ loadPropKit(window.FLY2_GLB); }, function(){ return state.score > nextFlyoverScore - 7000; }); });   // Sea Link kit 2: pylon, parapet, lamp, skyline cluster   // Sea Link kit: toll booth, big gantry, debris
 function propClone(name){ var t = propTemplates[name]; return t ? t.clone(true) : null; }
@@ -3662,7 +3677,7 @@ function showProceduralRickshaw(v){
 }
 function applyPlayerVehicle(){
   while (vehicleHolder.children.length) vehicleHolder.remove(vehicleHolder.children[0]);
-  var vm = (selectedVehicle === 'rickshaw' || selectedVehicle === 'classic') ? vehicleModelFor(selectedVehicle) : null;
+  var vm = (typeof RIDE_DEFS !== 'undefined' && RIDE_DEFS[selectedVehicle]) ? vehicleModelFor(selectedVehicle) : null;
   if (selectedVehicle === 'car' && carTemplate){
     vehicleHolder.add(carTemplate.clone(true)); showProceduralRickshaw(false);
   } else if (vm){
@@ -3671,6 +3686,7 @@ function applyPlayerVehicle(){
   } else {
     showProceduralRickshaw(true);   // 'classic' (hand-built) or fallback until a GLB is ready
   }
+  vehicleHolder.position.y = selectedVehicle === 'udta' ? 0.32 : 0;   // the Udta hovers even on the menu
   if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.setMusic(selectedVehicle);   // swap the vehicle's theme
 }
 
@@ -6456,7 +6472,7 @@ function updatePuddles(dt, dz){
     var p = puddles[i]; p.position.z += dz;
     if (p.position.z > KILL_BEHIND){ scene.remove(p); puddles.splice(i,1); continue; }
     if (!p.userData.hit && state.y <= 0.05 && Math.abs(p.position.z - PLAYER_Z) < p.scale.y*0.9 && Math.abs(p.position.x - player.position.x) < p.scale.x*0.85 + 0.3){
-      p.userData.hit = true; state.hydro = 0.5; state.hydroDir = (Math.random()<0.5?-1:1);
+      p.userData.hit = true; if (RIDE.hover) continue; state.hydro = 0.5; state.hydroDir = (Math.random()<0.5?-1:1);
       for (var k=0;k<3;k++) burst(player.position.x + rand(-0.7,0.7), 0.25, rand(0.5,1.5), 0x9fb8cc, 6, 2.2, 3.2);
       popup('💦 SPLASH! PHISLA!', 'popNear', 50, 38); state.shake = Math.max(state.shake, 0.25);
       if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.splash) GAME_AUDIO.splash();
@@ -7008,7 +7024,7 @@ function doJump(){
   if (!state.running) return;
   if (state.jumping){ if (state.vy < 0 && state.y < 1.0) state.jumpBuf = 0.2; return; }   // pressed just before landing: jump again the moment the wheels touch
   if (state.ducking){ state.ducking = false; state.duckT = 0; }                          // jump cancels a duck (runner convention)
-  state.jumping = true; state.vy = 9.2; PROG.bump('jumps');
+  state.jumping = true; state.vy = RIDE.jumpV; PROG.bump('jumps'); rideJumpFx();
   burst(player.position.x, 0.2, 1, 0xb09060, 6, 1.5, 2);
 }
 function doDuck(){
@@ -7249,7 +7265,7 @@ function loadProfile(){
 var profile = loadProfile();
 selectedVehicle = profile.equipped.rickshaw || 'rickshaw';   // drive whatever the garage has equipped
 (function(){ var cards = document.querySelectorAll('.vehCard'); cards.forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); }); })();
-function saveProfile(){ try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e){} }
+function saveProfile(){ if (!profile.rideLv) profile.rideLv = {}; try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch(e){} }
 function ownsItem(cat, id){ return profile.owned[cat] && profile.owned[cat].indexOf(id) >= 0; }
 function equippedItem(cat){ return profile.equipped[cat]; }
 function garageItem(cat, id){ var a=GARAGE_DATA[cat]||[]; for (var i=0;i<a.length;i++) if (a[i].id===id) return a[i]; return null; }
@@ -7268,7 +7284,11 @@ function equipItem(cat, id){ if (!ownsItem(cat,id)) return false; profile.equipp
 var GARAGE_DATA = {
   rickshaw: [   // the VEHICLE (Phase C): each is a real GLB; paint/trim/rear art apply to whichever is equipped
     { id:'rickshaw', name:'Decorated Auto', rarity:'common', price:0,    line:'Mumbai runs on personality.', desc:'The hero auto — tassels, flag, marigolds and a KING plate. Balanced and honest.', stats:{speed:60, handling:70, swag:75} },
-    { id:'classic',  name:'Desi Special',   rarity:'epic',   price:2500, line:'Simple. Solid. Desi.', desc:'A hand-built street auto with a beaded windshield and a HORN OK PLEASE tailgate.', stats:{speed:60, handling:70, swag:100}, perk:'+25% coins on every pickup' }
+    { id:'classic',  name:'Desi Special',   rarity:'epic',   price:2500, line:'Simple. Solid. Desi.', desc:'A hand-built street auto with a beaded windshield and a HORN OK PLEASE tailgate.', stats:{speed:60, handling:70, swag:100}, perk:'+25% coins on every pickup' },
+    { id:'monster',  name:'Chakka Jam',     rarity:'rare',   price:4000, line:'Potholes? What potholes.', desc:'An auto on monster-truck tyres with a roll bar and spotlights. Cones, barricades and rubble just get flattened.', stats:{speed:70, handling:50, swag:80} },
+    { id:'steam',    name:'Bhaap Gaadi',    rarity:'epic',   price:6000, line:'Chuk-chuk, bhai. Chuk-chuk.', desc:'A brass-and-copper steam auto with a boiler behind the driver. Turbo runs long, and the boiler has one more push in it.', stats:{speed:66, handling:55, swag:85} },
+    { id:'royal',    name:'Maharaja Express', rarity:'legendary', price:9000, line:'Arrive like royalty.', desc:'An ivory-and-gold palace on three wheels with velvet seats. Coins come to the Maharaja — and pay extra.', stats:{speed:55, handling:65, swag:100} },
+    { id:'udta',     name:'Udta Auto',      rarity:'legendary', price:12000, line:'Traffic is for the ground.', desc:'Winged, turbofan-hovering, garlanded. Floats over potholes, cones and monsoon puddles, and hangs in the air on every jump.', stats:{speed:72, handling:90, swag:85} }
   ],
   paint: [
     { id:'default', name:'Default Green', rarity:'common', price:0,   color:null },
@@ -7316,6 +7336,81 @@ var GARAGE_DATA = {
     { id:'diwali',  name:'Diwali Sparks',   rarity:'epic',   price:1500, color:0xffcf4a }
   ]
 };
+/* ===================== RIDES (29-Sep): every garage vehicle plays differently =====================
+   stats are REAL: speed → top-speed multiplier, handling → lane-change snap, swag → points per coin.
+   perks scale with the ride's upgrade level (profile.rideLv[id], Lv1–5, bought in the garage). */
+var RIDE_DEFS = {
+  rickshaw:{ },
+  classic: { glb:'desiauto', yaw:-Math.PI/2 },
+  monster: { glb:'ridemonster', yaw:0,          hue:[38,62] },
+  steam:   { glb:'ridesteam',   yaw:Math.PI,    hue:[4,30] },
+  royal:   { glb:'rideroyal',   yaw:Math.PI,    hue:'ivory' },
+  udta:    { glb:'rideudta',    yaw:Math.PI/2,  hue:[85,170], plateY:0.36 }
+};
+var RIDE_UP_COST = [0, 500, 1200, 2500, 5000];             // cost to reach Lv2..Lv5 (index = current level)
+function rideLevel(id){ return Math.max(1, Math.min(5, (profile && profile.rideLv && profile.rideLv[id]) || 1)); }
+function ridePerkText(id, L){
+  switch (id){
+    case 'rickshaw': return 'Street smart: combo lasts ' + (4 + 0.4*(L-1)).toFixed(1) + ' s (base 4 s)';
+    case 'classic':  return (25 + 5*(L-1)) + '% of coins count double';
+    case 'monster':  return 'Smashes cones, barricades, potholes & rubble · +' + (20*L) + ' pts per smash · bigger jumps';
+    case 'steam':    return 'Turbo lasts ' + Math.round((0.4 + 0.1*(L-1))*100) + '% longer · SECOND WIND: one free ' + (1.2 + 0.3*L).toFixed(1) + ' s boost per run';
+    case 'royal':    return 'Coin magnet (' + ['half','¾','full','full','wide'][L-1] + ' lane) · every ' + (L >= 4 ? 2 : 3) + 'rd coin pays +1';
+    case 'udta':     return 'Hovers over potholes, cones & puddles · jumps hang ' + Math.round((0.28 + 0.04*(L-1))*100) + '% longer';
+  }
+  return '';
+}
+var RIDE = null;                                            // resolved for the current run by rideResolve()
+function rideResolve(id){
+  var it = garageItem('rickshaw', id) || garageItem('rickshaw', 'rickshaw'), s = it.stats || { speed:60, handling:70, swag:75 }, L = rideLevel(id);
+  var r = { id:id, L:L, speedMul:1 + (s.speed - 60)/300, laneRate:22*(0.7 + s.handling/233), swagMul:s.swag/75,
+    combo:4, coinDouble:0, smash:false, smashPts:0, jumpV:9.2, turboMul:1, secondWind:0, reach:1.0, bonusEvery:0, hover:false, fallG:1 };
+  if (id === 'rickshaw') r.combo = 4 + 0.4*(L-1);
+  if (id === 'classic') r.coinDouble = 0.25 + 0.05*(L-1);
+  if (id === 'monster'){ r.smash = true; r.smashPts = 20*L; r.jumpV = 9.2*(1.06 + 0.02*L); }
+  if (id === 'steam'){ r.turboMul = 1.4 + 0.1*(L-1); r.secondWind = 1.2 + 0.3*L; }
+  if (id === 'royal'){ r.reach = [1.45, 1.9, 2.4, 2.8, 3.3][L-1]; r.bonusEvery = L >= 4 ? 2 : 3; }
+  if (id === 'udta'){ r.hover = true; var m = 1 + 2*(0.28 + 0.04*(L-1)); r.fallG = 1/(m*m); }   // the fall half of a jump lasts m× as long → airtime +28% (Lv1) … +44% (Lv5)
+  return r;
+}
+RIDE = rideResolve('rickshaw');
+// ---- sound: each ride's engine voice (applied to the shared engine oscillator; see the engine block in animate) ----
+var RIDE_ENG = {
+  rickshaw:{ type:'sawtooth', p:1,    lp:1,   lfo:1,   dep:1,   g:1 },
+  classic: { type:'sawtooth', p:1.08, lp:1.1, lfo:1.1, dep:1,   g:1 },
+  monster: { type:'sawtooth', p:0.46, lp:0.62,lfo:2.0, dep:1.9, g:1.35 },   // V-twin-ish burble
+  steam:   { type:'sawtooth', p:0.62, lp:0.85,chuff:true, dep:2.4, g:1.1 },  // chuff-chuff tied to road speed
+  royal:   { type:'triangle', p:0.82, lp:1.4, lfo:0.55,dep:0.35,g:0.9 },    // silky purr
+  udta:    { type:'triangle', p:2.3,  lp:2.4, lfo:0,   dep:0,   g:0.8 }     // turbofan whine, no putt-putt
+};
+function rideAudio(){ var E = RIDE_ENG[RIDE.id] || RIDE_ENG.rickshaw; if (engineOsc) try { engineOsc.type = E.type; } catch(e){} }
+function rideWhistle(){                                     // Bhaap Gaadi: a two-note steam whistle with a breathy wobble
+  if (!AC || state.muted || !RRA.gate('whistle', 1, 0.5, 0.8)) return; var t = AC.currentTime, out = RRA.out('sfx', 0);
+  [[740, 0], [932, 0]].forEach(function(n){ var o = AC.createOscillator(), g = AC.createGain(), v = AC.createOscillator(), vg = AC.createGain(); o.type = 'sine'; o.frequency.value = n[0];
+    v.frequency.value = 6; vg.gain.value = n[0]*0.012; v.connect(vg); vg.connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.06); g.gain.setValueAtTime(0.07, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.75);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.8); v.start(t); v.stop(t + 0.8); });
+}
+// ---- feel: how each ride sits and moves ----
+var _rideT = 0, _udtaGlow = null, _steamT = 0;
+function rideFeel(dt){
+  _rideT += dt; var id = RIDE.id, hy = 0;
+  if (id === 'udta'){
+    hy = 0.32 + Math.sin(_rideT*2.6)*0.07; player.rotation.z *= 1.35;                                 // floats and banks harder
+    if (!_udtaGlow){ _udtaGlow = new THREE.Mesh(new THREE.CircleGeometry(1.15, 28), new THREE.MeshBasicMaterial({ color:0x6fd6ff, transparent:true, opacity:0.3, blending:THREE.AdditiveBlending, depthWrite:false }));
+      _udtaGlow.rotation.x = -Math.PI/2; _udtaGlow.material.userData.noBend = true; _udtaGlow.renderOrder = 3; scene.add(_udtaGlow); }
+    _udtaGlow.visible = true; _udtaGlow.position.set(player.position.x, 0.045, player.position.z); _udtaGlow.material.opacity = 0.22 + Math.sin(_rideT*9)*0.06 - Math.min(0.15, state.y*0.05);
+  } else if (_udtaGlow) _udtaGlow.visible = false;
+  if (id === 'steam' && (_steamT -= dt) <= 0){ _steamT = Math.max(0.12, 0.3 - state.speed*0.003); burst(player.position.x + rand(-0.12, 0.12), 2.95 + state.y, player.position.z + 0.9, 0xf2f2f2, 2, 0.6, 1.7); }   // chimney puffs, faster with speed
+  if (id === 'royal'){ player.rotation.z += Math.sin(_rideT*1.6)*0.018; if (Math.random() < dt*1.4) burst(player.position.x + rand(-0.9, 0.9), rand(1.2, 2.6) + state.y, player.position.z + rand(-1, 1), 0xffd86a, 1, 0.4, 0.5); }
+  if (id === 'monster' && !state.jumping){ hy = Math.abs(Math.sin(_rideT*10))*0.035; if (Math.random() < dt*8) burst(player.position.x + rand(-0.9, 0.9), 0.25, player.position.z + 1.3, 0x9a7a55, 1, 1.2, 1); }   // chassis jiggle + tyre dust
+  vehicleHolder.position.y = hy;
+}
+function rideJumpFx(){
+  if (RIDE.id === 'udta'){ burst(player.position.x, 0.3, player.position.z, 0x7fd8ff, 10, 2.5, 2); if (AC && typeof RRA !== 'undefined') RRA.play('whooshBig', { gain:0.22 }); }
+  if (RIDE.id === 'monster') burst(player.position.x, 0.3, player.position.z + 0.8, 0x8a6a45, 12, 2.6, 2.2);
+  if (RIDE.id === 'steam') burst(player.position.x, 0.4, player.position.z + 1, 0xf4f4f4, 8, 1.8, 1.6);
+}
 var GARAGE_DESC = {"paint": {"default": "Factory green over Bombay yellow.", "red": "Matte red \u2014 the dabbawala\u2019s choice.", "blue": "Electric blue, Bandra nights.", "orange": "Sunset over Marine Drive.", "mint": "Cool mint, cooler driver.", "purple": "Royal purple, filmy vibes.", "black": "Stealth auto. Cops look twice.", "ivory": "Ivory white \u2014 wedding season ready."}, "rearArt": {"king": "The classic KING plate.", "tiger": "Sher-e-Mumbai on your tail.", "peacock": "National bird, peacock eyes.", "lotus": "Lotus on a blue pond.", "flowers": "Truck-art flowers, Punjab style.", "flames": "Flames \u2014 for the ones who overtake buses.", "rajasthan": "Elephant and jharokha arches.", "mumbai_st": "The skyline, the sun, HORN OK PLEASE."}, "trim": {"chrome": "Polished chrome skirts, bumpers and roof rails.", "black": "Murdered-out black trim.", "gold": "Gold trim \u2014 pure Bollywood.", "red": "Red trim to match the flames.", "blue": "Blue trim, sea-link style."}, "horn": {"classic": "The auto\u2019s own paa-paa. Peds jump.", "truck": "A truck air horn \u2014 traffic ahead flinches.", "musical": "Seven-note musical horn, wedding-band energy.", "dhol": "Dhol beats out of the horn.", "tiny": "A ridiculous little chirp. Everyone laughs.", "royal": "Royal fanfare, arrive like a maharaja."}, "fx": {"default": "Plain exhaust puff.", "dust": "A dust cloud like a Kutch highway.", "neon": "Neon streaks behind you at night.", "fire": "Fire out the exhaust \u2014 turbo doubles it.", "flower": "Petals trail behind the auto.", "monsoon": "Spray like you\u2019re always in the rain.", "electric": "Crackling sparks.", "diwali": "Golden sparks with the occasional pop."}};
 var RARITY_COLOR = { common:'#4bbf6b', rare:'#3f7fe0', epic:'#a24bff' };
 var scores = loadScores();
@@ -7420,7 +7515,7 @@ var CLOUD = (function(){
   function ensurePid(){ if (!profile.pid){ profile.pid = genPid(); saveProfile(); } return profile.pid; }
   function saveBlob(){
     return { pid:ensurePid(), nick:profile.nick || 'Anon', best:profile.best||0, coins:profile.coins, runs:profile.runs||0,
-             profile:{ owned:profile.owned, equipped:profile.equipped, v:profile.v, xp:profile.xp||0, level:profile.level||1, missions:profile.missions||null } };
+             profile:{ owned:profile.owned, equipped:profile.equipped, rideLv:profile.rideLv || {}, v:profile.v, xp:profile.xp||0, level:profile.level||1, missions:profile.missions||null } };
   }
   function sync(){ if (!on() || !profile.nick) return; var b = saveBlob(); b.t = 'save'; post(b); }
   function syncSoon(){ clearTimeout(syncT); syncT = setTimeout(sync, 2500); }          // garage purchases: coalesce into one save
@@ -7443,7 +7538,7 @@ var CLOUD = (function(){
     get({ action:'load', code:code }).then(function(r){
       if (!r || !r.ok){ cb(false, r && r.err === 'not found' ? 'No driver with that code.' : 'Could not load that code.'); return; }
       profile.pid = r.pid; profile.nick = r.nick; profile.best = Math.max(profile.best||0, r.best||0); profile.coins = r.coins; profile.runs = r.runs||0;
-      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; if (r.profile.level){ profile.level = r.profile.level; profile.xp = r.profile.xp||0; } if (r.profile.missions) profile.missions = r.profile.missions; }
+      if (r.profile && r.profile.owned && r.profile.equipped){ profile.owned = r.profile.owned; profile.equipped = r.profile.equipped; profile.v = r.profile.v || profile.v; if (r.profile.level){ profile.level = r.profile.level; profile.xp = r.profile.xp||0; } if (r.profile.missions) profile.missions = r.profile.missions; if (r.profile.rideLv) profile.rideLv = r.profile.rideLv; }
       saveProfile(); profile = loadProfile();                                             // re-run the normaliser/migrations on the restored data
       selectedVehicle = profile.equipped.rickshaw || 'rickshaw';
       document.querySelectorAll('.vehCard').forEach(function(c){ c.classList.toggle('selected', c.getAttribute('data-veh') === selectedVehicle); });
@@ -7788,7 +7883,8 @@ function startGame(){
   showControls();
   // pre-fill the road ahead
   for (var z=-64; z>SPAWN_AHEAD; z-=32) spawnChunk(z, 1);   // first row 64 m out (was 40: an early swerve died at 38 m, twice on 24-Sep)  // intro rows all share the middle open lane (drift-safe)
-  if (engineGain) engineGain.gain.setTargetAtTime(0.10, AC.currentTime, 0.3);
+  RIDE = rideResolve(selectedVehicle); state.secondWindUsed = false; state.coinN = 0; rideAudio();
+  if (engineGain) engineGain.gain.setTargetAtTime(0.10 * (RIDE_ENG[RIDE.id] || RIDE_ENG.rickshaw).g, AC.currentTime, 0.3);
 }
 function gameOver(){
   if (typeof endTestRide === 'function' && !state.practice) endTestRide();   // trial kit is over; the ride itself is rebuilt at the next start
@@ -8432,7 +8528,7 @@ function flashScreen(){ var f=$('flash'); if(!f) return; f.classList.remove('on'
 var lastNearPop = 0;
 function addCombo(){
   state.mult = Math.min(8, state.mult + 1); PROG.max('combo', state.mult);
-  state.comboTimer = 4.0;            // seconds before the multiplier decays
+  state.comboTimer = RIDE ? RIDE.combo : 4.0;   // seconds before the multiplier decays (Decorated Auto upgrades stretch it)
   bumpEl('multChip');
 }
 
@@ -8501,7 +8597,7 @@ var crashSpin = 0;
             desi special) are re-hued to the chosen colour, keeping shading; chrome/decor/seats untouched. Cached per pair.
    trim   : procedural chrome strips fitted to the vehicle's bounding box (side skirts, bumpers, roof rails), tinted.
    rearArt: a canvas-drawn truck-art panel on the tail (faces the chase camera).                                         */
-var VEHICLE_BODY_HUE = { rickshaw:[95,165], classic:[32,68] };
+var VEHICLE_BODY_HUE = { rickshaw:[95,165], classic:[32,68], monster:RIDE_DEFS.monster.hue, steam:RIDE_DEFS.steam.hue, royal:RIDE_DEFS.royal.hue, udta:RIDE_DEFS.udta.hue };
 var _paintTexCache = {};
 function _rgb2hsl(r,g,b){ var mx=Math.max(r,g,b), mn=Math.min(r,g,b), l=(mx+mn)/2, h=0, s=0; if (mx!==mn){ var d=mx-mn; s = l>0.5 ? d/(2-mx-mn) : d/(mx+mn);
   h = mx===r ? ((g-b)/d + (g<b?6:0)) : mx===g ? ((b-r)/d + 2) : ((r-g)/d + 4); h*=60; } return [h,s,l]; }
@@ -8513,13 +8609,16 @@ function repaintTexture(map, hueRange, colorHex){
   var w = img.width, h = img.height, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   var g = cv.getContext('2d'); g.drawImage(img, 0, 0, w, h);
   var id = g.getImageData(0, 0, w, h), d = id.data, tc = new THREE.Color(colorHex), t = _rgb2hsl(tc.r, tc.g, tc.b);
+  var ivory = hueRange === 'ivory';                                                           // Maharaja Express: the body is ivory (unsaturated) — paint the warm whites, leave gold + velvet alone
+  if (ivory) hueRange = [15, 75];
   var h0 = hueRange[0], h1 = hueRange[1], mid = (h0+h1)/2, half = (h1-h0)/2, feather = 14;
+  function inMask(hsl){ return ivory ? (hsl[1] < 0.42 && hsl[2] > 0.5 && hsl[2] < 0.97) : (hsl[1] > 0.28 && hsl[2] > 0.08 && hsl[2] < 0.92); }
   var sumL = 0, n = 0, i, hsl;
   for (i=0; i<d.length; i+=4){ hsl = _rgb2hsl(d[i]/255, d[i+1]/255, d[i+2]/255);
-    if (hsl[1] > 0.28 && hsl[2] > 0.08 && hsl[2] < 0.92 && Math.abs(hsl[0]-mid) < half){ sumL += hsl[2]; n++; } }
-  var avgL = n ? sumL/n : 0.45, dL = (t[2] - avgL);
+    if (inMask(hsl) && Math.abs(hsl[0]-mid) < half){ sumL += hsl[2]; n++; } }
+  var avgL = n ? sumL/n : 0.45, dL = (t[2] - avgL) * (ivory ? 0.75 : 1);
   for (i=0; i<d.length; i+=4){ hsl = _rgb2hsl(d[i]/255, d[i+1]/255, d[i+2]/255);
-    if (hsl[1] <= 0.28 || hsl[2] <= 0.08 || hsl[2] >= 0.92) continue;
+    if (!inMask(hsl)) continue;
     var dist = Math.abs(hsl[0]-mid); if (dist > half + feather) continue;
     var k = dist <= half ? 1 : 1 - (dist-half)/feather;                                        // soft edge on the hue mask
     var nl = Math.max(0.03, Math.min(0.97, hsl[2] + dL*0.85)), ns = t[1] * (0.65 + 0.35*Math.min(1, hsl[1]/0.6));
@@ -8621,14 +8720,15 @@ function applyGarageConfig(model, sel){
     var frame = new THREE.Mesh(new THREE.BoxGeometry(aw + 0.05, ah + 0.05, 0.03), _trimMat(trim ? trim.color : 0xcfd3d8)); frame.userData.garageAddon = true; plate.add(frame);
     var art = new THREE.Mesh(new THREE.PlaneGeometry(aw, ah), new THREE.MeshStandardMaterial({ map:rearArtTexture(cfg.rearArt), roughness:0.5, metalness:0.05 }));
     art.position.z = 0.017; art.userData.garageAddon = true; plate.add(art);
-    plate.position.set((box.min.x+box.max.x)/2, box.min.y + Math.min(sz.y*0.16, 0.34) + ah*0.5 + 0.08, box.max.z - 0.03); plate.rotation.x = -0.08;
+    var rdp = (typeof RIDE_DEFS !== 'undefined') && RIDE_DEFS[vehicle];   // some rides carry the plate higher (the Udta's tail is all trim at bumper height)
+    plate.position.set((box.min.x+box.max.x)/2, (rdp && rdp.plateY != null) ? box.min.y + sz.y*rdp.plateY : box.min.y + Math.min(sz.y*0.16, 0.34) + ah*0.5 + 0.08, box.max.z - 0.03); plate.rotation.x = -0.08;
     plate.userData.garageAddon = true; addons.add(plate);
   }
   host.add(addons); model.userData.garageAddons = addons;   // in the holder's frame, so the tail is always +Z
 }
 /* which vehicle a garage/equipped id maps to (rickshaw = decorated auto GLB, classic = desi special GLB) */
 function vehicleModelFor(id){
-  if (id === 'classic' && propTemplates.desiauto){ var desi = propTemplates.desiauto.clone(true); desi.rotation.y = -Math.PI/2; desi.userData.vehicleId = 'classic'; return desi; }
+  var rd = RIDE_DEFS[id]; if (rd && rd.glb && propTemplates[rd.glb]){ var rm = propTemplates[rd.glb].clone(true); rm.rotation.y = rd.yaw || 0; rm.userData.vehicleId = id; return rm; }
   if (playerRickshawTemplate){ var r = playerRickshawTemplate.clone(true); r.userData.vehicleId = 'rickshaw'; return r; }
   return null;
 }
@@ -8743,7 +8843,7 @@ function emitRideFx(dt){
 var TEST_RIDE_SECS = 45;
 function startTestRide(sel){
   trialSel = JSON.parse(JSON.stringify(sel));
-  if (trialSel.rickshaw && (trialSel.rickshaw === 'rickshaw' || trialSel.rickshaw === 'classic')) selectedVehicle = trialSel.rickshaw;
+  if (trialSel.rickshaw && RIDE_DEFS[trialSel.rickshaw]) selectedVehicle = trialSel.rickshaw;
   applyPlayerVehicle();
 }
 function endTestRide(){ if (!trialSel) return; trialSel = null; selectedVehicle = profile.equipped.rickshaw || 'rickshaw'; if (typeof applyPlayerVehicle === 'function') applyPlayerVehicle(); }
@@ -9032,11 +9132,12 @@ var GARAGE = (function(){
     var cat = currentCat(), id = sel[cat], it = garageItem(cat, id); if (!it) return;
     $g('gSelName').textContent = it.name;
     $g('gSelDesc').textContent = it.desc || (GARAGE_DESC[cat] && GARAGE_DESC[cat][id]) || '';
-    $g('gPerk').textContent = it.perk ? '★ ' + it.perk : '';
+    $g('gPerk').textContent = cat === 'rickshaw' ? '' : (it.perk ? '★ ' + it.perk : '');
+    rideDetail(cat, id, it);
     var btn = $g('gActionBtn'), st = stateOf(cat, id);
     btn.className = 'g2Act' + (busy ? ' busy' : ''); btn.disabled = false; btn.removeAttribute('aria-disabled');
     if (st === 'equipped'){ btn.innerHTML = '✓ EQUIPPED'; btn.classList.add('equipped'); btn.setAttribute('aria-disabled', 'true'); }
-    else if (st === 'owned'){ btn.textContent = 'EQUIP ' + it.name.toUpperCase(); }
+    else if (st === 'owned'){ btn.textContent = cat === 'rickshaw' ? 'EQUIP' : 'EQUIP ' + it.name.toUpperCase(); }
     else if (profile.coins < it.price){ btn.textContent = 'NEED ' + fmt(it.price - profile.coins) + ' MORE COINS'; btn.classList.add('poor'); btn.setAttribute('aria-disabled', 'true'); }
     else { btn.innerHTML = 'BUY · <span class="g2Coin" style="display:inline-flex;width:.9em;height:.9em;vertical-align:-2px"></span> ' + fmt(it.price); btn.classList.add('buy'); }
     // revert: only while something in this tab is a preview that isn't what you have equipped
@@ -9046,6 +9147,28 @@ var GARAGE = (function(){
     var any = CATS.some(function(c){ return sel[c] !== equippedItem(c); });
     $g('g2TestSub').textContent = any ? 'your preview · ' + TEST_RIDE_SECS + ' s practice' : 'your equipped ride · ' + TEST_RIDE_SECS + ' s practice';
     $g('gTestBtn').setAttribute('aria-label', 'Test ride ' + (any ? 'the previewed setup' : 'your equipped ride') + ', ' + TEST_RIDE_SECS + ' second practice');
+  }
+  function rideDetail(cat, id, it){                              // the ride's real stats, its level and the upgrade button
+    var box = $g('g2Ride'), up = $g('g2UpBtn'); if (!box || !up) return;
+    var isRide = cat === 'rickshaw'; box.classList.toggle('hidden', !isRide); up.classList.toggle('hidden', !isRide || !ownsItem('rickshaw', id)); if (!isRide) return;
+    var st = it.stats || { speed:60, handling:70, swag:75 }, L = rideLevel(id), r = rideResolve(id);
+    var rows = [['SPEED', st.speed, 'top speed ×' + r.speedMul.toFixed(2)], ['HANDLING', st.handling, 'lane snap ×' + (r.laneRate/22).toFixed(2)], ['SWAG', st.swag, 'coin pts ×' + r.swagMul.toFixed(2)]];
+    $g('g2Stats').innerHTML = rows.map(function(rw){ return '<b>' + rw[0] + '</b><i title="' + rw[2] + '"><s style="width:' + rw[1] + '%"></s></i><u>' + rw[1] + '</u>'; }).join('');
+    $g('g2LvTxt').textContent = 'LV ' + L; $g('g2Pips').innerHTML = [1,2,3,4,5].map(function(k){ return '<span class="' + (k <= L ? 'on' : '') + '"></span>'; }).join('');
+    $g('g2PerkS').textContent = '★ ' + ridePerkText(id, L);
+    up.className = 'g2Up' + (ownsItem('rickshaw', id) ? '' : ' hidden');
+    if (L >= 5){ up.textContent = '★ MAX LEVEL'; up.classList.add('max'); }
+    else { var c = RIDE_UP_COST[L]; up.textContent = '⬆ LV' + (L+1) + ' · ' + fmt(c); if (profile.coins < c) up.classList.add('poor'); up.title = 'Next: ' + ridePerkText(id, L+1); }
+  }
+  function doUpgrade(){
+    var id = sel.rickshaw, it = garageItem('rickshaw', id); if (!it || !ownsItem('rickshaw', id) || busy) return;
+    var L = rideLevel(id); if (L >= 5) return; var c = RIDE_UP_COST[L];
+    if (profile.coins < c){ toast('You need ' + fmt(c - profile.coins) + ' more coins', true); return; }
+    profile.coins -= c; if (!profile.rideLv) profile.rideLv = {}; profile.rideLv[id] = L + 1; saveProfile(); if (typeof CLOUD !== 'undefined') CLOUD.syncSoon();
+    if (window.PERF) PERF.mark('garage upgrade ' + id + ' → Lv' + (L+1));
+    updateWallet(true); if (typeof GAME_AUDIO !== 'undefined') try { GAME_AUDIO.bell(); } catch(e){}
+    renderPanel(); toast(it.name + ' is now LV ' + (L+1) + '!');
+    var p = $g('g2Pips'); if (p && !RM()){ p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); }
   }
   function tabCats(){ return activeCat === 'paint' ? ['paint','rearArt','trim'] : [activeCat]; }
   function selectItem(cat, id, fromKey){
@@ -9154,8 +9277,8 @@ var GARAGE = (function(){
     thumbWait();
   }
   function thumbWait(){                                         // the Desi Special kit streams in late: swap its card image in when it lands
-    if (!isOpen) return; if (window.RIDE_THUMB && RIDE_THUMB.rickshaw && RIDE_THUMB.classic) return;
-    setTimeout(function(){ if (!isOpen) return; try { rideThumbs(); } catch(e){} if (activeCat === 'rickshaw' && window.RIDE_THUMB && RIDE_THUMB.classic) renderPanel(); thumbWait(); }, 1000);
+    if (!isOpen) return; if (window.RIDE_THUMB && GARAGE_DATA.rickshaw.every(function(r){ return RIDE_THUMB[r.id]; })) return;
+    setTimeout(function(){ if (!isOpen) return; try { rideThumbs(); } catch(e){} if (activeCat === 'rickshaw' && window.RIDE_THUMB) renderPanel(); thumbWait(); }, 1000);
   }
   function close(){
     if (!isOpen) return; isOpen = false; gLaunch = null; document.body.classList.remove('inGarage');
@@ -9173,7 +9296,7 @@ var GARAGE = (function(){
   function wire(){
     var gb = $g('garageBtn'); if (gb) gb.addEventListener('click', function(){ if (typeof menuToGarage === 'function') menuToGarage(function(){ open(); }); else open(); });
     $g('garageBack').addEventListener('click', close);
-    $g('gActionBtn').addEventListener('click', doAction);
+    $g('gActionBtn').addEventListener('click', doAction); $g('g2UpBtn').addEventListener('click', doUpgrade);
     $g('g2Revert').addEventListener('click', revert);
     $g('gTestBtn').addEventListener('click', testRide);
     $g('g2Reset').addEventListener('click', resetView);
@@ -9219,7 +9342,8 @@ var GARAGE = (function(){
   }
   function refresh(){ if (!isOpen) return; CATS.forEach(function(c){ sel[c] = equippedItem(c); }); buildPreviewModel(false); updateWallet(); renderPanel(); }
   return { open:open, close:close, wire:wire, refresh:refresh, isOpen:function(){ return isOpen; }, sel:function(){ return sel; },
-           rebuildPreview:function(){ if (isOpen) buildPreviewModel(false); }, view:function(){ return view; }, cat:function(){ return currentCat(); },
+           rebuildPreview:function(){ if (isOpen) buildPreviewModel(false); },
+           onRideModel:function(name){ if (!isOpen) return; var d = RIDE_DEFS[sel.rickshaw]; if (d && d.glb === name) buildPreviewModel(false); try { rideThumbs(); } catch(e){} if (activeCat === 'rickshaw') renderPanel(); }, view:function(){ return view; }, cat:function(){ return currentCat(); },
            _debug:function(){ return { cam:gCam, scene:gScene, plate:gPlate, holder:gHolder, PL:PL, renderer:gRenderer }; }, draw:function(){ draw(); }, tick:function(dt){ tick(dt); } };
 })();
 GARAGE.wire();
@@ -9495,6 +9619,7 @@ function menuFromGarage(){
 var _thumbR = null, _thumbDone = {};
 function rideThumbs(){                                                 // real renders of each ride for the cards (once each, then the renderer is released)
   var want = { rickshaw:function(){ return vehicleModelFor('rickshaw'); }, car:function(){ return carTemplate ? carTemplate.clone(true) : null; }, classic:function(){ return propTemplates.desiauto ? vehicleModelFor('classic') : null; } };
+  ['monster','steam','royal','udta'].forEach(function(id){ want[id] = function(){ return propTemplates[RIDE_DEFS[id].glb] ? vehicleModelFor(id) : null; }; });
   var todo = Object.keys(want).filter(function(k){ return !_thumbDone[k]; }); if (!todo.length) return;
   try {
     if (!_thumbR){ _thumbR = new THREE.WebGLRenderer({ alpha:true, antialias:true, preserveDrawingBuffer:true }); _thumbR.setSize(320, 200); _thumbR.outputEncoding = THREE.sRGBEncoding; _thumbR.toneMapping = THREE.ACESFilmicToneMapping; _thumbR.toneMappingExposure = 1.05; }
@@ -9547,7 +9672,9 @@ function animate(){
   if (state.ducking){ state.duckT = (state.duckT || 0) - dt; if (state.duckT <= 0){ state.ducking = false; state.duckT = 0; } }
 
   // powerup timers
-  if (state.turbo > 0){ state.turbo -= rawDt; if (state.turbo<=0){ state.turbo=0; powerSound(false); } }
+  if (state.turbo > 0){ state.turbo -= rawDt; if (state.turbo<=0){ state.turbo=0;
+    if (RIDE.secondWind && !state.secondWindUsed){ state.secondWindUsed = true; state.turbo = RIDE.secondWind; popup('💨 SECOND WIND!', 'popNear', 50, 34); rideWhistle(); burst(player.position.x, 2.4, 0.8, 0xf4f4f4, 16, 2, 2.5); }   // Bhaap Gaadi: the boiler has one more push
+    else powerSound(false); } }
   if (state.slowmo > 0){ state.slowmo -= rawDt; if (state.slowmo<=0){ state.slowmo=0; powerSound(false); } }
   if (state.swerveTimer > 0){ state.swerveTimer -= rawDt; if (state.swerveTimer<0) state.swerveTimer=0; }
   // combo multiplier decays when you stop grabbing coins / near-missing
@@ -9560,24 +9687,25 @@ function animate(){
   // speed ramp
   var target = Math.min(MAX_SPEED + 6*Math.min(2, heat()), BASE_SPEED + state.dist/90);   // the cap rises to 54 by 40k pts
   if (flyover && (flyover.phase === 'deck' || flyover.phase === 'toll')) target *= 1.15;   // highway pace on the Sea Link
-  state.speed = target * (state.turbo>0 ? 1.7 : 1);
+  state.speed = target * RIDE.speedMul * (state.turbo>0 ? 1.7 : 1);   // speed stat
   var dz = state.speed * dt;
   state.dist += dz;
   updateBend(dt, dz);                                   // road curves & hills
 
   // engine pitch
   if (engineOsc){
-    engineOsc.frequency.setTargetAtTime(45 + state.speed*2.6, AC.currentTime, 0.1);
-    if (engineLP) engineLP.frequency.setTargetAtTime(480 + state.speed*14, AC.currentTime, 0.15);   // the motor opens up with speed (and reaches phone-speaker range)
-    engineLfo.frequency.setTargetAtTime(Math.min(13, 6 + state.speed*0.2), AC.currentTime, 0.1);      // idles chug, cruise hums: the flutter never climbs into buzz territory
-    if (engineLfoGain) engineLfoGain.gain.setTargetAtTime(0.03 * Math.max(0.25, 1 - state.speed/60), AC.currentTime, 0.2);
+    var _E = RIDE_ENG[RIDE.id] || RIDE_ENG.rickshaw;                                                     // each ride has its own engine voice
+    engineOsc.frequency.setTargetAtTime((45 + state.speed*2.6) * _E.p, AC.currentTime, 0.1);
+    if (engineLP) engineLP.frequency.setTargetAtTime((480 + state.speed*14) * _E.lp, AC.currentTime, 0.15);   // the motor opens up with speed (and reaches phone-speaker range)
+    engineLfo.frequency.setTargetAtTime(_E.chuff ? 2.2 + state.speed*0.11 : Math.max(0.1, Math.min(13, 6 + state.speed*0.2) * _E.lfo), AC.currentTime, 0.1);      // idles chug, cruise hums: the flutter never climbs into buzz territory
+    if (engineLfoGain) engineLfoGain.gain.setTargetAtTime(_E.chuff ? 0.06 : 0.03 * Math.max(0.25, 1 - state.speed/60) * _E.dep, AC.currentTime, 0.2);
   }
 
   // player lateral — time-based exponential smoothing (crisp, frame-rate independent).
   // Uses rawDt so steering stays responsive even during chai slow-mo.
   var targetX = LANES[state.lane] + ((flyover && flyover.gust > 0) ? flyover.gustDir * 0.85 * Math.sin(Math.min(1, flyover.gust/1.4)*Math.PI) : 0);   // crosswind shoves you toward the parapet
   var prevX = state.x;
-  state.x += (targetX - state.x) * (1 - Math.exp(-22 * rawDt));
+  state.x += (targetX - state.x) * (1 - Math.exp(-RIDE.laneRate * rawDt));   // handling stat
   if (Math.abs(targetX - state.x) < 0.001) state.x = targetX;
   player.position.x = state.x;
   player.rotation.z = (prevX - state.x) * 2.2 - BEND.curve.value * 55;   // lean into lane change + into the bend
@@ -9585,12 +9713,13 @@ function animate(){
 
   // jump physics
   if (state.jumping){
-    state.vy -= 26*dt;
+    state.vy -= 26*dt*(state.vy < 0 ? RIDE.fallG : 1);   // Udta hangs in the air on the way down
     state.y += state.vy*dt;
     if (state.y <= 0){ state.y = 0; state.jumping = false; if (state.jumpBuf > 0 && !state.ducking){ state.jumpBuf = 0; doJump(); }
-      burst(state.x, 0.15, 0.8, 0xb09060, 5, 1.2, 1.5); FEEL.land(); }
+      burst(state.x, 0.15, 0.8, 0xb09060, 5, 1.2, 1.5); FEEL.land(); if (RIDE.id === 'monster'){ state.shake = Math.max(state.shake, 0.22); burst(state.x, 0.2, 0.6, 0x8a6a45, 14, 3, 2.2); } }
   }
   player.position.y = state.y + (state.jumping ? 0 : Math.sin(performance.now()*0.022)*0.008);   // engine shiver on the springs
+  rideFeel(dt);
   player.rotation.x = state.jumping ? -0.28 : (state.ducking ? 0.12 : 0);
   player.scale.y = state.ducking ? 0.62 : 1;
 
@@ -9929,7 +10058,17 @@ function animate(){
     if (o.root.position.z > KILL_BEHIND){
       scene.remove(o.root); obstacles.splice(i,1); continue;
     }
-    if (playerHit(o)){
+    if (RIDE.hover && o.hit.ground){ if (!o.hovered && Math.abs(o.root.position.z - PLAYER_Z) < 1.5 && Math.abs(o.root.position.x - player.position.x) < 1.2){ o.hovered = true; burst(player.position.x, 0.3, 0.2, 0x7fd8ff, 6, 1.5, 1.2); } }   // Udta floats over cones + potholes
+    else if (playerHit(o)){
+      if (RIDE.smash && o.hit.jumpOver && !o.hit.allLanes && o.type !== 'spikes' && !o.isBike && !o.slide){   // Chakka Jam flattens the small stuff
+        burst(o.root.position.x, 0.6, o.root.position.z, 0xc9b79a, 14, 3, 3); burst(o.root.position.x, 0.9, o.root.position.z, 0xff8a3a, 6, 2.5, 2.5);
+        if (o.junction) o.junction.smashed = true;
+        scene.remove(o.root); obstacles.splice(i,1); state.shake = Math.max(state.shake, 0.3);
+        var sp = RIDE.smashPts * state.mult; state.bonus += sp; state.smashes = (state.smashes || 0) + 1; PROG.bump('smash');
+        if (typeof crashSound === 'function') crashSound(false, 0);
+        if (state.smashes === 1 || state.smashes % 4 === 0) popup('💥 CHAKKA JAM! +' + sp, 'popNear', 50, 38);
+        continue;
+      }
       if (state.turbo > 0){
         burst(o.root.position.x, 1.5, o.root.position.z, 0x30e0ff, 12, 3, 4);
         if (o.junction) o.junction.smashed = true;
@@ -9976,11 +10115,14 @@ function animate(){
     c.mesh.position.z += dz;
     if (c.mesh.userData.glb) c.mesh.rotation.y += dt*4; else c.mesh.rotation.z += dt*4;
     if (c.mesh.position.z > KILL_BEHIND){ scene.remove(c.mesh); coins.splice(i,1); continue; }
+    if (RIDE.reach > 1.0 && c.mesh.position.z > -10 && c.mesh.position.z < 2 && Math.abs(c.mesh.position.x - player.position.x) < RIDE.reach + 0.8)   // Maharaja: coins come to you
+      c.mesh.position.x += (player.position.x - c.mesh.position.x) * Math.min(1, dt*7);
     if (Math.abs(c.mesh.position.z - PLAYER_Z) < 1.2 &&
-        Math.abs(c.mesh.position.x - player.position.x) < 1.0 &&
+        Math.abs(c.mesh.position.x - player.position.x) < Math.max(1.0, RIDE.reach) &&
         Math.abs(c.mesh.position.y - (state.y+1.0)) < 1.2){
-      state.coins += (selectedVehicle === 'classic' && Math.random() < 0.25) ? 2 : 1;   // Desi Special perk: +25% coins
-      state.bonus += 10 * state.mult;
+      state.coins += (RIDE.coinDouble && Math.random() < RIDE.coinDouble) ? 2 : 1;   // Desi Special perk: some coins count double
+      if (RIDE.bonusEvery && (++state.coinN) % RIDE.bonusEvery === 0){ state.coins++; if (state.coinN % (RIDE.bonusEvery*5) === 0) burst(player.position.x, 2.2, 0, 0xffd24a, 6, 1.4, 2); }   // Maharaja pays extra
+      state.bonus += Math.round(10 * state.mult * RIDE.swagMul);   // swag stat
       if (state.comboTimer > 0) state.comboTimer = Math.max(state.comboTimer, 2.5);  // coins sustain combo
       chime(state.coins);
       coinPop(c.mesh.position.x, c.mesh.position.y, 0); FEEL.coinFly(c.mesh.position); PROG.bump('coins'); if (state.coins % 5 === 0) FEEL.haptic(8);
@@ -10005,7 +10147,7 @@ function animate(){
       if (pu.kind==='mirchi'){ startChakkar(); }
       else if (pu.kind==='chai'){ state.slowmo = 5; }
       else if (pu.kind==='ganesh'){ state.shield = true; }
-      else { state.turbo = 3; honk(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn(); }
+      else { state.turbo = 3 * RIDE.turboMul; honk(); if (typeof GAME_AUDIO !== 'undefined') GAME_AUDIO.horn(); if (RIDE.id === 'steam') rideWhistle(); }
       scene.remove(pu.mesh); powerups.splice(i,1);
     }
   }
