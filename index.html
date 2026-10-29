@@ -179,6 +179,12 @@ window.addEventListener('error', function(e){
   @keyframes rainSlide { from{ transform:translateY(0); } to{ transform:translateY(300px); } }
   #lightning { position:fixed; inset:0; pointer-events:none; z-index:4; opacity:0; background:rgba(220,235,255,0.9); }
   #lightning.on { animation:lightningFlash .45s ease-out; }
+  /* 29-Oct: the street-turn whip-pan. A plain DOM layer over the canvas (opacity + transform only = compositor-cheap, unlike a CSS filter on the
+     WebGL canvas). It covers the cut where the corner set is swapped for the new street, so the swap is never seen. */
+  #whip { position:fixed; inset:0; pointer-events:none; z-index:1; opacity:0; overflow:hidden; will-change:opacity;
+    background:linear-gradient(90deg, rgba(222,198,160,0.92), rgba(240,222,190,0.97) 50%, rgba(222,198,160,0.92)); }
+  #whip i { position:absolute; inset:-10% -60%; will-change:transform;
+    background:repeating-linear-gradient(0deg, rgba(255,255,255,0) 0 7px, rgba(255,244,222,0.55) 7px 9px, rgba(120,96,70,0.18) 9px 12px, rgba(255,255,255,0) 12px 23px); }
   @keyframes lightningFlash { 0%{opacity:0} 6%{opacity:0.85} 12%{opacity:0.1} 20%{opacity:0.7} 100%{opacity:0} }
   .goTitle { font-size:clamp(40px,9vw,80px); font-weight:900; color:#ff5b4d; text-shadow:3px 3px 0 #5e1410, 0 0 50px rgba(255,60,40,.6); }
   .quip { color:#ffe9bf; font-size:clamp(15px,3.2vw,22px); margin-top:16px; font-style:italic; max-width:520px; }
@@ -899,7 +905,7 @@ window.addEventListener('error', function(e){
   <div id="flash"></div>
   <div id="stormVignette"></div>
   <div id="rainGlass"></div>
-  <div id="lightning"></div>
+  <div id="lightning"></div><div id="whip"><i></i></div>
   <div id="popupLayer"></div>
 
   <div id="startScreen" class="screen v2">
@@ -1881,7 +1887,7 @@ setInterval(function(){
   el.textContent = (AL.done ? ('Mumbai loaded in ' + AL.seconds + ' s · ') : ('Loading Mumbai… ' + (AL.pct||0) + '% (' + (AL.loaded||0) + '/' + have + ' files) · ')) + 'build ' + BUILD_TAG +
     ' · vehicles ' + glb.vehicles + ' · props ' + glb.props + ' · bldgs ' + glb.buildings + (missing.length ? ' · MISSING ' + missing.join(',') : '') + (err ? ' · ' + err : '');
 }, 1000);
-var BUILD_TAG = '29-Oct-a';
+var BUILD_TAG = '29-Oct-c';
 ['touchend','click'].forEach(function(t){ window.addEventListener(t, function(){ try { if (typeof AC !== 'undefined' && AC && AC.state !== 'running') AC.resume(); } catch(e){} }, { passive:true }); });   // iOS: audio only unlocks inside touchend/click, and comes back 'interrupted' after calls/background
 window.addEventListener('pointerdown', function firstTouch(){ try { initAudio(); if (AC && AC.state === 'suspended') AC.resume(); if (typeof GAME_AUDIO !== 'undefined' && GAME_AUDIO.ambience) GAME_AUDIO.ambience(); } catch(e){} }, { once:true });
 function applyUiArt(){                                   // Higgsfield key art for menu / loading (ui-art.js), when present
@@ -1943,7 +1949,7 @@ var PERF = (function(){
       var toFps=function(ms){return ms>0?+(1000/ms).toFixed(1):0;};
       var mem=(window.performance&&performance.memory)?{usedMB:+(performance.memory.usedJSHeapSize/1048576).toFixed(1),limitMB:+(performance.memory.jsHeapSizeLimit/1048576).toFixed(0)}:null;
       return {
-        game:'Rickshaw Rush: Mumbai', generatedAt:new Date().toISOString(),
+        game:'Rickshaw Rush: Mumbai', build:(typeof BUILD_TAG !== 'undefined' ? BUILD_TAG : '?'), generatedAt:new Date().toISOString(),
         session:{ durationSec:+dur.toFixed(1), frames:ft.length },
         fps:{ avg:toFps(avgFt), min:toFps(pct(sorted,0.999)), p50:toFps(pct(sorted,0.50)),
               low1pct:toFps(pct(sorted,0.99)), low01pct:toFps(pct(sorted,0.999)) },
@@ -2035,6 +2041,8 @@ function updateBend(dt, dz){
   }
   var ck = state.chakkar > 0;                                                               // CHAKKAR: everything winds, buildings melt, time drags
   BEND.psych.value += (((ck && !COMFORT) ? 1 : 0) - BEND.psych.value) * Math.min(1, dt * (ck ? 1.6 : 0.9));
+  if (typeof gradePass !== 'undefined' && gradePass && (BEND.psych.value > 0.002 || gradePass._psy)){ var _ps = BEND.psych.value > 0.002 ? BEND.psych.value : 0, _tq = performance.now()*0.001, _gu = gradePass.uniforms;
+    gradePass._psy = _ps > 0; _gu.uSat.value = 1.1 + _ps*0.55; _gu.uWarm.value.set(1.045 + _ps*0.10*Math.sin(_tq*1.3), 1.0 + _ps*0.05*Math.sin(_tq*0.9 + 1), 0.93 + _ps*0.16*Math.cos(_tq*1.1)); }
   if (ck && !bendPlan.lock && !COMFORT){ var tt = performance.now() * 0.001;
     bendPlan.curve = Math.sin(tt*0.9) * 0.0024; bendPlan.hill = Math.sin(tt*0.55) * 0.0005; bendPlan.amp = 1.7 + Math.sin(tt*1.7) * 0.6; }
   var k = Math.min(1, dt * (ck ? 1.4 : 0.33));                                              // ease between plans (~3 s)
@@ -5910,7 +5918,7 @@ function startChakkar(){
   state.chakkar = 7; state.bonus += 500 * state.mult;                                         // the dare pays: +500, but 7 s of driving dizzy
   if (window.PERF) PERF.mark('chakkar start');
   popup('🌶️ CHAKKAR! MIRCHI ZYADA HO GAYI!', 'popEvent', 50, 24); popup('+500 · hold the line…', 'popSub', 50, 38);
-  var cv = renderer.domElement; cv.classList.add('chakkar');
+  // 29-Oct: the dizzy colour wobble now runs in the grade pass (see BEND.psych below) — the old animated CSS filter on the canvas re-composited the whole screen every frame for 7 s (a 337 ms hitch on S's M1)
   if (AC && !state.muted){ var t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(), l = AC.createOscillator(), lg = AC.createGain();
     o.type = 'sine'; o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(160, t + 1.4); l.frequency.value = 6; lg.gain.value = 40; l.connect(lg); lg.connect(o.frequency);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.07, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5); o.connect(g); g.connect(RRA.bus('sfx')); o.start(t); l.start(t); o.stop(t + 1.6); l.stop(t + 1.6); }
@@ -6284,8 +6292,8 @@ function turnCornerRow(G, pool, s, z, reach){              // side-street facade
     G.add(b); x += w + 0.25; first = false;
   }
 }
-function spawnTurn(z){
-  var dir = Math.random() < 0.34 ? 0 : (Math.random() < 0.5 ? -1 : 1);
+function spawnTurn(z, warmOnly){
+  var dir = warmOnly ? 0 : Math.random() < 0.34 ? 0 : (Math.random() < 0.5 ? -1 : 1);
   var G = new THREE.Group(); G.position.z = z;
   var openL = dir <= 0, openR = dir >= 0, reach = MOBILE && TIER === 'low' ? 50 : 70;
   // the side street (and the mouth of the main road) — overlays the verges inside the gap
@@ -6312,6 +6320,7 @@ function spawnTurn(z){
   // painted arrows in every lane on the run-up
   var am = turnArrowMat(dir);
   [16, 34].forEach(function(dzA){ LANES.forEach(function(lx){ var a = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 3.4), am); a.rotation.x = -Math.PI/2; a.position.set(lx, 0.025, dzA); a.renderOrder = 2; G.add(a); }); });
+  if (warmOnly) return G;
   scene.add(G);
   // nothing old may live beyond the corner — and a clear 25 m run-up before it
   for (var i2=obstacles.length-1;i2>=0;i2--){ var o = obstacles[i2]; if (o.root.position.z < z + 25){ scene.remove(o.root); obstacles.splice(i2, 1); } }
@@ -6401,6 +6410,14 @@ function hazardCue(){
   if (mode === _hazCue._m) return; _hazCue._m = mode;
   _hazCue.className = mode ? 'on ' + mode : ''; _hazCue.textContent = mode === 'jump' ? 'JUMP ⬆' : mode === 'duck' ? 'DUCK ⬇' : '';
 }
+var _whip = null;
+function turnWhip(p, dir){                                    // opacity: 0 → full cover across the cut (p 0.66–0.86) → clear by p = 1
+  if (!_whip){ _whip = $('whip'); if (!_whip) return; _whip._i = _whip.firstChild; _whip._o = -1; }
+  var a = 0.70, b = TURN_CUT - 0.015, c = TURN_CUT + 0.03, d = TURN_CUT + 0.12;   // ramp in ~80 ms, full cover ~2 frames around the cut, out in ~150 ms
+  var o = p < a ? 0 : p < b ? (p - a) / (b - a) : p < c ? 1 : Math.max(0, 1 - (p - c) / (d - c));
+  o = Math.round(o*o*(3 - 2*o) * 100) / 100; if (o === _whip._o) return; _whip._o = o;
+  _whip.style.opacity = o; if (_whip._i) _whip._i.style.transform = 'translate3d(' + (-dir * (p - 0.7) * 260).toFixed(1) + 'px,0,0)';
+}
 function updateTurn(dt, rawDt, dz){
   var T = TURN.t; if (state.running && !T) TURN.since += dz;
   if (!T){ TURN.yaw = 0; TURN.lead = 0; return; }
@@ -6431,11 +6448,12 @@ function updateTurn(dt, rawDt, dz){
     // 21-Oct: no CSS blur on the WebGL canvas any more — toggling a filter on it makes Safari/Chrome re-composite the canvas through an
     // offscreen layer for a frame or two (a visible pop + a dropped frame on Macs). The cut hides in the yaw speed instead.
     if (T._swapNow){ T._swapNow = false; player.position.x = state.x; player.rotation.z = 0; }   // the cut: the auto is re-placed THIS frame (it was drawn one frame at its old lane)
+    turnWhip(T.p, T.turnDir);
     player.rotation.y = TURN.yaw + TURN.lead;
-    if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; }
+    if (T.p >= 1){ TURN.t = null; TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; turnWhip(1, 0); }
   }
 }
-function clearTurn(){ if (TURN.t){ scene.remove(TURN.t.group); turnDispose(TURN.t.group); turnRestore(TURN.t); TURN.t = null; } TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; TURN.since = -150; turnKerbGap(null); turnCue('', null); }
+function clearTurn(){ if (TURN.t){ scene.remove(TURN.t.group); turnDispose(TURN.t.group); turnRestore(TURN.t); TURN.t = null; } TURN.yaw = 0; TURN.lead = 0; TURN.fwd = 0; player.position.z = PLAYER_Z; TURN.since = -150; turnKerbGap(null); turnCue('', null); turnWhip(1, 0); }
 
 /* --- Crossing set-pieces: a scripted ~5 s event where a group walks ACROSS all three lanes.
        Actors are spaced ≥ 6 m apart so at most two lanes are ever blocked at once — the gap moves, you time it. --- */
@@ -7703,7 +7721,7 @@ var CLOUD = (function(){
   function flush(){
     if (!on() || busy || !queue.length || typeof fetch !== 'function') return;
     busy = true; var item = queue[0];
-    fetch(CLOUD_URL, { method:'POST', body:JSON.stringify(item), redirect:'follow' })
+    fetch(CLOUD_URL, { method:'POST', body:JSON.stringify(item), redirect:'follow', keepalive:JSON.stringify(item).length < 60000 })   // keepalive: survives closing the tab
       .then(function(r){ return r.json(); })
       .then(function(res){
         queue.shift(); persistQ(); busy = false;
@@ -7713,6 +7731,10 @@ var CLOUD = (function(){
       })
       .catch(function(){ busy = false; setTimeout(flush, 15000); });
   }
+  // 29-Oct: anything still queued when the tab is closed/hidden goes out as a beacon (debug reports used to sit in the queue until the NEXT visit —
+  // a month late). The server ignores duplicates by rid, so a beacon + a later retry can't double-count.
+  window.addEventListener('pagehide', function(){ try { if (on() && navigator.sendBeacon) queue.forEach(function(it){ navigator.sendBeacon(CLOUD_URL, JSON.stringify(it)); }); } catch(e){} });
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden'){ try { if (on() && navigator.sendBeacon) queue.forEach(function(it){ if (!it._b){ it._b = 1; navigator.sendBeacon(CLOUD_URL, JSON.stringify(it)); } }); } catch(e){} } });
   function get(params){
     if (!on() || typeof fetch !== 'function') return Promise.reject(new Error('offline'));
     var qs = Object.keys(params).map(function(k){ return k + '=' + encodeURIComponent(params[k]); }).join('&');
@@ -9826,8 +9848,9 @@ function worldPrewarm(budget){
   function add(t){ if (t && t.isObject3D && !_warmed.has(t.uuid)) list.push(t); }
   vehicleDefs.forEach(function(d){ add(d.template); }); Object.keys(propTemplates).forEach(function(k){ add(propTemplates[k]); });
   bikeTemplates.forEach(add); cowTemplates.forEach(add); [carTemplate, policeJeepTemplate, bullockTemplate, roadSignTemplate, stallTemplate, cartTemplate, manTemplate, vendorTemplate, banner3dTemplate, badshahTemplate, playerRickshawTemplate].forEach(add);
-  walkerDefs.forEach(function(w){ add(w.template || w.scene || w.root); });
-  add(turnWarmKit());                                                           // 21-Oct: the street-turn set (road, kerbs, bollards, boards, arrows) — its first corner used to compile + upload mid-run
+  walkerDefs.forEach(function(w){ add(w.template || w.scene || w.root); }); if (typeof auntieDef !== 'undefined' && auntieDef) add(auntieDef.template);   // the crossing set-piece's auntie (first set-piece hitched 329 ms)
+  add(turnWarmKit());
+  if (!worldPrewarm._turnG && typeof ASSET_LOAD !== 'undefined' && window.ASSET_LOAD && ASSET_LOAD.done && buildingDefs.length){ try { worldPrewarm._turnG = spawnTurn(-120, true); worldPrewarm._turnG.position.set(0, 0, 0); } catch(e){ worldPrewarm._turnG = new THREE.Group(); } } add(worldPrewarm._turnG);   // a REAL corner set (both sides), compiled + uploaded before the first turn                                                           // 21-Oct: the street-turn set (road, kerbs, bollards, boards, arrows) — its first corner used to compile + upload mid-run
   if (typeof RIDES_WARM !== 'undefined') RIDES_WARM.forEach(add);
   if (!list.length && !_hiddenWarmDone){ _hiddenWarmDone = true; var hk = hiddenWarmKit(); if (hk) list.push(hk); }   // last: everything already in the scene that hasn't been drawn yet
   if (!list.length) return 0;
